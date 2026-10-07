@@ -207,7 +207,7 @@ Outputs:
     Value: !Ref MablopBucket
   FunctionUrl:
     Description: Public Lambda Function URL (token-gated at app level).
-    Value: !GetAtt MablopFunction.FunctionUrl # SAM exposes the Function URL on the function resource
+    Value: !GetAtt MablopFunctionUrl.FunctionUrl # SAM exposes the Function URL on the function resource
   LambdaRoleArn:
     Description: Lambda execution role ARN (least-privilege).
     Value: !GetAtt MablopLambdaRole.Arn
