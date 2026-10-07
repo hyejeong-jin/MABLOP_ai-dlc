@@ -1,0 +1,213 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: MABLOP MVP - single Lambda + Function URL + private SSE S3 bucket (us-east-1). YAGNI.
+
+# Scope: Lambda + public Function URL + private SSE bucket + placeholder role ref (14.1);
+# billing alarm (14.3). IAM role policy -> task 14.2. No API GW/DynamoDB/Cognito/
+# Step Functions/OpenSearch/RDS/EC2/ECS/Fargate/K8s (Req 8.5).
+
+Parameters:
+  # Pre_Shared_Token source: resolved at deploy from Secrets Manager / SSM, NOT hardcoded (Req 9.3).
+  # Default is an SSM dynamic-reference path; override per-env. Secret VALUE never lives here.
+  MablopTokenSsmPath:
+    Type: String
+    Default: /mablop/token
+    Description: SSM Parameter Store path holding the Pre_Shared_Token (SecureString).
+
+  # Bedrock model ids - locked us-east-1 selections (decisions.md D14); override per-env.
+  EmbeddingModelId:
+    Type: String
+    Default: amazon.titan-embed-text-v2:0
+    Description: Cheap multilingual embedding model id (Req 1.4, 2.2).
+  TextModelId:
+    Type: String
+    Default: anthropic.claude-3-5-haiku-20241022-v1:0
+    Description: Quality Korean draft text model id (Req 2.7).
+  StyleModelId:
+    Type: String
+    Default: anthropic.claude-3-haiku-20240307-v1:0
+    Description: Cheap style-profile model id (Req 1.6).
+  VisionModelId:
+    Type: String
+    Default: anthropic.claude-3-haiku-20240307-v1:0
+    Description: Low/mid multimodal vision model id (Req 3.3).
+
+  # Cost/limit caps - placeholders; tune per-env.
+  ContextTokenCap:
+    Type: Number
+    Default: 8000
+    Description: Prompt context token cap (Req 7.1).
+  TopK:
+    Type: Number
+    Default: 8
+    Description: Retrieval Top_K cap (Req 7.2).
+  MaxPostCount:
+    Type: Number
+    Default: 20
+    Description: MAX_POST_COUNT per style-learning run (Req 1.8).
+
+  # Billing alarm (task 14.3). Threshold = cost target ceiling USD 5-20/month -> default 20.
+  MonthlyBudgetUsd:
+    Type: Number
+    Default: 20
+    Description: Monthly spend threshold (USD) for the billing alarm (Req 7.6).
+  AlarmEmail:
+    Type: String
+    Default: ""
+    Description: Email for billing-alarm notifications (subscribe-confirmed).
+
+Globals:
+  Function:
+    Runtime: python3.13
+    MemorySize: 512
+    Timeout: 900 # 15-min Lambda cap for checkpointed learning runs (Req 1.9).
+
+Resources:
+  # Private, SSE-S3, all public access blocked (Req 6.4, 8.2).
+  MablopBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256 # SSE-S3 default (Req 6.4).
+
+  # Explicit log group so the role's logs scope resolves to a real resource.
+  MablopLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: /aws/lambda/mablop
+      RetentionInDays: 14 # keep CloudWatch Logs cost near-zero (NFR-1).
+
+  # Least-privilege execution role (mirrors infra/lambda-role-policy.json, Req 6.3):
+  # bedrock:InvokeModel on the 4 model ARNs; s3 Get/Put scoped to the 8 prefixes;
+  # logs only on this function's log group. No wildcards.
+  MablopLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: mablop-least-privilege
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Sid: BedrockInvoke
+                Effect: Allow
+                Action: bedrock:InvokeModel
+                Resource:
+                  - !Sub "arn:aws:bedrock:us-east-1::foundation-model/${EmbeddingModelId}"
+                  - !Sub "arn:aws:bedrock:us-east-1::foundation-model/${TextModelId}"
+                  - !Sub "arn:aws:bedrock:us-east-1::foundation-model/${StyleModelId}"
+                  - !Sub "arn:aws:bedrock:us-east-1::foundation-model/${VisionModelId}"
+              - Sid: S3Prefixes
+                Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:PutObject
+                Resource:
+                  - !Sub "arn:aws:s3:::${MablopBucket}/raw-posts/*"
+                  - !Sub "arn:aws:s3:::${MablopBucket}/embeddings/*"
+                  - !Sub "arn:aws:s3:::${MablopBucket}/vector-index/*"
+                  - !Sub "arn:aws:s3:::${MablopBucket}/style-profile/*"
+                  - !Sub "arn:aws:s3:::${MablopBucket}/images/*"
+                  - !Sub "arn:aws:s3:::${MablopBucket}/generated-posts/*"
+                  - !Sub "arn:aws:s3:::${MablopBucket}/prompt-templates/*"
+                  - !Sub "arn:aws:s3:::${MablopBucket}/metadata/*"
+              - Sid: LogsOnly
+                Effect: Allow
+                Action:
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: !Sub "arn:aws:logs:us-east-1:${AWS::AccountId}:log-group:/aws/lambda/mablop:*"
+
+  # Single Python Lambda, routed by `action` (Req 8.1).
+  MablopFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: mablop
+      Handler: handler.handler
+      CodeUri: ../backend/
+      Role: !GetAtt MablopLambdaRole.Arn # least-privilege role defined above.
+      # Public Function URL, no API Gateway (Req 8.1, 8.5).
+      FunctionUrlConfig:
+        AuthType: NONE # app-level token gate via Access_Controller (Req 5.1).
+      Environment:
+        Variables:
+          MABLOP_BUCKET: !Ref MablopBucket
+          # Token from secret source at runtime, NOT hardcoded (Req 9.3).
+          MABLOP_TOKEN: !Sub "{{resolve:ssm-secure:${MablopTokenSsmPath}}}"
+          MABLOP_EMBED_MODEL: !Ref EmbeddingModelId
+          MABLOP_TEXT_MODEL: !Ref TextModelId
+          MABLOP_STYLE_MODEL: !Ref StyleModelId
+          MABLOP_VISION_MODEL: !Ref VisionModelId
+          MABLOP_CONTEXT_TOKEN_CAP: !Ref ContextTokenCap
+          MABLOP_TOP_K: !Ref TopK
+          MABLOP_MAX_POST_COUNT: !Ref MaxPostCount
+
+  # Public Function URL invoke permission. AuthType NONE requires an explicit
+  # resource policy granting lambda:InvokeFunctionUrl to anyone; the app-level
+  # Pre_Shared_Token (Access_Controller) is the actual gate (Req 5.1).
+  MablopFunctionUrlPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref MablopFunction
+      Action: lambda:InvokeFunctionUrl
+      Principal: "*"
+      FunctionUrlAuthType: NONE
+
+  # --- Billing alarm (task 14.3, Req 7.6) ---
+  # AWS/Billing EstimatedCharges metric lives in us-east-1 only = our deploy region.
+  # One topic + one email sub + one alarm. YAGNI: no dashboards, no composite alarms.
+  MablopBillingTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      DisplayName: mablop-billing
+
+  MablopBillingEmailSub:
+    Type: AWS::SNS::Subscription
+    Properties:
+      Protocol: email
+      Endpoint: !Ref AlarmEmail
+      TopicArn: !Ref MablopBillingTopic
+
+  # Fires when estimated monthly charges exceed the budget.
+  MablopBillingAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: mablop-monthly-budget
+      AlarmDescription: Estimated monthly charges exceeded budget (Req 7.6).
+      Namespace: AWS/Billing
+      MetricName: EstimatedCharges
+      Dimensions:
+        - Name: Currency
+          Value: USD
+      Statistic: Maximum
+      Period: 21600 # 6h; billing metric updates slowly.
+      EvaluationPeriods: 1
+      Threshold: !Ref MonthlyBudgetUsd
+      ComparisonOperator: GreaterThanThreshold
+      TreatMissingData: notBreaching
+      AlarmActions:
+        - !Ref MablopBillingTopic
+
+Outputs:
+  BucketName:
+    Description: Private SSE bucket name.
+    Value: !Ref MablopBucket
+  FunctionUrl:
+    Description: Public Lambda Function URL (token-gated at app level).
+    Value: !GetAtt MablopFunction.FunctionUrl # SAM exposes the Function URL on the function resource
+  LambdaRoleArn:
+    Description: Lambda execution role ARN (least-privilege).
+    Value: !GetAtt MablopLambdaRole.Arn

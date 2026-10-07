@@ -1,0 +1,37 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "BedrockInvoke",
+      "Effect": "Allow",
+      "Action": "bedrock:InvokeModel",
+      "Resource": [
+        "arn:aws:bedrock:us-east-1::foundation-model/${EmbeddingModelId}",
+        "arn:aws:bedrock:us-east-1::foundation-model/${TextModelId}",
+        "arn:aws:bedrock:us-east-1::foundation-model/${StyleModelId}",
+        "arn:aws:bedrock:us-east-1::foundation-model/${VisionModelId}"
+      ]
+    },
+    {
+      "Sid": "S3Prefixes",
+      "Effect": "Allow",
+      "Action": ["s3:GetObject", "s3:PutObject"],
+      "Resource": [
+        "arn:aws:s3:::${BucketName}/raw-posts/*",
+        "arn:aws:s3:::${BucketName}/embeddings/*",
+        "arn:aws:s3:::${BucketName}/vector-index/*",
+        "arn:aws:s3:::${BucketName}/style-profile/*",
+        "arn:aws:s3:::${BucketName}/images/*",
+        "arn:aws:s3:::${BucketName}/generated-posts/*",
+        "arn:aws:s3:::${BucketName}/prompt-templates/*",
+        "arn:aws:s3:::${BucketName}/metadata/*"
+      ]
+    },
+    {
+      "Sid": "LogsOnly",
+      "Effect": "Allow",
+      "Action": ["logs:CreateLogStream", "logs:PutLogEvents"],
+      "Resource": "arn:aws:logs:us-east-1:${AccountId}:log-group:/aws/lambda/${FunctionName}:*"
+    }
+  ]
+}

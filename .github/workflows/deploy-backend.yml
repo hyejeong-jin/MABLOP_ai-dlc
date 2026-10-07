@@ -1,0 +1,47 @@
+# Backend/infra deploy: SAM build + deploy via GitHub OIDC. No long-lived keys (Req 9.1-9.3).
+name: deploy-backend
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# OIDC token to assume the AWS role. No static access keys anywhere.
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      # SAM CLI ships in the GitHub-hosted runner image.
+      - uses: aws-actions/setup-sam@v2
+        with:
+          use-installer: true
+
+      # Short-lived creds via OIDC. Role ARN from a repo var, NOT a hardcoded key.
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: us-east-1
+
+      # Non-interactive build + deploy of the SAM template.
+      - name: sam build
+        run: sam build --template infra/template.yaml
+
+      - name: sam deploy
+        run: >
+          sam deploy
+          --no-confirm-changeset
+          --no-fail-on-empty-changeset
+          --stack-name mablop
+          --region us-east-1
+          --resolve-s3
+          --capabilities CAPABILITY_IAM

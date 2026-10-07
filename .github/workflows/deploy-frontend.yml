@@ -1,0 +1,55 @@
+# Frontend deploy: Vite build -> GitHub Pages (Req 9.4). No secrets in code.
+name: deploy-frontend
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Pages deploy needs pages:write + id-token:write.
+permissions:
+  pages: write
+  id-token: write
+  contents: read
+
+# One in-flight Pages deploy at a time.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - run: npm ci
+
+      # Build-time config via repo vars/secrets, never hardcoded.
+      - run: npm run build
+        env:
+          VITE_MABLOP_API_URL: ${{ secrets.VITE_MABLOP_API_URL }}
+          VITE_BASE_PATH: ${{ vars.VITE_BASE_PATH }}
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: frontend/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

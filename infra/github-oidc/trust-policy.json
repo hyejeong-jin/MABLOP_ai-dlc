@@ -1,0 +1,21 @@
+{
+  "Version": "2012-10-17",
+  "Comment": "GitHub OIDC trust policy for the MABLOP deploy role. Replace placeholders before use.",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Federated": "arn:aws:iam::<ACCOUNT_ID>:oidc-provider/token.actions.githubusercontent.com"
+      },
+      "Action": "sts:AssumeRoleWithWebIdentity",
+      "Condition": {
+        "StringEquals": {
+          "token.actions.githubusercontent.com:aud": "sts.amazonaws.com"
+        },
+        "StringLike": {
+          "token.actions.githubusercontent.com:sub": "repo:<GITHUB_OWNER>/<REPO>:ref:refs/heads/main"
+        }
+      }
+    }
+  ]
+}
