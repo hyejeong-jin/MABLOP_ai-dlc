@@ -45,3 +45,4 @@ jobs:
           --region us-east-1
           --resolve-s3
           --capabilities CAPABILITY_IAM
+          --parameter-overrides AlarmEmail="${{ vars.ALARM_EMAIL }}"

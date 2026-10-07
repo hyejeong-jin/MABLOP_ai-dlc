@@ -56,6 +56,9 @@ Parameters:
     Default: ""
     Description: Email for billing-alarm notifications (subscribe-confirmed).
 
+Conditions:
+  HasAlarmEmail: !Not [!Equals [!Ref AlarmEmail, ""]]
+
 Globals:
   Function:
     Runtime: python3.13
@@ -176,6 +179,7 @@ Resources:
 
   MablopBillingEmailSub:
     Type: AWS::SNS::Subscription
+    Condition: HasAlarmEmail
     Properties:
       Protocol: email
       Endpoint: !Ref AlarmEmail
