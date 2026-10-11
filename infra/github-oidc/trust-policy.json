@@ -1,6 +1,5 @@
 {
   "Version": "2012-10-17",
-  "Comment": "GitHub OIDC trust policy for the MABLOP deploy role. Replace placeholders before use.",
   "Statement": [
     {
       "Effect": "Allow",
