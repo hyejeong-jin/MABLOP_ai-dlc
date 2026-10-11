@@ -1,6 +1,5 @@
 {
   "Version": "2012-10-17",
-  "Comment": "Permissions for the GitHub Actions MABLOP deploy role. Scoped to the services the SAM stack creates. Replace <ACCOUNT_ID>.",
   "Statement": [
     {
       "Sid": "CloudFormationStack",
@@ -49,7 +48,10 @@
     {
       "Sid": "SamManagedBucketCreateCheck",
       "Effect": "Allow",
-      "Action": ["s3:GetBucketLocation", "s3:ListAllMyBuckets"],
+      "Action": [
+        "s3:GetBucketLocation",
+        "s3:ListAllMyBuckets"
+      ],
       "Resource": "*"
     },
     {
@@ -124,7 +126,10 @@
     {
       "Sid": "SsmReadToken",
       "Effect": "Allow",
-      "Action": ["ssm:GetParameters", "ssm:GetParameter"],
+      "Action": [
+        "ssm:GetParameters",
+        "ssm:GetParameter"
+      ],
       "Resource": "arn:aws:ssm:us-east-1:<ACCOUNT_ID>:parameter/mablop/*"
     }
   ]
