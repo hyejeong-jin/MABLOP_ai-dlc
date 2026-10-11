@@ -1,5 +1,6 @@
 """Image_Analyzer (FR-3, Req 3): presigned URLs + vision captioning."""
 import base64
+import mimetypes
 import os
 import uuid
 
@@ -15,8 +16,8 @@ _DEFAULT_EXPIRY = 120
 _DEFAULT_MAXBYTES = 2 * 1024 * 1024
 
 _VISION_MODEL_ENV = "MABLOP_VISION_MODEL"  # low/mid multimodal (Design tiering, Req 3.3)
-# Locked in decisions.md: Claude 3 Haiku (multimodal, cheapest vision-capable, us-east-1).
-_DEFAULT_VISION_MODEL = "anthropic.claude-3-haiku-20240307-v1:0"
+# Locked in decisions.md: Claude Sonnet 4.5 fallback (verified multimodal access, us-east-1).
+_DEFAULT_VISION_MODEL = "anthropic.claude-sonnet-4-5-20250929-v1:0"
 _CAPTION_MAX_ENV = "MABLOP_CAPTION_MAX_CHARS"  # short-caption bound (Req 7.5)
 _DEFAULT_CAPTION_MAX = 200
 
@@ -60,8 +61,8 @@ def _vision_caption(key: str) -> str:
     """One vision call: fetch bytes from S3, base64, caption (3.3)."""
     model_id = os.environ.get(_VISION_MODEL_ENV, _DEFAULT_VISION_MODEL)
     b64 = base64.b64encode(s3store.get_bytes(key)).decode("ascii")
-    out = bedrock.invoke(model_id, {"image": b64, "task": "caption"})
-    return str(out["caption"])
+    media_type = mimetypes.guess_type(key)[0] or "image/jpeg"
+    return bedrock.vision_caption(b64, media_type, model_id)
 
 
 def _bound(text: str) -> str:

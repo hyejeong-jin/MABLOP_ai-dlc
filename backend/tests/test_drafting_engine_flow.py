@@ -85,7 +85,9 @@ def _patch_bedrock(de, monkeypatch, markdown):
 
     def fake_invoke(model_id, body):
         captured["model_id"] = model_id
-        captured["prompt"] = body.get("prompt")
+        messages = body.get("messages", [])
+        content = messages[0].get("content", []) if messages else []
+        captured["prompt"] = content[0].get("text") if content else body.get("prompt")
         return {"outputText": markdown}
 
     monkeypatch.setattr(de.bedrock, "embed", fake_embed)

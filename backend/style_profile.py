@@ -12,8 +12,8 @@ import bedrock
 import s3store
 
 _STYLE_MODEL_ENV = "MABLOP_STYLE_MODEL"  # cheap style/proof model (Design tiering D10, Req 1.6)
-# Locked in decisions.md: Claude 3 Haiku (cheapest Claude, structured JSON, us-east-1).
-_DEFAULT_STYLE_MODEL = "anthropic.claude-3-haiku-20240307-v1:0"
+# Locked in decisions.md: Claude Sonnet 4.5 fallback (verified account access, us-east-1).
+_DEFAULT_STYLE_MODEL = "anthropic.claude-sonnet-4-5-20250929-v1:0"
 
 _PROFILE_KEY = "style-profile/profile.json"
 
@@ -32,8 +32,7 @@ def generate_profile(post_bodies: list[str]) -> dict:
     """Analyze post bodies via the cheap model; return a Style_Profile dict (1.6)."""
     model_id = os.environ.get(_STYLE_MODEL_ENV, _DEFAULT_STYLE_MODEL)
     prompt = _build_prompt(post_bodies)
-    out = bedrock.invoke(model_id, {"inputText": prompt})
-    parsed = _parse_profile(_response_text(out))
+    parsed = _parse_profile(bedrock.text_generate(prompt, model_id, max_tokens=2048))
     # We own builtAt + sourcePostCount; never trust the model for them.
     parsed["builtAt"] = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     parsed["sourcePostCount"] = len(post_bodies)
@@ -60,7 +59,9 @@ def _build_prompt(post_bodies: list[str]) -> str:
 
 
 def _response_text(out: dict) -> str:
-    """Best-effort pull of the generated text from a Bedrock response body."""
+    """Best-effort pull of generated text; supports Claude text or legacy mocks."""
+    if isinstance(out, str):
+        return out
     for key in ("outputText", "completion", "text"):
         if isinstance(out.get(key), str):
             return out[key]

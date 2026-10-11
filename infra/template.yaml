@@ -21,16 +21,16 @@ Parameters:
     Description: Cheap multilingual embedding model id (Req 1.4, 2.2).
   TextModelId:
     Type: String
-    Default: anthropic.claude-3-5-haiku-20241022-v1:0
+    Default: anthropic.claude-sonnet-4-5-20250929-v1:0
     Description: Quality Korean draft text model id (Req 2.7).
   StyleModelId:
     Type: String
-    Default: anthropic.claude-3-haiku-20240307-v1:0
-    Description: Cheap style-profile model id (Req 1.6).
+    Default: anthropic.claude-sonnet-4-5-20250929-v1:0
+    Description: Style-profile model id (verified fallback) (Req 1.6).
   VisionModelId:
     Type: String
-    Default: anthropic.claude-3-haiku-20240307-v1:0
-    Description: Low/mid multimodal vision model id (Req 3.3).
+    Default: anthropic.claude-sonnet-4-5-20250929-v1:0
+    Description: Vision model id (verified fallback) (Req 3.3).
 
   # Cost/limit caps - placeholders; tune per-env.
   ContextTokenCap:

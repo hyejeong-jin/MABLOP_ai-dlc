@@ -1,89 +1,89 @@
-# MABLOP ¹èÆ÷ ·±ºÏ (go-live)
+# MABLOP ë°°í¬ ëŸ°ë¶ (go-live)
 
-> ÅÏÅ° °¡ÀÌµå. ¾î¶² ºñ¹Ğ°ªµµ ·¹Æ÷¿¡ ÀúÀåÇÏÁö ¾Ê½À´Ï´Ù. ¹èÆ÷´Â GitHub Actions°¡
-> **OIDC ´Ü±â ÀÚ°İÁõ¸í**À¸·Î ¼öÇàÇÏ¸ç, Àå±â AWS ¾×¼¼½º Å°´Â »ç¿ëÇÏÁö ¾Ê½À´Ï´Ù (°áÁ¤ D12).
-> ¸®Àü: **us-east-1** °íÁ¤. ¸ğµç ÄÜ¼Ö ÀÛ¾÷Àº ·Î±×ÀÎÇÑ º»ÀÎ °èÁ¤¿¡¼­ ¼öÇàÇÏ¼¼¿ä.
+> í„´í‚¤ ê°€ì´ë“œ. ì–´ë–¤ ë¹„ë°€ê°’ë„ ë ˆí¬ì— ì €ì¥í•˜ì§€ ì•ŠìŠµë‹ˆë‹¤. ë°°í¬ëŠ” GitHub Actionsê°€
+> **OIDC ë‹¨ê¸° ìê²©ì¦ëª…**ìœ¼ë¡œ ìˆ˜í–‰í•˜ë©°, ì¥ê¸° AWS ì•¡ì„¸ìŠ¤ í‚¤ëŠ” ì‚¬ìš©í•˜ì§€ ì•ŠìŠµë‹ˆë‹¤ (ê²°ì • D12).
+> ë¦¬ì „: **us-east-1** ê³ ì •. ëª¨ë“  ì½˜ì†” ì‘ì—…ì€ ë¡œê·¸ì¸í•œ ë³¸ì¸ ê³„ì •ì—ì„œ ìˆ˜í–‰í•˜ì„¸ìš”.
 
-°ü·Ã »êÃâ¹°:
-- `infra/template.yaml` ? SAM ½ºÅÃ (Lambda + Function URL + ºñ°ø°³ SSE ¹öÅ¶ + ÃÖ¼Ò±ÇÇÑ ¿ªÇÒ + ·Î±×±×·ì + °ú±İ ¾Ë¶÷)
-- `.github/workflows/deploy-backend.yml` ? SAM ¹èÆ÷ (OIDC)
-- `.github/workflows/deploy-frontend.yml` ? Vite ºôµå ¡æ GitHub Pages
-- `infra/github-oidc/trust-policy.json` ? ¹èÆ÷ ¿ªÇÒ ½Å·Ú Á¤Ã¥ (ÇÃ·¹ÀÌ½ºÈ¦´õ Ä¡È¯ ÇÊ¿ä)
-- `infra/github-oidc/deploy-permissions.json` ? ¹èÆ÷ ¿ªÇÒ ±ÇÇÑ Á¤Ã¥ (ÇÃ·¹ÀÌ½ºÈ¦´õ Ä¡È¯ ÇÊ¿ä)
+ê´€ë ¨ ì‚°ì¶œë¬¼:
+- `infra/template.yaml` ? SAM ìŠ¤íƒ (Lambda + Function URL + ë¹„ê³µê°œ SSE ë²„í‚· + ìµœì†Œê¶Œí•œ ì—­í•  + ë¡œê·¸ê·¸ë£¹ + ê³¼ê¸ˆ ì•ŒëŒ)
+- `.github/workflows/deploy-backend.yml` ? SAM ë°°í¬ (OIDC)
+- `.github/workflows/deploy-frontend.yml` ? Vite ë¹Œë“œ â†’ GitHub Pages
+- `infra/github-oidc/trust-policy.json` ? ë°°í¬ ì—­í•  ì‹ ë¢° ì •ì±… (í”Œë ˆì´ìŠ¤í™€ë” ì¹˜í™˜ í•„ìš”)
+- `infra/github-oidc/deploy-permissions.json` ? ë°°í¬ ì—­í•  ê¶Œí•œ ì •ì±… (í”Œë ˆì´ìŠ¤í™€ë” ì¹˜í™˜ í•„ìš”)
 
 ---
 
-## 0. »çÀü ÁØºñ (git / GitHub)
+## 0. ì‚¬ì „ ì¤€ë¹„ (git / GitHub)
 
-ÀÌ Æú´õ´Â ¾ÆÁ÷ git ÀúÀå¼Ò°¡ ¾Æ´Õ´Ï´Ù. OIDC´Â **Æ¯Á¤ GitHub ÀúÀå¼Ò**¿¡ ¹­ÀÌ¹Ç·Î ¸ÕÀú ·¹Æ÷°¡ ÀÖ¾î¾ß ÇÕ´Ï´Ù.
+ì´ í´ë”ëŠ” ì•„ì§ git ì €ì¥ì†Œê°€ ì•„ë‹™ë‹ˆë‹¤. OIDCëŠ” **íŠ¹ì • GitHub ì €ì¥ì†Œ**ì— ë¬¶ì´ë¯€ë¡œ ë¨¼ì € ë ˆí¬ê°€ ìˆì–´ì•¼ í•©ë‹ˆë‹¤.
 
 ```bash
-# ·¹Æ÷ ·çÆ®¿¡¼­
+# ë ˆí¬ ë£¨íŠ¸ì—ì„œ
 git init
 git add .
 git commit -m "MABLOP MVP: backend+frontend+infra"
-# GitHub¿¡ ºñ°ø°³ ·¹Æ÷ »ı¼º ÈÄ:
+# GitHubì— ë¹„ê³µê°œ ë ˆí¬ ìƒì„± í›„:
 git branch -M main
 git remote add origin https://github.com/<OWNER>/<REPO>.git
 git push -u origin main
 ```
 
-> ÁÖÀÇ: `.env`, ¾×¼¼½º Å°, SSM ÅäÅ« µî ºñ¹Ğ°ªÀº Ä¿¹ÔÇÏÁö ¸¶¼¼¿ä. `.gitignore`°¡ `.env*`¸¦ ÀÌ¹Ì Á¦¿ÜÇÕ´Ï´Ù.
+> ì£¼ì˜: `.env`, ì•¡ì„¸ìŠ¤ í‚¤, SSM í† í° ë“± ë¹„ë°€ê°’ì€ ì»¤ë°‹í•˜ì§€ ë§ˆì„¸ìš”. `.gitignore`ê°€ `.env*`ë¥¼ ì´ë¯¸ ì œì™¸í•©ë‹ˆë‹¤.
 
-GitHub Pages »ç¿ë ¼³Á¤: ·¹Æ÷ ¡æ Settings ¡æ Pages ¡æ **Build and deployment: GitHub Actions**.
+GitHub Pages ì‚¬ìš© ì„¤ì •: ë ˆí¬ â†’ Settings â†’ Pages â†’ **Build and deployment: GitHub Actions**.
 
 ---
 
-## 1. Bedrock ¸ğµ¨ ¾×¼¼½º È°¼ºÈ­ (us-east-1)
+## 1. Bedrock ëª¨ë¸ ì•¡ì„¸ìŠ¤ í™œì„±í™” (us-east-1)
 
-ÄÜ¼Ö ¡æ Amazon Bedrock ¡æ **Model access** ¡æ ¾Æ·¡ 3°³ ¸ğµ¨ ¾×¼¼½º ¿äÃ» (½ÂÀÎ±îÁö ¼ö ºĞ~¼ö ½Ã°£ °É¸± ¼ö ÀÖÀ½):
+ì½˜ì†” â†’ Amazon Bedrock â†’ **Model access** â†’ ì•„ë˜ 3ê°œ ëª¨ë¸ ì•¡ì„¸ìŠ¤ ìš”ì²­ (ìŠ¹ì¸ê¹Œì§€ ìˆ˜ ë¶„~ìˆ˜ ì‹œê°„ ê±¸ë¦´ ìˆ˜ ìˆìŒ):
 
-| ¿ëµµ | ¸ğµ¨ ID |
+| ìš©ë„ | ëª¨ë¸ ID |
 |---|---|
-| ÀÓº£µù | `amazon.titan-embed-text-v2:0` |
-| º»¹® »ı¼º | `anthropic.claude-3-5-haiku-20241022-v1:0` |
-| ¹®Ã¼ºĞ¼®/ºñÀü | `anthropic.claude-3-haiku-20240307-v1:0` |
+| ì„ë² ë”© | `amazon.titan-embed-text-v2:0` |
+| ë³¸ë¬¸ ìƒì„± | `anthropic.claude-sonnet-4-5-20250929-v1:0` |
+| ë¬¸ì²´ë¶„ì„/ë¹„ì „ | `anthropic.claude-sonnet-4-5-20250929-v1:0` |
 
-> ¸ğµ¨ ID/°¡°İÀº `docs/aidlc/inception/decisions.md` D14¿¡ °íÁ¤. °¡°İÀº º¯ÇÏ¹Ç·Î ¹èÆ÷ Àü Bedrock ÄÜ¼Ö¿¡¼­ ÀçÈ®ÀÎ ±ÇÀå.
-> ¾×¼¼½º°¡ "Access granted"·Î ¹Ù²î±â Àü¿¡´Â »ı¼º/ÀÓº£µù È£ÃâÀÌ AccessDenied·Î ½ÇÆĞÇÕ´Ï´Ù.
+> ëª¨ë¸ ID/ê°€ê²©ì€ `docs/aidlc/inception/decisions.md` D14ì— ê³ ì •. ê°€ê²©ì€ ë³€í•˜ë¯€ë¡œ ë°°í¬ ì „ Bedrock ì½˜ì†”ì—ì„œ ì¬í™•ì¸ ê¶Œì¥.
+> ì•¡ì„¸ìŠ¤ê°€ "Access granted"ë¡œ ë°”ë€Œê¸° ì „ì—ëŠ” ìƒì„±/ì„ë² ë”© í˜¸ì¶œì´ AccessDeniedë¡œ ì‹¤íŒ¨í•©ë‹ˆë‹¤.
 
 ---
 
-## 2. »çÀü°øÀ¯ ÅäÅ«À» SSM¿¡ ÀúÀå (SecureString)
+## 2. ì‚¬ì „ê³µìœ  í† í°ì„ SSMì— ì €ì¥ (SecureString)
 
-Lambda°¡ `{{resolve:ssm-secure:/mablop/token}}`·Î ÀĞ½À´Ï´Ù. CloudShell ¶Ç´Â ÄÜ¼Ö¿¡¼­:
+Lambdaê°€ `{{resolve:ssm-secure:/mablop/token}}`ë¡œ ì½ìŠµë‹ˆë‹¤. CloudShell ë˜ëŠ” ì½˜ì†”ì—ì„œ:
 
 ```bash
-# °­ÇÑ ·£´ı ÅäÅ« »ı¼º ¿¹½Ã (·ÎÄÃ¿¡¼­):
+# ê°•í•œ ëœë¤ í† í° ìƒì„± ì˜ˆì‹œ (ë¡œì»¬ì—ì„œ):
 #   openssl rand -base64 24
 aws ssm put-parameter \
   --region us-east-1 \
   --name /mablop/token \
   --type SecureString \
-  --value "<ºÙ¿©³ÖÀ»-·£´ı-ÅäÅ«>"
+  --value "<ë¶™ì—¬ë„£ì„-ëœë¤-í† í°>"
 ```
 
-> ÁÖÀÇ(¼ÖÁ÷): CloudFormationÀÇ `resolve:ssm-secure`´Â ÀÌ °ªÀ» Lambda **È¯°æº¯¼ö¿¡ Æò¹®**À¸·Î ³Ö½À´Ï´Ù.
-> Áï Lambda ÄÜ¼Ö È¯°æº¯¼ö¿¡¼­ ÅäÅ«ÀÌ º¸ÀÔ´Ï´Ù. ¼Ò¼ö ½Å·Ú »ç¿ëÀÚ¿ë MVP¶ó ¼ö¿ë °¡´ÉÇÏ³ª,
-> ³ªÁß¿¡ °­È­ÇÏ·Á¸é Lambda°¡ ·±Å¸ÀÓ¿¡ SSM/Secrets Manager¸¦ Á÷Á¢ Á¶È¸ÇÏµµ·Ï ¹Ù²Ù¼¼¿ä.
-> ÀÌ ÅäÅ«Àº ÇÁ·ĞÆ®¿£µå¿¡¼­ `X-Mablop-Token` Çì´õ·Î Àü¼ÛµÇ¹Ç·Î ¾Æ·¡ 3´Ü°èÀÇ ÇÁ·ĞÆ® ¼³Á¤°ú µ¿ÀÏÇÑ °ªÀ» °øÀ¯ÇØ¾ß ÇÕ´Ï´Ù.
+> ì£¼ì˜(ì†”ì§): CloudFormationì˜ `resolve:ssm-secure`ëŠ” ì´ ê°’ì„ Lambda **í™˜ê²½ë³€ìˆ˜ì— í‰ë¬¸**ìœ¼ë¡œ ë„£ìŠµë‹ˆë‹¤.
+> ì¦‰ Lambda ì½˜ì†” í™˜ê²½ë³€ìˆ˜ì—ì„œ í† í°ì´ ë³´ì…ë‹ˆë‹¤. ì†Œìˆ˜ ì‹ ë¢° ì‚¬ìš©ììš© MVPë¼ ìˆ˜ìš© ê°€ëŠ¥í•˜ë‚˜,
+> ë‚˜ì¤‘ì— ê°•í™”í•˜ë ¤ë©´ Lambdaê°€ ëŸ°íƒ€ì„ì— SSM/Secrets Managerë¥¼ ì§ì ‘ ì¡°íšŒí•˜ë„ë¡ ë°”ê¾¸ì„¸ìš”.
+> ì´ í† í°ì€ í”„ë¡ íŠ¸ì—”ë“œì—ì„œ `X-Mablop-Token` í—¤ë”ë¡œ ì „ì†¡ë˜ë¯€ë¡œ ì•„ë˜ 3ë‹¨ê³„ì˜ í”„ë¡ íŠ¸ ì„¤ì •ê³¼ ë™ì¼í•œ ê°’ì„ ê³µìœ í•´ì•¼ í•©ë‹ˆë‹¤.
 
 ---
 
-## 3. GitHub OIDC ÀÚ°İÁõ¸í °ø±ŞÀÚ + ¹èÆ÷ ¿ªÇÒ »ı¼º (ÃÖÃÊ 1È¸)
+## 3. GitHub OIDC ìê²©ì¦ëª… ê³µê¸‰ì + ë°°í¬ ì—­í•  ìƒì„± (ìµœì´ˆ 1íšŒ)
 
-### 3a. OIDC °ø±ŞÀÚ (°èÁ¤¿¡ ¾øÀ¸¸é 1È¸¸¸)
+### 3a. OIDC ê³µê¸‰ì (ê³„ì •ì— ì—†ìœ¼ë©´ 1íšŒë§Œ)
 
-ÄÜ¼Ö ¡æ IAM ¡æ Identity providers ¡æ Add provider ¡æ OpenID Connect
+ì½˜ì†” â†’ IAM â†’ Identity providers â†’ Add provider â†’ OpenID Connect
 - Provider URL: `https://token.actions.githubusercontent.com`
 - Audience: `sts.amazonaws.com`
 
-### 3b. ¹èÆ÷ ¿ªÇÒ »ı¼º
+### 3b. ë°°í¬ ì—­í•  ìƒì„±
 
-1. `infra/github-oidc/trust-policy.json`¿¡¼­ `<ACCOUNT_ID>`, `<GITHUB_OWNER>/<REPO>`¸¦ Ä¡È¯.
-   (main ºê·£Ä¡ push·Î¸¸ ¹èÆ÷ÇÏµµ·Ï `sub`¸¦ `repo:OWNER/REPO:ref:refs/heads/main`·Î Á¦ÇÑÇØ µÒ.)
-2. `infra/github-oidc/deploy-permissions.json`¿¡¼­ `<ACCOUNT_ID>` Ä¡È¯.
-3. CloudShell¿¡¼­:
+1. `infra/github-oidc/trust-policy.json`ì—ì„œ `<ACCOUNT_ID>`, `<GITHUB_OWNER>/<REPO>`ë¥¼ ì¹˜í™˜.
+   (main ë¸Œëœì¹˜ pushë¡œë§Œ ë°°í¬í•˜ë„ë¡ `sub`ë¥¼ `repo:OWNER/REPO:ref:refs/heads/main`ë¡œ ì œí•œí•´ ë‘ .)
+2. `infra/github-oidc/deploy-permissions.json`ì—ì„œ `<ACCOUNT_ID>` ì¹˜í™˜.
+3. CloudShellì—ì„œ:
 
 ```bash
 aws iam create-role \
@@ -95,49 +95,49 @@ aws iam put-role-policy \
   --policy-name mablop-deploy-permissions \
   --policy-document file://infra/github-oidc/deploy-permissions.json
 
-# ¿ªÇÒ ARN È®ÀÎ (´ÙÀ½ ´Ü°è¿¡¼­ »ç¿ë):
+# ì—­í•  ARN í™•ì¸ (ë‹¤ìŒ ë‹¨ê³„ì—ì„œ ì‚¬ìš©):
 aws iam get-role --role-name mablop-deploy --query 'Role.Arn' --output text
 ```
 
 ---
 
-## 4. GitHub ÀúÀå¼Ò º¯¼ö/½ÃÅ©¸´ ¼³Á¤
+## 4. GitHub ì €ì¥ì†Œ ë³€ìˆ˜/ì‹œí¬ë¦¿ ì„¤ì •
 
-·¹Æ÷ ¡æ Settings ¡æ Secrets and variables ¡æ Actions.
+ë ˆí¬ â†’ Settings â†’ Secrets and variables â†’ Actions.
 
 **Variables** (vars):
-| ÀÌ¸§ | °ª | ¾²ÀÓ |
+| ì´ë¦„ | ê°’ | ì“°ì„ |
 |---|---|---|
-| `AWS_DEPLOY_ROLE_ARN` | 3b¿¡¼­ ¾òÀº `mablop-deploy` ¿ªÇÒ ARN | ¹é¿£µå ¹èÆ÷ OIDC |
-| `VITE_BASE_PATH` | `/<REPO>/` (ÇÁ·ÎÁ§Æ® ÆäÀÌÁöÀÎ °æ¿ì) ¶Ç´Â `/` (»ç¿ëÀÚ/Á¶Á÷ ÆäÀÌÁö) | ÇÁ·ĞÆ® ¶ó¿ìÆÃ base |
+| `AWS_DEPLOY_ROLE_ARN` | 3bì—ì„œ ì–»ì€ `mablop-deploy` ì—­í•  ARN | ë°±ì—”ë“œ ë°°í¬ OIDC |
+| `VITE_BASE_PATH` | `/<REPO>/` (í”„ë¡œì íŠ¸ í˜ì´ì§€ì¸ ê²½ìš°) ë˜ëŠ” `/` (ì‚¬ìš©ì/ì¡°ì§ í˜ì´ì§€) | í”„ë¡ íŠ¸ ë¼ìš°íŒ… base |
 
 **Secrets** (secrets):
-| ÀÌ¸§ | °ª | ¾²ÀÓ |
+| ì´ë¦„ | ê°’ | ì“°ì„ |
 |---|---|---|
-| `VITE_MABLOP_API_URL` | (6´Ü°è¿¡¼­ ¾ò´Â Function URL) | ÇÁ·ĞÆ®°¡ È£ÃâÇÒ ¹é¿£µå |
+| `VITE_MABLOP_API_URL` | (6ë‹¨ê³„ì—ì„œ ì–»ëŠ” Function URL) | í”„ë¡ íŠ¸ê°€ í˜¸ì¶œí•  ë°±ì—”ë“œ |
 
-> `VITE_MABLOP_API_URL`Àº ¹é¿£µå ¹èÆ÷°¡ ³¡³ª¾ß ¾Ë ¼ö ÀÖÀ¸¹Ç·Î, 5´Ü°è(¹é¿£µå) ¡æ °ª È®º¸ ¡æ ¼³Á¤ ¡æ 7´Ü°è(ÇÁ·ĞÆ®) ¼ø¼­ÀÔ´Ï´Ù.
-> °ú±İ ¾Ë¶÷ ÀÌ¸ŞÀÏ(`AlarmEmail`)Àº SAM ÆÄ¶ó¹ÌÅÍ·Î ³Ñ±é´Ï´Ù(5´Ü°è Âü°í). ¿öÅ©ÇÃ·Î¿¡¼­ ³Ñ±â·Á¸é
-> deploy-backend.ymlÀÇ `sam deploy`¿¡ `--parameter-overrides AlarmEmail=<you@example.com>`¸¦ Ãß°¡ÇÏ°Å³ª,
-> ÃÖÃÊ 1È¸ CloudShell¿¡¼­ ¼öµ¿ ¹èÆ÷ ½Ã ÁöÁ¤ÇÏ¼¼¿ä.
+> `VITE_MABLOP_API_URL`ì€ ë°±ì—”ë“œ ë°°í¬ê°€ ëë‚˜ì•¼ ì•Œ ìˆ˜ ìˆìœ¼ë¯€ë¡œ, 5ë‹¨ê³„(ë°±ì—”ë“œ) â†’ ê°’ í™•ë³´ â†’ ì„¤ì • â†’ 7ë‹¨ê³„(í”„ë¡ íŠ¸) ìˆœì„œì…ë‹ˆë‹¤.
+> ê³¼ê¸ˆ ì•ŒëŒ ì´ë©”ì¼(`AlarmEmail`)ì€ SAM íŒŒë¼ë¯¸í„°ë¡œ ë„˜ê¹ë‹ˆë‹¤(5ë‹¨ê³„ ì°¸ê³ ). ì›Œí¬í”Œë¡œì—ì„œ ë„˜ê¸°ë ¤ë©´
+> deploy-backend.ymlì˜ `sam deploy`ì— `--parameter-overrides AlarmEmail=<you@example.com>`ë¥¼ ì¶”ê°€í•˜ê±°ë‚˜,
+> ìµœì´ˆ 1íšŒ CloudShellì—ì„œ ìˆ˜ë™ ë°°í¬ ì‹œ ì§€ì •í•˜ì„¸ìš”.
 
 ---
 
-## 5. ¹é¿£µå ¹èÆ÷ (SAM, OIDC)
+## 5. ë°±ì—”ë“œ ë°°í¬ (SAM, OIDC)
 
-µÎ °¡Áö ¹æ¹ı Áß ÅÃ1.
+ë‘ ê°€ì§€ ë°©ë²• ì¤‘ íƒ1.
 
-### 5a. GitHub Actions (±ÇÀå, Å° ºÒÇÊ¿ä)
-`main`¿¡ pushÇÏ°Å³ª Actions ÅÇ¿¡¼­ **deploy-backend** ¿öÅ©ÇÃ·Î¸¦ ¼öµ¿ ½ÇÇà(workflow_dispatch).
+### 5a. GitHub Actions (ê¶Œì¥, í‚¤ ë¶ˆí•„ìš”)
+`main`ì— pushí•˜ê±°ë‚˜ Actions íƒ­ì—ì„œ **deploy-backend** ì›Œí¬í”Œë¡œë¥¼ ìˆ˜ë™ ì‹¤í–‰(workflow_dispatch).
 
-°ú±İ ¾Ë¶÷ ÀÌ¸ŞÀÏÀ» ³ÖÀ¸·Á¸é `.github/workflows/deploy-backend.yml`ÀÇ `sam deploy` ÁÙ¿¡ ¾Æ·¡¸¦ Ãß°¡:
+ê³¼ê¸ˆ ì•ŒëŒ ì´ë©”ì¼ì„ ë„£ìœ¼ë ¤ë©´ `.github/workflows/deploy-backend.yml`ì˜ `sam deploy` ì¤„ì— ì•„ë˜ë¥¼ ì¶”ê°€:
 ```
 --parameter-overrides AlarmEmail=<you@example.com>
 ```
 
-### 5b. CloudShell¿¡¼­ ÃÖÃÊ 1È¸ ¼öµ¿ (¼±ÅÃ)
+### 5b. CloudShellì—ì„œ ìµœì´ˆ 1íšŒ ìˆ˜ë™ (ì„ íƒ)
 ```bash
-# ·¹Æ÷¸¦ CloudShell¿¡ clone ÈÄ:
+# ë ˆí¬ë¥¼ CloudShellì— clone í›„:
 sam build --template infra/template.yaml
 sam deploy --no-confirm-changeset --no-fail-on-empty-changeset \
   --stack-name mablop --region us-east-1 --resolve-s3 \
@@ -145,72 +145,72 @@ sam deploy --no-confirm-changeset --no-fail-on-empty-changeset \
   --parameter-overrides AlarmEmail=<you@example.com>
 ```
 
-¹èÆ÷ ¼º°ø ÈÄ Ãâ·Â¿¡¼­ **FunctionUrl**°ú **BucketName**À» È®ÀÎ:
+ë°°í¬ ì„±ê³µ í›„ ì¶œë ¥ì—ì„œ **FunctionUrl**ê³¼ **BucketName**ì„ í™•ì¸:
 ```bash
 aws cloudformation describe-stacks --stack-name mablop --region us-east-1 \
   --query "Stacks[0].Outputs" --output table
 ```
 
-> ·±Å¸ÀÓ ÁÖÀÇ: ÅÛÇÃ¸´Àº `python3.13`À» »ç¿ëÇÕ´Ï´Ù. Æ¯Á¤ ½ÃÁ¡/°èÁ¤¿¡¼­ Lambda°¡ 3.13À»
-> ¾ÆÁ÷ Áö¿øÇÏÁö ¾Ê¾Æ ¹èÆ÷°¡ ½ÇÆĞÇÏ¸é `infra/template.yaml`ÀÇ `Runtime: python3.13`À»
-> `python3.12`·Î ³·Ãß°í Àç¹èÆ÷ÇÏ¼¼¿ä (ÄÚµå È£È¯µÊ).
+> ëŸ°íƒ€ì„ ì£¼ì˜: í…œí”Œë¦¿ì€ `python3.13`ì„ ì‚¬ìš©í•©ë‹ˆë‹¤. íŠ¹ì • ì‹œì /ê³„ì •ì—ì„œ Lambdaê°€ 3.13ì„
+> ì•„ì§ ì§€ì›í•˜ì§€ ì•Šì•„ ë°°í¬ê°€ ì‹¤íŒ¨í•˜ë©´ `infra/template.yaml`ì˜ `Runtime: python3.13`ì„
+> `python3.12`ë¡œ ë‚®ì¶”ê³  ì¬ë°°í¬í•˜ì„¸ìš” (ì½”ë“œ í˜¸í™˜ë¨).
 
 ---
 
-## 6. °ú±İ ¾Ë¶÷ ÀÌ¸ŞÀÏ ±¸µ¶ È®ÀÎ
+## 6. ê³¼ê¸ˆ ì•ŒëŒ ì´ë©”ì¼ êµ¬ë… í™•ì¸
 
-5´Ü°è¿¡¼­ `AlarmEmail`À» ÁöÁ¤Çß´Ù¸é SNS°¡ **±¸µ¶ È®ÀÎ ¸ŞÀÏ**À» º¸³À´Ï´Ù. ¸ŞÀÏÀÇ "Confirm subscription"À» Å¬¸¯ÇØ¾ß ¾Ë¶÷ ¾Ë¸²À» ¹Ş½À´Ï´Ù.
+5ë‹¨ê³„ì—ì„œ `AlarmEmail`ì„ ì§€ì •í–ˆë‹¤ë©´ SNSê°€ **êµ¬ë… í™•ì¸ ë©”ì¼**ì„ ë³´ëƒ…ë‹ˆë‹¤. ë©”ì¼ì˜ "Confirm subscription"ì„ í´ë¦­í•´ì•¼ ì•ŒëŒ ì•Œë¦¼ì„ ë°›ìŠµë‹ˆë‹¤.
 
-> Âü°í: AWS/Billing EstimatedCharges ÁöÇ¥¸¦ ¾²·Á¸é **Billing preferences¿¡¼­ "Receive CloudWatch billing alerts"**°¡ ÄÑÁ® ÀÖ¾î¾ß ÇÕ´Ï´Ù(°èÁ¤ 1È¸ ¼³Á¤).
-
----
-
-## 7. ÇÁ·ĞÆ®¿£µå ¹èÆ÷ (GitHub Pages)
-
-1. 5´Ü°è¿¡¼­ ¾òÀº **FunctionUrl**À» ·¹Æ÷ Secret `VITE_MABLOP_API_URL`¿¡ ÀúÀå.
-2. `VITE_BASE_PATH`¸¦ ·¹Æ÷ ÇüÅÂ¿¡ ¸Â°Ô ¼³Á¤ (ÇÁ·ÎÁ§Æ® ÆäÀÌÁö¸é `/<REPO>/`).
-3. Actions ÅÇ¿¡¼­ **deploy-frontend** ½ÇÇà(¶Ç´Â main push). ¿Ï·áµÇ¸é Pages URLÀÌ È¯°æ¿¡ Ç¥½ÃµË´Ï´Ù.
+> ì°¸ê³ : AWS/Billing EstimatedCharges ì§€í‘œë¥¼ ì“°ë ¤ë©´ **Billing preferencesì—ì„œ "Receive CloudWatch billing alerts"**ê°€ ì¼œì ¸ ìˆì–´ì•¼ í•©ë‹ˆë‹¤(ê³„ì • 1íšŒ ì„¤ì •).
 
 ---
 
-## 8. ½º¸ğÅ© Å×½ºÆ®
+## 7. í”„ë¡ íŠ¸ì—”ë“œ ë°°í¬ (GitHub Pages)
 
-»çÀü°øÀ¯ ÅäÅ«(2´Ü°è °ª)°ú FunctionUrl·Î ¹é¿£µå°¡ »ì¾ÆÀÖ´ÂÁö È®ÀÎ:
+1. 5ë‹¨ê³„ì—ì„œ ì–»ì€ **FunctionUrl**ì„ ë ˆí¬ Secret `VITE_MABLOP_API_URL`ì— ì €ì¥.
+2. `VITE_BASE_PATH`ë¥¼ ë ˆí¬ í˜•íƒœì— ë§ê²Œ ì„¤ì • (í”„ë¡œì íŠ¸ í˜ì´ì§€ë©´ `/<REPO>/`).
+3. Actions íƒ­ì—ì„œ **deploy-frontend** ì‹¤í–‰(ë˜ëŠ” main push). ì™„ë£Œë˜ë©´ Pages URLì´ í™˜ê²½ì— í‘œì‹œë©ë‹ˆë‹¤.
+
+---
+
+## 8. ìŠ¤ëª¨í¬ í…ŒìŠ¤íŠ¸
+
+ì‚¬ì „ê³µìœ  í† í°(2ë‹¨ê³„ ê°’)ê³¼ FunctionUrlë¡œ ë°±ì—”ë“œê°€ ì‚´ì•„ìˆëŠ”ì§€ í™•ì¸:
 
 ```bash
-# ÅäÅ« ¾øÀ½ -> 401 (Access_Controller µ¿ÀÛ È®ÀÎ)
+# í† í° ì—†ìŒ -> 401 (Access_Controller ë™ì‘ í™•ì¸)
 curl -s -o /dev/null -w "%{http_code}\n" -X POST "<FUNCTION_URL>" \
   -H "content-type: application/json" -d '{"action":"generate-draft"}'
 # -> 401
 
-# Àß¸øµÈ ¾×¼Ç (ÅäÅ« À¯È¿) -> 400 bad_request
+# ì˜ëª»ëœ ì•¡ì…˜ (í† í° ìœ íš¨) -> 400 bad_request
 curl -s -X POST "<FUNCTION_URL>" \
-  -H "content-type: application/json" -H "X-Mablop-Token: <ÅäÅ«>" \
+  -H "content-type: application/json" -H "X-Mablop-Token: <í† í°>" \
   -d '{"action":"nope"}'
 # -> {"error":{"code":"bad_request",...}}
 ```
 
-±×´ÙÀ½ ºê¶ó¿ìÀú¿¡¼­ Pages URL Á¢¼Ó ¡æ
-1. **½ºÅ¸ÀÏ ÇĞ½À**: ³×ÀÌ¹ö ºí·Î±× URL ÀÔ·Â(Å©·Ñ ½ÇÆĞ ½Ã º»¹® ºÙ¿©³Ö±â) ¡æ ÇĞ½À ½ÇÇà ¡æ completed È®ÀÎ.
-2. **ÃÊ¾È ÀÛ¼º**: Á¦¸ñ/°³¿ä/¸Ş¸ğ + ÀÌ¹ÌÁö(¼±ÅÃ) ¡æ ÃÊ¾È »ı¼º ¡æ Markdown °á°ú È®ÀÎ.
+ê·¸ë‹¤ìŒ ë¸Œë¼ìš°ì €ì—ì„œ Pages URL ì ‘ì† â†’
+1. **ìŠ¤íƒ€ì¼ í•™ìŠµ**: ë„¤ì´ë²„ ë¸”ë¡œê·¸ URL ì…ë ¥(í¬ë¡¤ ì‹¤íŒ¨ ì‹œ ë³¸ë¬¸ ë¶™ì—¬ë„£ê¸°) â†’ í•™ìŠµ ì‹¤í–‰ â†’ completed í™•ì¸.
+2. **ì´ˆì•ˆ ì‘ì„±**: ì œëª©/ê°œìš”/ë©”ëª¨ + ì´ë¯¸ì§€(ì„ íƒ) â†’ ì´ˆì•ˆ ìƒì„± â†’ Markdown ê²°ê³¼ í™•ì¸.
 
-> ³×ÀÌ¹ö Å©·Ñ¸µÀº iframe/µ¿Àû ·»´õ¸µ ¶§¹®¿¡ ÀÚÁÖ ¸·Èü´Ï´Ù(¼³°è ¸®½ºÅ© R-1). ¸·È÷¸é
-> ºÙ¿©³Ö±â Æú¹éÀ¸·Î º»¹®À» Á÷Á¢ ³ÖÀ¸¼¼¿ä. ÀÌ°ÍÀÌ MVPÀÇ 1Â÷ ¼öÁı °æ·ÎÀÔ´Ï´Ù.
+> ë„¤ì´ë²„ í¬ë¡¤ë§ì€ iframe/ë™ì  ë Œë”ë§ ë•Œë¬¸ì— ìì£¼ ë§‰í™ë‹ˆë‹¤(ì„¤ê³„ ë¦¬ìŠ¤í¬ R-1). ë§‰íˆë©´
+> ë¶™ì—¬ë„£ê¸° í´ë°±ìœ¼ë¡œ ë³¸ë¬¸ì„ ì§ì ‘ ë„£ìœ¼ì„¸ìš”. ì´ê²ƒì´ MVPì˜ 1ì°¨ ìˆ˜ì§‘ ê²½ë¡œì…ë‹ˆë‹¤.
 
 ---
 
-## 9. ·Ñ¹é / Á¤¸®
+## 9. ë¡¤ë°± / ì •ë¦¬
 
 ```bash
-# ÀüÃ¼ ½ºÅÃ »èÁ¦ (¹öÅ¶¿¡ °´Ã¼°¡ ÀÖÀ¸¸é ¸ÕÀú ºñ¿ö¾ß »èÁ¦µÊ)
+# ì „ì²´ ìŠ¤íƒ ì‚­ì œ (ë²„í‚·ì— ê°ì²´ê°€ ìˆìœ¼ë©´ ë¨¼ì € ë¹„ì›Œì•¼ ì‚­ì œë¨)
 aws s3 rm s3://<BUCKET_NAME> --recursive
 aws cloudformation delete-stack --stack-name mablop --region us-east-1
 ```
 
 ---
 
-## ¾Ë·ÁÁø ÇÑ°è / ÈÄ¼Ó °úÁ¦
-- SSM ÅäÅ«ÀÌ Lambda È¯°æº¯¼ö¿¡ Æò¹® ³ëÃâ (MVP ¼ö¿ë). °­È­: ·±Å¸ÀÓ SSM/Secrets Manager Á¶È¸.
-- `index_store.build_and_store_index`´Â ºó º¤ÅÍ¼Â(N=0)¿¡¼­ ¿¹¿Ü ? ÇĞ½À Æ÷½ºÆ®°¡ 0°ÇÀÌ¸é ¹æ¾î ÇÊ¿ä.
-- Bedrock °¡°İÀº º¯µ¿ ? decisions.md D14 Ç¥¸¦ ¹èÆ÷ ½Ã ÀçÈ®ÀÎ.
-- ³×ÀÌ¹ö ÀÚµ¿ Å©·Ñ¸µ ½Å·Úµµ ³·À½ ? ºÙ¿©³Ö±â Æú¹éÀÌ ±âº» °æ·Î.
+## ì•Œë ¤ì§„ í•œê³„ / í›„ì† ê³¼ì œ
+- SSM í† í°ì´ Lambda í™˜ê²½ë³€ìˆ˜ì— í‰ë¬¸ ë…¸ì¶œ (MVP ìˆ˜ìš©). ê°•í™”: ëŸ°íƒ€ì„ SSM/Secrets Manager ì¡°íšŒ.
+- `index_store.build_and_store_index`ëŠ” ë¹ˆ ë²¡í„°ì…‹(N=0)ì—ì„œ ì˜ˆì™¸ ? í•™ìŠµ í¬ìŠ¤íŠ¸ê°€ 0ê±´ì´ë©´ ë°©ì–´ í•„ìš”.
+- Bedrock ê°€ê²©ì€ ë³€ë™ ? decisions.md D14 í‘œë¥¼ ë°°í¬ ì‹œ ì¬í™•ì¸.
+- ë„¤ì´ë²„ ìë™ í¬ë¡¤ë§ ì‹ ë¢°ë„ ë‚®ìŒ ? ë¶™ì—¬ë„£ê¸° í´ë°±ì´ ê¸°ë³¸ ê²½ë¡œ.

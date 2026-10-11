@@ -21,8 +21,8 @@ _DRAFT_PREFIX = "generated-posts/"
 _PROFILE_KEY = "style-profile/profile.json"  # Style_Profile location (Req 1.6, 2.5)
 
 _TEXT_MODEL_ENV = "MABLOP_TEXT_MODEL"  # quality Korean text-gen (Design tiering, Req 2.7)
-# Locked in decisions.md: Claude 3.5 Haiku (quality Korean text-gen, us-east-1).
-_DEFAULT_TEXT_MODEL = "anthropic.claude-3-5-haiku-20241022-v1:0"
+# Locked in decisions.md: Claude Sonnet 4.5 (quality Korean text-gen, us-east-1).
+_DEFAULT_TEXT_MODEL = "anthropic.claude-sonnet-4-5-20250929-v1:0"
 
 _TOP_K_ENV = "MABLOP_TOP_K"  # Top_K retrieval cap (Req 2.4, 7.2)
 _DEFAULT_TOP_K = 8
@@ -51,7 +51,7 @@ def build_prompt(profile: dict, chunks: list, inputs: dict) -> str:
 
 
 def _text_model() -> str:
-    """Quality Korean text-gen model id from env; placeholder default."""
+    """Quality Korean text-gen model id from env; locked default in decisions.md D14."""
     return os.environ.get(_TEXT_MODEL_ENV, _DEFAULT_TEXT_MODEL)
 
 
@@ -111,8 +111,7 @@ def generate_from_prompt(prompt: str, image_count: int, draft_id: str = None) ->
     `![img-N]` placeholders to each supplied index 1..K (K<=10) exactly once,
     stores it under generated-posts/<draftId>.md, and returns the draft.
     """
-    resp = bedrock.invoke(_text_model(), {"prompt": prompt})
-    raw = _extract_text(resp)
+    raw = bedrock.text_generate(prompt, _text_model())
     markdown = normalize_placeholders(raw, image_count)
 
     draft_id = draft_id or "draft-" + uuid.uuid4().hex

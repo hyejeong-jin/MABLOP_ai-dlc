@@ -23,11 +23,11 @@ Resolved from AWS docs/pricing (verify live console access per account before fi
 | Tier | Model ID | Why | Approx us-east-1 price |
 |---|---|---|---|
 | Embedding (cheap multilingual) | `amazon.titan-embed-text-v2:0` | 1024-dim, 100+ langs incl. Korean, cheapest | ~$0.02 / 1M input tokens |
-| Text generation (quality Korean) | `anthropic.claude-3-5-haiku-20241022-v1:0` | fast, strong Korean, far cheaper than Sonnet | ~$0.80 in / $4.00 out per 1M (confirm live) |
-| Style profile / proofing (cheap) | `anthropic.claude-3-haiku-20240307-v1:0` | cheapest Claude, fine for structured JSON | ~$0.25 in / $1.25 out per 1M (confirm live) |
-| Image captioning (low/mid vision) | `anthropic.claude-3-haiku-20240307-v1:0` | multimodal, cheapest vision-capable; short captions | billed as Claude 3 Haiku + image tokens |
+| Text generation (quality Korean) | `anthropic.claude-sonnet-4-5-20250929-v1:0` | quality-focused Korean generation | confirm live pricing |
+| Style profile / proofing (fallback) | `anthropic.claude-sonnet-4-5-20250929-v1:0` | verified account access; revisit Haiku when available | confirm live pricing |
+| Image captioning (low/mid vision) | `anthropic.claude-sonnet-4-5-20250929-v1:0` | multimodal fallback; short captions | Sonnet 4.5 image-token pricing; confirm live |
 
-Sources: Amazon Bedrock pricing page; Titan Text Embeddings V2 + Claude 3/3.5 Haiku model cards (aws docs). Prices change ? treat the table as the committed selection, re-check the live pricing page at deploy. Bedrock remains the main variable cost; infra stays <$1/mo.
+Sources: Amazon Bedrock pricing page; Titan Text Embeddings V2 + Claude Sonnet 4.5 / Haiku 5.5 model cards (aws docs). Prices change ? treat the table as the committed selection, re-check the live pricing page at deploy. Bedrock remains the main variable cost; infra stays <$1/mo.
 
 These IDs are wired as `infra/template.yaml` parameter defaults (EmbeddingModelId / TextModelId / StyleModelId / VisionModelId) and as the backend module fail-safe defaults.
 
@@ -38,16 +38,13 @@ These IDs are wired as `infra/template.yaml` parameter defaults (EmbeddingModelI
 - `backend/pyproject.toml` now lists `[tool.setuptools] py-modules` explicitly (flat-layout packaging fixed).
 
 
-## Deploy blockers (found during testing consolidation)
+## Resolved deploy blockers
 
-- **Bedrock model-id placeholder naming mismatch.** `infra/lambda-role-policy.json` uses
-  `${EmbeddingModelId}` / `${KoreanTextModelId}` / `${StyleProofModelId}` / `${VisionModelId}`,
-  while `infra/template.yaml` parameters are `EmbeddingModelId` / `TextModelId` / `StyleModelId`
-  / `VisionModelId`. Reconcile these names (and substitute real us-east-1 model ARNs) before
-  the first `sam deploy`, together with locking the model IDs in the "Open / to-confirm" section above.
-- **backend/pyproject.toml flat-layout.** `pip install -e` fails due to setuptools multi-top-level
-  ambiguity; tests run via the conftest sys.path shim. Add an explicit `[tool.setuptools] py-modules`
-  (or packages) list before packaging the Lambda deployment artifact.
+- IAM policy placeholders match the SAM parameter names.
+- The Lambda embedding environment variable is `MABLOP_EMBED_MODEL`.
+- Backend flat-layout packaging is fixed with explicit `py-modules`.
+- The Lambda role policy is inlined in `infra/template.yaml`.
+- Function URL permission and explicit log group are present.
 
 ## Correctness fixes made during property-based testing
 
@@ -62,3 +59,8 @@ These IDs are wired as `infra/template.yaml` parameter defaults (EmbeddingModelI
 
 - `index_store.build_and_store_index` raises on an empty vector set (N=0) via `reshape(0, -1)`.
 - `retrieval.cosine_top_k` with `k=0` would index `argpartition(-1)`; callers pass k>=1.
+
+
+## Account availability note
+
+Claude Haiku 5.5 returned `not available for this account` in the Bedrock console. Sonnet 4.5 succeeded in the same account and region, so MVP style analysis and image captioning use Sonnet 4.5 until Haiku access is granted.
