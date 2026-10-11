@@ -21,7 +21,8 @@
       ],
       "Resource": [
         "arn:aws:cloudformation:us-east-1:<ACCOUNT_ID>:stack/mablop/*",
-        "arn:aws:cloudformation:us-east-1:aws:transform/Serverless-2016-10-31"
+        "arn:aws:cloudformation:us-east-1:aws:transform/Serverless-2016-10-31",
+        "arn:aws:cloudformation:us-east-1:<ACCOUNT_ID>:stack/aws-sam-cli-managed-default/*"
       ]
     },
     {
