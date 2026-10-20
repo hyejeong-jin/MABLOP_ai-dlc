@@ -150,9 +150,14 @@ Resources:
       FunctionUrlConfig:
         AuthType: NONE # app-level token gate via Access_Controller (Req 5.1).
         Cors:
-          AllowOrigins: "'https://hyejeong-jin.github.io'"
-          AllowMethods: "'POST,OPTIONS'"
-          AllowHeaders: "'Content-Type,X-Mablop-Token'"
+          AllowOrigins:
+            - https://hyejeong-jin.github.io
+          AllowMethods:
+            - POST
+            - OPTIONS
+          AllowHeaders:
+            - Content-Type
+            - X-Mablop-Token
       Environment:
         Variables:
           MABLOP_BUCKET: !Ref MablopBucket
