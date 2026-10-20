@@ -20,6 +20,7 @@ _MAX_POST_COUNT_ENV = "MABLOP_MAX_POST_COUNT"  # cap per run (Req 1.8)
 _DEFAULT_MAX_POST_COUNT = 20
 
 _RAW_PREFIX = "raw-posts/"  # extracted/pasted bodies (Req 1.7)
+_STATUS_KEY = "metadata/learning-status.json"
 
 
 def resolve_url(blog_url: str) -> str:
@@ -227,6 +228,33 @@ def _load_raw(post_id: str) -> str:
         return ""
 
 
+def _learning_status(state: dict) -> dict:
+    """Build the current workspace learning summary from checkpoint state."""
+    counts = {}
+    for chunk in state.get("chunks", []):
+        post_id = chunk.get("postId")
+        if post_id:
+            counts[post_id] = counts.get(post_id, 0) + 1
+    return {
+        "runId": state["runId"],
+        "updatedAt": state.get("updatedAt"),
+        "processedPosts": len(state.get("processedPosts", [])),
+        "chunks": len(state.get("chunks", [])),
+        "posts": [
+            {"postId": post_id, "chunkCount": counts.get(post_id, 0)}
+            for post_id in state.get("processedPosts", [])
+        ],
+    }
+
+
+def get_learning_status() -> dict:
+    """Return the last completed learning summary for the shared workspace."""
+    try:
+        return s3store.get_json(_STATUS_KEY)
+    except Exception:
+        return {"processedPosts": 0, "chunks": 0, "posts": []}
+
+
 def _complete(state: dict, failures: list[str]) -> dict:
     """All posts done: build+store profile, finalize index, clear checkpoint (1.5,1.6,1.10).
 
@@ -237,6 +265,9 @@ def _complete(state: dict, failures: list[str]) -> dict:
     profile = style_profile.generate_profile(bodies)
     profile_key = style_profile.store_profile(profile)
     checkpoint.finalize(state)
+    learning_status = _learning_status(state)
+    learning_status["updatedAt"] = profile.get("builtAt")
+    s3store.put_json(_STATUS_KEY, learning_status)
     return {
         "runId": state["runId"],
         "status": "completed",
@@ -246,4 +277,5 @@ def _complete(state: dict, failures: list[str]) -> dict:
         "indexKey": index_store.INDEX_KEY,
         "checkpoint": None,
         "failedPosts": failures,
+        "learningStatus": learning_status,
     }

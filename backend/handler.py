@@ -23,6 +23,7 @@ DISPATCH = {
     "analyze-images": lambda body: image_analyzer.analyze_images(body.get("images", [])),
     "generate-draft": lambda body: drafting_engine.generate_draft(body),
     "get-result": lambda body: _get_result(body),
+    "get-learning-status": lambda body: style_learner.get_learning_status(),
 }
 
 

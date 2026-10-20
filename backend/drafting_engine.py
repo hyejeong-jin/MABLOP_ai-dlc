@@ -79,32 +79,69 @@ def _extract_text(resp) -> str:
     return ""
 
 
-def normalize_placeholders(markdown: str, image_count: int) -> str:
-    """Ensure ![img-1..K] each appear exactly once; drop out-of-range; K<=10 (3.6,3.7,4.1,7.4)."""
+def _caption_terms(caption: str) -> list[str]:
+    """Extract useful Korean/Latin terms for contextual image placement."""
+    return [term for term in re.findall(r"[0-9A-Za-z\uAC00-\uD7A3]{2,}", str(caption or ""))]
+
+
+def _insert_by_caption(text: str, number: int, caption: str) -> str:
+    """Insert one image marker after the most relevant heading or matching line."""
+    marker = f"![img-{number}]"
+    terms = _caption_terms(caption)
+    lines = text.splitlines()
+    # Prefer headings: they identify the image's section without disrupting prose.
+    for heading_only in (True, False):
+        for i, line in enumerate(lines):
+            if heading_only and not line.lstrip().startswith("#"):
+                continue
+            if any(term.casefold() in line.casefold() for term in terms):
+                lines.insert(i + 1, marker)
+                return "\n".join(lines)
+    # Do not append uncontextualized markers at the document end.
+    return text
+
+
+def normalize_placeholders(
+    markdown: str, image_count: int, captions: dict | list | None = None
+) -> str:
+    """Keep valid markers and place missing images near matching caption context.
+
+    When captions are supplied (the real generate-draft path), missing markers
+    are inserted near matching headings/lines and never dumped at the end.
+    Legacy direct calls without captions retain the old append fallback for
+    compatibility with the pure placeholder tests.
+    """
     k = max(0, min(int(image_count), _MAX_IMAGES))
     text = markdown or ""
-
     seen = set()
 
     def _repl(m):
         n = int(m.group(1))
-        if n < 1 or n > k or n in seen:  # out-of-range or duplicate -> remove
+        if n < 1 or n > k or n in seen:
             return ""
         seen.add(n)
         return m.group(0)
 
     text = _PLACEHOLDER_RE.sub(_repl, text)
-
-    # Append any supplied index the model omitted, in order, so each 1..K appears once.
     missing = [n for n in range(1, k + 1) if n not in seen]
-    if missing:
-        tail = "\n\n" + "\n\n".join("![img-{}]".format(n) for n in missing)
-        text = (text.rstrip("\n") + tail) if text.strip() else tail.lstrip("\n")
 
+    if captions is None:
+        if missing:
+            tail = "\n\n" + "\n\n".join("![img-{}]".format(n) for n in missing)
+            text = (text.rstrip("\n") + tail) if text.strip() else tail.lstrip("\n")
+        return text
+
+    for number in missing:
+        caption = captions.get(number, "") if isinstance(captions, dict) else (
+            captions[number - 1] if number - 1 < len(captions) else ""
+        )
+        placed = _insert_by_caption(text, number, caption)
+        if placed != text:
+            text = placed
     return text
 
 
-def generate_from_prompt(prompt: str, image_count: int, draft_id: str = None) -> dict:
+def generate_from_prompt(prompt: str, image_count: int, draft_id: str = None, captions=None) -> dict:
     """Generate+normalize+store a Draft from an assembled prompt (2.7,2.8,2.9,3.6,3.7,4.1,4.2).
 
     Invokes the quality Korean text model, parses the Markdown, normalizes
@@ -112,7 +149,7 @@ def generate_from_prompt(prompt: str, image_count: int, draft_id: str = None) ->
     stores it under generated-posts/<draftId>.md, and returns the draft.
     """
     raw = bedrock.text_generate(prompt, _text_model())
-    markdown = normalize_placeholders(raw, image_count)
+    markdown = normalize_placeholders(raw, image_count, captions=captions)
 
     draft_id = draft_id or "draft-" + uuid.uuid4().hex
     draft_key = _DRAFT_PREFIX + draft_id + ".md"
@@ -200,7 +237,7 @@ def generate_draft(payload: dict) -> dict:
         prompt_builder.token_cap_from_env(),
     )
 
-    result = generate_from_prompt(prompt, image_count=len(image_keys))
+    result = generate_from_prompt(prompt, image_count=len(image_keys), captions=captions)
     result["topK"] = len(chunks)
     return result
 

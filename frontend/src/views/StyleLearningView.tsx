@@ -1,6 +1,6 @@
 // Style-learning view (task 11.1). Naver URL + maxPosts, paste fallback, run status + resume.
 // Browser -> Lambda only (Req 6.1); no form lib, no state mgr (YAGNI).
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { postJson, ApiRequestError } from "../api";
 
 // learn-style response (design: Interfaces / learn-style).
@@ -13,9 +13,24 @@ interface LearnStyleResponse {
   indexKey?: string;
   checkpoint?: unknown;
   failedPosts?: string[]; // post ids whose crawl failed -> paste fallback
+  learningStatus?: LearningStatus;
 }
 
 // one paste-fallback row (Req 1.3)
+
+interface LearnedPost {
+  postId: string;
+  chunkCount: number;
+}
+
+interface LearningStatus {
+  runId?: string;
+  updatedAt?: string;
+  processedPosts: number;
+  chunks: number;
+  posts: LearnedPost[];
+}
+
 interface PasteRow {
   postId: string;
   text: string;
@@ -32,11 +47,19 @@ export function StyleLearningView() {
   const [status, setStatus] = useState<"idle" | "running">("idle");
   const [result, setResult] = useState<LearnStyleResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [learningStatus, setLearningStatus] = useState<LearningStatus | null>(null);
 
   function updateToken(v: string) {
     setToken(v);
     localStorage.setItem(TOKEN_KEY, v); // persist pre-shared token locally
   }
+
+  useEffect(() => {
+    if (!token) return;
+    postJson<LearningStatus>({ action: "get-learning-status" }, token)
+      .then(setLearningStatus)
+      .catch(() => undefined);
+  }, []);
 
   function addPasteRow() {
     setPasteRows((rows) => [...rows, { postId: "", text: "" }]);
@@ -64,6 +87,7 @@ export function StyleLearningView() {
         token,
       );
       setResult(res);
+      if (res.learningStatus) setLearningStatus(res.learningStatus);
       // in-progress -> keep runId so the user can resume (Req 1.9)
       setResumeRunId(res.status === "in-progress" ? res.runId : null);
     } catch (err) {
@@ -78,6 +102,20 @@ export function StyleLearningView() {
   return (
     <section>
       <h1>스타일 학습</h1>
+      {learningStatus && learningStatus.posts.length > 0 && (
+        <section aria-label="학습 완료된 포스트">
+          <h2>현재 작업공간 학습 완료 목록</h2>
+          <p>포스트 {learningStatus.processedPosts}개 · 청크 {learningStatus.chunks}개</p>
+          <ul>
+            {learningStatus.posts.map((post) => (
+              <li key={post.postId}>
+                <strong>{post.postId}</strong> ({post.chunkCount} chunks)
+              </li>
+            ))}
+          </ul>
+          {learningStatus.updatedAt && <small>최근 학습: {learningStatus.updatedAt}</small>}
+        </section>
+      )}
       <form onSubmit={submit}>
         <label>
           토큰
@@ -108,7 +146,7 @@ export function StyleLearningView() {
 
         <fieldset>
           <legend>붙여넣기 대체 입력</legend>
-                    <p>자동 수집이 실패하면 행을 추가하고 고유한 postId와 포스트 본문을 붙여넣으세요.</p>
+          <p>자동 수집이 실패하면 행을 추가하고 고유한 postId와 포스트 본문을 붙여넣으세요.</p>
           {pasteRows.map((row, i) => (
             <div key={i}>
               <input
