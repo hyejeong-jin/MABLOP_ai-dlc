@@ -23,9 +23,9 @@ Resolved from AWS docs/pricing (verify live console access per account before fi
 | Tier | Model ID | Why | Approx us-east-1 price |
 |---|---|---|---|
 | Embedding (cheap multilingual) | `amazon.titan-embed-text-v2:0` | 1024-dim, 100+ langs incl. Korean, cheapest | ~$0.02 / 1M input tokens |
-| Text generation (quality Korean) | `anthropic.claude-sonnet-4-5-20250929-v1:0` | quality-focused Korean generation | confirm live pricing |
-| Style profile / proofing (fallback) | `anthropic.claude-sonnet-4-5-20250929-v1:0` | verified account access; revisit Haiku when available | confirm live pricing |
-| Image captioning (low/mid vision) | `anthropic.claude-sonnet-4-5-20250929-v1:0` | multimodal fallback; short captions | Sonnet 4.5 image-token pricing; confirm live |
+| Text generation (quality Korean) | `us.anthropic.claude-sonnet-4-5-20250929-v1:0` | quality-focused Korean generation | confirm live pricing |
+| Style profile / proofing (fallback) | `us.anthropic.claude-sonnet-4-5-20250929-v1:0` | verified account access; revisit Haiku when available | confirm live pricing |
+| Image captioning (low/mid vision) | `us.anthropic.claude-sonnet-4-5-20250929-v1:0` | multimodal fallback; short captions | Sonnet 4.5 image-token pricing; confirm live |
 
 Sources: Amazon Bedrock pricing page; Titan Text Embeddings V2 + Claude Sonnet 4.5 / Haiku 5.5 model cards (aws docs). Prices change ? treat the table as the committed selection, re-check the live pricing page at deploy. Bedrock remains the main variable cost; infra stays <$1/mo.
 

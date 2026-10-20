@@ -21,15 +21,15 @@ Parameters:
     Description: Cheap multilingual embedding model id (Req 1.4, 2.2).
   TextModelId:
     Type: String
-    Default: anthropic.claude-sonnet-4-5-20250929-v1:0
+    Default: us.anthropic.claude-sonnet-4-5-20250929-v1:0
     Description: Quality Korean draft text model id (Req 2.7).
   StyleModelId:
     Type: String
-    Default: anthropic.claude-sonnet-4-5-20250929-v1:0
+    Default: us.anthropic.claude-sonnet-4-5-20250929-v1:0
     Description: Style-profile model id (verified fallback) (Req 1.6).
   VisionModelId:
     Type: String
-    Default: anthropic.claude-sonnet-4-5-20250929-v1:0
+    Default: us.anthropic.claude-sonnet-4-5-20250929-v1:0
     Description: Vision model id (verified fallback) (Req 3.3).
 
   # Cost/limit caps - placeholders; tune per-env.
@@ -109,10 +109,16 @@ Resources:
                 Effect: Allow
                 Action: bedrock:InvokeModel
                 Resource:
+                  # Titan is invoked directly.
                   - !Sub "arn:aws:bedrock:us-east-1::foundation-model/${EmbeddingModelId}"
-                  - !Sub "arn:aws:bedrock:us-east-1::foundation-model/${TextModelId}"
-                  - !Sub "arn:aws:bedrock:us-east-1::foundation-model/${StyleModelId}"
-                  - !Sub "arn:aws:bedrock:us-east-1::foundation-model/${VisionModelId}"
+                  # Claude uses the US geo inference profile from us-east-1.
+                  - !Sub "arn:aws:bedrock:us-east-1:${AWS::AccountId}:inference-profile/${TextModelId}"
+                  - !Sub "arn:aws:bedrock:us-east-1:${AWS::AccountId}:inference-profile/${StyleModelId}"
+                  - !Sub "arn:aws:bedrock:us-east-1:${AWS::AccountId}:inference-profile/${VisionModelId}"
+                  # Underlying foundation model destinations for the US profile.
+                  - "arn:aws:bedrock:us-east-1::foundation-model/anthropic.claude-sonnet-4-5-20250929-v1:0"
+                  - "arn:aws:bedrock:us-east-2::foundation-model/anthropic.claude-sonnet-4-5-20250929-v1:0"
+                  - "arn:aws:bedrock:us-west-2::foundation-model/anthropic.claude-sonnet-4-5-20250929-v1:0"
               - Sid: S3Prefixes
                 Effect: Allow
                 Action:

@@ -17,7 +17,7 @@ _DEFAULT_MAXBYTES = 2 * 1024 * 1024
 
 _VISION_MODEL_ENV = "MABLOP_VISION_MODEL"  # low/mid multimodal (Design tiering, Req 3.3)
 # Locked in decisions.md: Claude Sonnet 4.5 fallback (verified multimodal access, us-east-1).
-_DEFAULT_VISION_MODEL = "anthropic.claude-sonnet-4-5-20250929-v1:0"
+_DEFAULT_VISION_MODEL = "us.anthropic.claude-sonnet-4-5-20250929-v1:0"
 _CAPTION_MAX_ENV = "MABLOP_CAPTION_MAX_CHARS"  # short-caption bound (Req 7.5)
 _DEFAULT_CAPTION_MAX = 200
 

@@ -13,7 +13,7 @@ import s3store
 
 _STYLE_MODEL_ENV = "MABLOP_STYLE_MODEL"  # cheap style/proof model (Design tiering D10, Req 1.6)
 # Locked in decisions.md: Claude Sonnet 4.5 fallback (verified account access, us-east-1).
-_DEFAULT_STYLE_MODEL = "anthropic.claude-sonnet-4-5-20250929-v1:0"
+_DEFAULT_STYLE_MODEL = "us.anthropic.claude-sonnet-4-5-20250929-v1:0"
 
 _PROFILE_KEY = "style-profile/profile.json"
 

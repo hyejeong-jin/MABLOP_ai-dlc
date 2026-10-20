@@ -7,15 +7,21 @@
       "Action": "bedrock:InvokeModel",
       "Resource": [
         "arn:aws:bedrock:us-east-1::foundation-model/${EmbeddingModelId}",
-        "arn:aws:bedrock:us-east-1::foundation-model/${TextModelId}",
-        "arn:aws:bedrock:us-east-1::foundation-model/${StyleModelId}",
-        "arn:aws:bedrock:us-east-1::foundation-model/${VisionModelId}"
+        "arn:aws:bedrock:us-east-1:${AccountId}:inference-profile/${TextModelId}",
+        "arn:aws:bedrock:us-east-1:${AccountId}:inference-profile/${StyleModelId}",
+        "arn:aws:bedrock:us-east-1:${AccountId}:inference-profile/${VisionModelId}",
+        "arn:aws:bedrock:us-east-1::foundation-model/anthropic.claude-sonnet-4-5-20250929-v1:0",
+        "arn:aws:bedrock:us-east-2::foundation-model/anthropic.claude-sonnet-4-5-20250929-v1:0",
+        "arn:aws:bedrock:us-west-2::foundation-model/anthropic.claude-sonnet-4-5-20250929-v1:0"
       ]
     },
     {
       "Sid": "S3Prefixes",
       "Effect": "Allow",
-      "Action": ["s3:GetObject", "s3:PutObject"],
+      "Action": [
+        "s3:GetObject",
+        "s3:PutObject"
+      ],
       "Resource": [
         "arn:aws:s3:::${BucketName}/raw-posts/*",
         "arn:aws:s3:::${BucketName}/embeddings/*",
@@ -30,7 +36,10 @@
     {
       "Sid": "LogsOnly",
       "Effect": "Allow",
-      "Action": ["logs:CreateLogStream", "logs:PutLogEvents"],
+      "Action": [
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+      ],
       "Resource": "arn:aws:logs:us-east-1:${AccountId}:log-group:/aws/lambda/${FunctionName}:*"
     }
   ]

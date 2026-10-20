@@ -2,7 +2,7 @@
 // Design Principle 2: browser -> S3 direct (presigned PUT), only S3 keys to the Lambda
 // (Req 3.1, 6.1). Resize/compress + 10-image cap via images.ts (Req 7.3, 7.4).
 // Browser never ships bytes to the Lambda; NO Bedrock/AWS SDK (Req 6.1). YAGNI: local state.
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { postJson, ApiRequestError } from "../api";
 import { capImages, resizeImage, MAX_IMAGES } from "../images";
 
@@ -48,13 +48,22 @@ export function DraftingView() {
     localStorage.setItem(TOKEN_KEY, v); // persist shared token locally
   }
 
-  // native file input -> cap at 10 (Req 7.4). Merge with existing, re-cap.
-  function onFiles(e: React.ChangeEvent<HTMLInputElement>) {
-    const picked = Array.from(e.target.files ?? []).map((file) => ({
-      file,
-      description: "",
-    }));
+  // Native input + drop zone. Ignore non-images and cap at 10 (Req 7.4).
+  function addFiles(files: File[]) {
+    const picked = files
+      .filter((file) => file.type.startsWith("image/"))
+      .map((file) => ({ file, description: "" }));
     setImages((cur) => capImages([...cur, ...picked]));
+  }
+
+  function onFiles(e: React.ChangeEvent<HTMLInputElement>) {
+    addFiles(Array.from(e.target.files ?? []));
+    e.target.value = "";
+  }
+
+  function onDrop(e: React.DragEvent<HTMLDivElement>) {
+    e.preventDefault();
+    addFiles(Array.from(e.dataTransfer.files));
   }
 
   function setDescription(i: number, description: string) {
@@ -161,21 +170,32 @@ export function DraftingView() {
 
         <fieldset>
           <legend>이미지 첨부 (최대 {MAX_IMAGES}장)</legend>
-          <input
-            type="file"
-            aria-label="이미지 첨부"
-            accept="image/*"
-            multiple
-            onChange={onFiles}
-          />
+          <p aria-live="polite">선택된 이미지: {images.length}/{MAX_IMAGES}</p>
+          <div
+            role="group"
+            aria-label="이미지 끌어놓기 영역"
+            onDragOver={(e) => e.preventDefault()}
+            onDrop={onDrop}
+          >
+            <label htmlFor="image-input">이미지 선택 또는 여기에 끌어놓기</label>
+            <input
+              id="image-input"
+              type="file"
+              aria-label="이미지 첨부"
+              accept="image/*"
+              multiple
+              onChange={onFiles}
+            />
+          </div>
           {images.map((a, i) => (
-            <div key={i}>
+            <div key={`${a.file.name}-${i}`}>
+              <ImagePreview file={a.file} />
               <span>{a.file.name}</span>
               <input
                 aria-label={`이미지 설명 ${i}`}
                 value={a.description}
                 onChange={(e) => setDescription(i, e.target.value)}
-                placeholder="설명 (선택)"
+                placeholder="설명 (선택: 입력하면 비전 호출 생략)"
               />
               <button type="button" onClick={() => removeImage(i)}>
                 제거
@@ -193,6 +213,19 @@ export function DraftingView() {
       <DraftResult loading={loading} markdown={markdown} error={error} />
     </section>
   );
+}
+
+function ImagePreview({ file }: { file: File }) {
+  const [src, setSrc] = useState("");
+
+  useEffect(() => {
+    if (!URL.createObjectURL) return;
+    const url = URL.createObjectURL(file);
+    setSrc(url);
+    return () => URL.revokeObjectURL(url);
+  }, [file]);
+
+  return src ? <img src={src} alt={file.name} width={96} height={96} /> : null;
 }
 
 // Prop-driven result renderer (mirrors ResultView's {loading, markdown?, error?} shape).

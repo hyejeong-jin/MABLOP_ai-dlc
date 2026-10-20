@@ -22,7 +22,7 @@ _PROFILE_KEY = "style-profile/profile.json"  # Style_Profile location (Req 1.6, 
 
 _TEXT_MODEL_ENV = "MABLOP_TEXT_MODEL"  # quality Korean text-gen (Design tiering, Req 2.7)
 # Locked in decisions.md: Claude Sonnet 4.5 (quality Korean text-gen, us-east-1).
-_DEFAULT_TEXT_MODEL = "anthropic.claude-sonnet-4-5-20250929-v1:0"
+_DEFAULT_TEXT_MODEL = "us.anthropic.claude-sonnet-4-5-20250929-v1:0"
 
 _TOP_K_ENV = "MABLOP_TOP_K"  # Top_K retrieval cap (Req 2.4, 7.2)
 _DEFAULT_TOP_K = 8
