@@ -154,7 +154,6 @@ Resources:
             - https://hyejeong-jin.github.io
           AllowMethods:
             - POST
-            - OPTIONS
           AllowHeaders:
             - Content-Type
             - X-Mablop-Token
