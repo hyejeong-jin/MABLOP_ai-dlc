@@ -108,6 +108,7 @@ export function StyleLearningView() {
 
         <fieldset>
           <legend>붙여넣기 대체 입력</legend>
+                    <p>자동 수집이 실패하면 행을 추가하고 고유한 postId와 포스트 본문을 붙여넣으세요.</p>
           {pasteRows.map((row, i) => (
             <div key={i}>
               <input

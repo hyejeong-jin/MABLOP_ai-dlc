@@ -12,6 +12,7 @@ import crawler
 import index_store
 import s3store
 import style_profile
+from errors import MablopError
 
 _MOBILE_HOST = "m.blog.naver.com"
 
@@ -167,6 +168,11 @@ def learn_style(payload: dict) -> dict:
     state = checkpoint.resume_or_new(run_id)
 
     posts = _discover_posts(payload)
+    if not posts:
+        raise MablopError(
+            "bad_request",
+            "??? ???? ????. ??? ?? ??? ???? ???? ?? ???? postId? ??? ?????.",
+        )
     pasted = _pasted_index(payload)
     start = time.monotonic()
     failures: list[str] = []
