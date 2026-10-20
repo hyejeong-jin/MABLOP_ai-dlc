@@ -40,8 +40,23 @@ export function DraftingView() {
   const [notes, setNotes] = useState("");
   const [images, setImages] = useState<Attached[]>([]);
   const [loading, setLoading] = useState(false);
+  const [stage, setStage] = useState("");
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [markdown, setMarkdown] = useState<string | undefined>(undefined);
   const [error, setError] = useState<string | undefined>(undefined);
+
+  useEffect(() => {
+    if (!loading) {
+      setElapsedSeconds(0);
+      return;
+    }
+    const started = Date.now();
+    const timer = window.setInterval(
+      () => setElapsedSeconds(Math.floor((Date.now() - started) / 1000)),
+      1000,
+    );
+    return () => window.clearInterval(timer);
+  }, [loading]);
 
   function updateToken(v: string) {
     setToken(v);
@@ -79,6 +94,7 @@ export function DraftingView() {
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
+    setStage("\uc900\ube44 \uc911...");
     setError(undefined);
     setMarkdown(undefined);
     try {
@@ -86,6 +102,7 @@ export function DraftingView() {
       let imageKeys: string[] = [];
 
       if (capped.length) {
+        setStage(`\uc774\ubbf8\uc9c0 ${capped.length}\uc7a5 \uc555\ucd95 \ubc0f \uc5c5\ub85c\ub4dc \uc911...`);
         // 1. compress each image client-side (Req 7.3).
         const blobs = await Promise.all(capped.map((a) => resizeImage(a.file)));
 
@@ -115,6 +132,7 @@ export function DraftingView() {
 
         imageKeys = presign.uploads.map((u) => u.key);
 
+        setStage("\uc774\ubbf8\uc9c0 \ub9e5\ub77d \ubd84\uc11d \uc911... (\uc774\ubbf8\uc9c0 \uc218\uc5d0 \ub530\ub77c \uc218\ubd84 \uac78\ub9b4 \uc218 \uc788\uc2b5\ub2c8\ub2e4)");
         // 4. analyze-images: send keys (+ optional user description for cost-0 skip).
         await postJson(
           {
@@ -128,6 +146,7 @@ export function DraftingView() {
         );
       }
 
+      setStage("\uc544\uc774\uac00 \ucd08\uc548 \uc791\uc131 \uc911... (\uac80\uc0c9\u00b7\ubb38\uccb4 \ubd84\uc11d\u00b7\ubcf8\ubb38 \uc0dd\uc131\uc744 \uc9c4\ud589\ud569\ub2c8\ub2e4)");
       // 5. generate-draft: keys only, synchronous return.
       const draft = await postJson<DraftResponse>(
         { action: "generate-draft", title, outline, notes, imageKeys },
@@ -140,6 +159,7 @@ export function DraftingView() {
       setError(msg);
     } finally {
       setLoading(false);
+      setStage("");
     }
   }
 
@@ -210,7 +230,13 @@ export function DraftingView() {
       </form>
 
       {/* synchronous result area (ResultView full impl in 11.6; keys-only path done) */}
-      <DraftResult loading={loading} markdown={markdown} error={error} />
+      <DraftResult
+        loading={loading}
+        stage={stage}
+        elapsedSeconds={elapsedSeconds}
+        markdown={markdown}
+        error={error}
+      />
     </section>
   );
 }
@@ -232,11 +258,21 @@ function ImagePreview({ file }: { file: File }) {
 // Inlined here so 11.4 stays self-contained; 11.6 owns the shared ResultView.
 function DraftResult(props: {
   loading: boolean;
+  stage: string;
+  elapsedSeconds: number;
   markdown?: string;
   error?: string;
 }) {
-  const { loading, markdown, error } = props;
-  if (loading) return <p>초안 생성 중...</p>;
+  const { loading, stage, elapsedSeconds, markdown, error } = props;
+  if (loading) {
+    return (
+      <div role="status">
+        <p>\ucd08\uc548 \uc0dd\uc131 \uc911...</p>
+        <p>{stage}</p>
+        <p>\uacbd\uacfc \uc2dc\uac04: {elapsedSeconds}\ucd08</p>
+      </div>
+    );
+  }
   if (error) return <p role="alert">{error}</p>;
   if (markdown) return <pre aria-label="초안 결과">{markdown}</pre>;
   return null;
