@@ -133,6 +133,10 @@ Resources:
                   - logs:CreateLogStream
                   - logs:PutLogEvents
                 Resource: !Sub "arn:aws:logs:us-east-1:${AWS::AccountId}:log-group:/aws/lambda/mablop:*"
+              - Sid: ReadToken
+                Effect: Allow
+                Action: ssm:GetParameter
+                Resource: !Sub "arn:aws:ssm:us-east-1:${AWS::AccountId}:parameter${MablopTokenSsmPath}"
 
   # Single Python Lambda, routed by `action` (Req 8.1).
   MablopFunction:
@@ -148,8 +152,9 @@ Resources:
       Environment:
         Variables:
           MABLOP_BUCKET: !Ref MablopBucket
-          # Token from secret source at runtime, NOT hardcoded (Req 9.3).
-          MABLOP_TOKEN: !Sub "{{resolve:ssm-secure:${MablopTokenSsmPath}}}"
+          # Lambda reads the token from SSM at runtime (ssm-secure is not supported
+          # in Lambda env vars). Only the parameter PATH lives here, never the value.
+          MABLOP_TOKEN_SSM_PATH: !Ref MablopTokenSsmPath
           MABLOP_EMBED_MODEL: !Ref EmbeddingModelId
           MABLOP_TEXT_MODEL: !Ref TextModelId
           MABLOP_STYLE_MODEL: !Ref StyleModelId

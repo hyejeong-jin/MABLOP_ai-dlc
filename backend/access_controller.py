@@ -14,6 +14,9 @@ RATELIMIT_KEY = "metadata/ratelimit.json"
 # Warm invocation fast-path window state: {"start": float, "count": int}.
 _window = None
 
+# Cached pre-shared token resolved from SSM (per warm container).
+_cached_token = None
+
 
 def _env(name: str, default: str) -> str:
     """Env var or default (secret/caps never hard-coded, Req 9.3)."""
@@ -21,8 +24,33 @@ def _env(name: str, default: str) -> str:
 
 
 def _secret() -> str:
-    """Pre_Shared_Token from env (empty default blocks all, Req 9.3)."""
-    return _env("MABLOP_TOKEN", "")
+    """Resolve the Pre_Shared_Token.
+
+    Prefer the MABLOP_TOKEN env var (used by tests). Otherwise read it once
+    from SSM at MABLOP_TOKEN_SSM_PATH (CloudFormation cannot inject an
+    ssm-secure value into a Lambda env var, so the Lambda fetches it at
+    runtime). Empty result blocks all requests (Req 9.3).
+    """
+    global _cached_token
+    direct = _env("MABLOP_TOKEN", "")
+    if direct:
+        return direct
+    if _cached_token is not None:
+        return _cached_token
+    path = _env("MABLOP_TOKEN_SSM_PATH", "")
+    if not path:
+        return ""
+    try:
+        import boto3
+
+        region = _env("MABLOP_BEDROCK_REGION", "us-east-1")
+        value = boto3.client("ssm", region_name=region).get_parameter(
+            Name=path, WithDecryption=True
+        )["Parameter"]["Value"]
+    except Exception:
+        return ""
+    _cached_token = value
+    return value
 
 
 def _max_rate() -> int:

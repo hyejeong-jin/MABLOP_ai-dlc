@@ -27,7 +27,7 @@ Prefixes are logical key namespaces, not folders ??S3 creates them on first `Put
 
 ## Secrets
 
-`MABLOP_TOKEN` resolves at deploy from SSM SecureString (`MablopTokenSsmPath`, default `/mablop/token`) via a dynamic reference. The secret value never appears in source (Req 9.3).
+The Lambda reads the pre-shared token from SSM Parameter Store **at runtime** via `ssm:GetParameter` with `WithDecryption=True`. Only the parameter path (`MablopTokenSsmPath`, default `/mablop/token`) is passed to the Lambda as the `MABLOP_TOKEN_SSM_PATH` env var; the token value is never stored in the template, in a Lambda env var, or in source. CloudFormation `ssm-secure` dynamic references are not supported in Lambda environment variables, which is why the value is fetched at runtime (Req 9.3).
 
 ## Placeholders
 
