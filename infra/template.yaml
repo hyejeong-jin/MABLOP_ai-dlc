@@ -79,6 +79,19 @@ Resources:
         ServerSideEncryptionConfiguration:
           - ServerSideEncryptionByDefault:
               SSEAlgorithm: AES256 # SSE-S3 default (Req 6.4).
+      CorsConfiguration:
+        CorsRules:
+          - AllowedOrigins:
+              - https://hyejeong-jin.github.io
+            AllowedMethods:
+              - PUT
+              - GET
+              - HEAD
+            AllowedHeaders:
+              - "*"
+            ExposedHeaders:
+              - ETag
+            MaxAge: 3000
 
   # Explicit log group so the role's logs scope resolves to a real resource.
   MablopLogGroup:
