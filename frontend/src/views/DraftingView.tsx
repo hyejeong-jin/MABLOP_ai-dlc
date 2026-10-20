@@ -8,6 +8,7 @@ import { capImages, resizeImage, MAX_IMAGES } from "../images";
 
 // shared token key (same as StyleLearningView) so the pre-shared token is reused.
 const TOKEN_KEY = "mablop-token";
+const LAST_DRAFT_KEY = "mablop-last-draft";
 
 // one attached image + its optional user description (cost-0 caption path, Req 3.4).
 interface Attached {
@@ -153,6 +154,7 @@ export function DraftingView() {
         token,
       );
       setMarkdown(draft.markdown);
+      localStorage.setItem(LAST_DRAFT_KEY, draft.markdown);
     } catch (err) {
       const msg =
         err instanceof ApiRequestError ? `${err.code}: ${err.message}` : String(err);

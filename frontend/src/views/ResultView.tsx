@@ -1,7 +1,9 @@
 // Result / Markdown view (task 11.6). Prop-driven; App.tsx (11.4) owns wiring.
 // Single synchronous loading state during generate-draft (Req 2.9). No markdown lib (YAGNI):
 // raw Markdown shown in a <pre> with native copy / download controls.
-import { useState } from "react";
+import { useEffect, useState } from "react";
+
+const LAST_DRAFT_KEY = "mablop-last-draft";
 
 export interface ResultViewProps {
   loading?: boolean; // synchronous wait during generate-draft; defaults false until 11.4 wires it
@@ -11,18 +13,29 @@ export interface ResultViewProps {
 
 export function ResultView({ loading = false, markdown, error }: ResultViewProps) {
   const [copied, setCopied] = useState(false);
+  const [storedMarkdown, setStoredMarkdown] = useState(
+    () => localStorage.getItem(LAST_DRAFT_KEY) ?? "",
+  );
+  const shownMarkdown = markdown ?? storedMarkdown;
+
+  useEffect(() => {
+    if (markdown !== undefined) {
+      setStoredMarkdown(markdown);
+      localStorage.setItem(LAST_DRAFT_KEY, markdown);
+    }
+  }, [markdown]);
 
   // native clipboard copy; no deps
   async function copy() {
-    if (!markdown) return;
-    await navigator.clipboard.writeText(markdown);
+    if (!shownMarkdown) return;
+    await navigator.clipboard.writeText(shownMarkdown);
     setCopied(true);
   }
 
   // download raw markdown as .md via blob url
   function download() {
-    if (!markdown) return;
-    const blob = new Blob([markdown], { type: "text/markdown" });
+    if (!shownMarkdown) return;
+    const blob = new Blob([shownMarkdown], { type: "text/markdown" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
@@ -39,7 +52,7 @@ export function ResultView({ loading = false, markdown, error }: ResultViewProps
 
       {error && <p role="alert">{error}</p>}
 
-      {!loading && markdown && (
+      {!loading && shownMarkdown && (
         <div>
           <div>
             <button type="button" onClick={copy}>
