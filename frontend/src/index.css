@@ -1,0 +1,58 @@
+:root {
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: #24213a;
+  background: #f7f7fb;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  --ink: #24213a;
+  --muted: #77748c;
+  --line: #e8e6f0;
+  --primary: #6753df;
+  --primary-dark: #4d3bbb;
+  --soft-purple: #f0edff;
+  --card: #ffffff;
+  --shadow: 0 18px 50px rgba(54, 42, 113, .08);
+}
+* { box-sizing: border-box; }
+body { margin: 0; min-width: 320px; background: #f7f7fb; }
+button, input, textarea { font: inherit; }
+button { cursor: pointer; }
+button:disabled { cursor: wait; opacity: .6; }
+main { width: min(920px, calc(100% - 40px)); min-height: 100vh; margin: 0 auto; padding: 42px 0 70px; }
+main > h1 { margin: 0 0 22px; color: var(--ink); font-size: 30px; letter-spacing: -.06em; }
+main > nav { display: flex; gap: 8px; margin-bottom: 28px; padding: 6px; border: 1px solid var(--line); border-radius: 15px; background: rgba(255,255,255,.8); box-shadow: 0 8px 24px rgba(54,42,113,.04); }
+main > nav button { flex: 1; border: 0; border-radius: 10px; padding: 12px; color: var(--muted); background: transparent; font-weight: 750; transition: .2s; }
+main > nav button:hover { color: var(--primary); background: var(--soft-purple); }
+main > nav button:focus-visible { outline: 3px solid #cfc8ff; outline-offset: 2px; }
+main > nav button:nth-child(1) { color: var(--primary); }
+main > section { min-height: 300px; padding: 30px; border: 1px solid var(--line); border-radius: 22px; background: var(--card); box-shadow: var(--shadow); }
+main > section h1 { display: none; }
+main > section h2 { margin: 0 0 15px; font-size: 21px; letter-spacing: -.04em; }
+main > section form { display: grid; gap: 17px; }
+main > section form > label { display: grid; gap: 7px; color: #514e67; font-size: 12px; font-weight: 750; }
+main input:not([type="file"]), main textarea { width: 100%; border: 1px solid #dedcea; border-radius: 10px; outline: none; padding: 12px 13px; color: var(--ink); background: #fbfbfe; transition: .2s; }
+main input:not([type="file"]):focus, main textarea:focus { border-color: var(--primary); background: white; box-shadow: 0 0 0 4px #eeeaff; }
+main textarea { min-height: 105px; resize: vertical; line-height: 1.6; }
+main button { border: 0; border-radius: 10px; padding: 11px 16px; color: white; background: var(--primary); font-weight: 750; transition: .2s; }
+main button:hover:not(:disabled) { background: var(--primary-dark); transform: translateY(-1px); }
+main button[type="button"] { color: var(--primary); background: var(--soft-purple); }
+main form > button[type="submit"] { width: 100%; margin-top: 4px; padding: 14px; }
+main fieldset { display: grid; gap: 12px; border: 1px solid var(--line); border-radius: 14px; padding: 17px; background: #fcfcff; }
+main legend { color: var(--ink); padding: 0 6px; font-size: 13px; font-weight: 800; }
+main fieldset > p { margin: 0; color: var(--muted); font-size: 12px; }
+main fieldset > div[role="group"] { display: grid; gap: 8px; padding: 20px; text-align: center; border: 1px dashed #bbb4e9; border-radius: 12px; background: #f8f6ff; }
+main fieldset > div[role="group"] label { color: var(--primary); font-size: 13px; font-weight: 750; }
+main fieldset > div:not([role="group"]) { display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center; }
+main fieldset img { border-radius: 10px; object-fit: cover; border: 1px solid var(--line); }
+main ul { padding-left: 20px; line-height: 1.8; }
+main [role="alert"] { padding: 12px; color: #a33a4d; border-radius: 10px; background: #fff0f2; }
+main [role="status"] { padding: 14px; border-radius: 12px; color: #514e67; background: var(--soft-purple); }
+main pre { max-height: 650px; overflow: auto; padding: 22px; white-space: pre-wrap; line-height: 1.75; border: 1px solid var(--line); border-radius: 12px; background: #fbfbfd; }
+@media (max-width: 680px) {
+  main { width: calc(100% - 24px); padding-top: 24px; }
+  main > h1 { font-size: 26px; }
+  main > nav button { padding: 10px 5px; font-size: 12px; }
+  main > section { padding: 20px 16px; border-radius: 17px; }
+  main fieldset > div:not([role="group"]) { grid-template-columns: 72px 1fr; }
+  main fieldset > div:not([role="group"]) button { grid-column: 2; justify-self: start; }
+}
