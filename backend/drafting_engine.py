@@ -84,9 +84,9 @@ def _caption_terms(caption: str) -> list[str]:
     return [term for term in re.findall(r"[0-9A-Za-z\uAC00-\uD7A3]{2,}", str(caption or ""))]
 
 
-def _insert_by_caption(text: str, number: int, caption: str) -> str:
-    """Insert one image marker after the most relevant heading or matching line."""
-    marker = f"![img-{number}]"
+def _insert_by_caption(text: str, number: int, caption: str, image_names=None) -> str:
+    """Insert one filename-aware image marker near matching context."""
+    marker = _image_marker(number, image_names)
     terms = _caption_terms(caption)
     lines = text.splitlines()
     # Prefer headings: they identify the image's section without disrupting prose.
@@ -101,8 +101,17 @@ def _insert_by_caption(text: str, number: int, caption: str) -> str:
     return text
 
 
+def _image_marker(number: int, image_names=None) -> str:
+    """Render a stable marker with the original attachment filename when known."""
+    name = image_names.get(number) if isinstance(image_names, dict) else None
+    return f"![img-{number}]({name})" if name else f"![img-{number}]"
+
+
 def normalize_placeholders(
-    markdown: str, image_count: int, captions: dict | list | None = None
+    markdown: str,
+    image_count: int,
+    captions: dict | list | None = None,
+    image_names: dict | None = None,
 ) -> str:
     """Keep valid markers and place missing images near matching caption context.
 
@@ -120,14 +129,14 @@ def normalize_placeholders(
         if n < 1 or n > k or n in seen:
             return ""
         seen.add(n)
-        return m.group(0)
+        return _image_marker(n, image_names)
 
     text = _PLACEHOLDER_RE.sub(_repl, text)
     missing = [n for n in range(1, k + 1) if n not in seen]
 
     if captions is None:
         if missing:
-            tail = "\n\n" + "\n\n".join("![img-{}]".format(n) for n in missing)
+            tail = "\n\n" + "\n\n".join(_image_marker(n, image_names) for n in missing)
             text = (text.rstrip("\n") + tail) if text.strip() else tail.lstrip("\n")
         return text
 
@@ -135,13 +144,19 @@ def normalize_placeholders(
         caption = captions.get(number, "") if isinstance(captions, dict) else (
             captions[number - 1] if number - 1 < len(captions) else ""
         )
-        placed = _insert_by_caption(text, number, caption)
+        placed = _insert_by_caption(text, number, caption, image_names)
         if placed != text:
             text = placed
     return text
 
 
-def generate_from_prompt(prompt: str, image_count: int, draft_id: str = None, captions=None) -> dict:
+def generate_from_prompt(
+    prompt: str,
+    image_count: int,
+    draft_id: str = None,
+    captions=None,
+    image_names: dict | None = None,
+) -> dict:
     """Generate+normalize+store a Draft from an assembled prompt (2.7,2.8,2.9,3.6,3.7,4.1,4.2).
 
     Invokes the quality Korean text model, parses the Markdown, normalizes
@@ -149,7 +164,9 @@ def generate_from_prompt(prompt: str, image_count: int, draft_id: str = None, ca
     stores it under generated-posts/<draftId>.md, and returns the draft.
     """
     raw = bedrock.text_generate(prompt, _text_model())
-    markdown = normalize_placeholders(raw, image_count, captions=captions)
+    markdown = normalize_placeholders(
+        raw, image_count, captions=captions, image_names=image_names
+    )
 
     draft_id = draft_id or "draft-" + uuid.uuid4().hex
     draft_key = _DRAFT_PREFIX + draft_id + ".md"
@@ -229,6 +246,10 @@ def generate_draft(payload: dict) -> dict:
     image_keys = (payload.get("imageKeys") or [])[:_MAX_IMAGES]
 
     captions = _load_captions(image_keys)
+    image_names = {
+        index: key.rsplit("/", 1)[-1]
+        for index, key in enumerate(image_keys, start=1)
+    }
     chunks = _retrieve_chunks(_input_text(title, outline, notes))
     profile = _load_profile()
 
@@ -237,7 +258,12 @@ def generate_draft(payload: dict) -> dict:
         prompt_builder.token_cap_from_env(),
     )
 
-    result = generate_from_prompt(prompt, image_count=len(image_keys), captions=captions)
+    result = generate_from_prompt(
+        prompt,
+        image_count=len(image_keys),
+        captions=captions,
+        image_names=image_names,
+    )
     result["topK"] = len(chunks)
     return result
 
