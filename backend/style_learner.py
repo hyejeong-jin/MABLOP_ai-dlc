@@ -168,13 +168,20 @@ def learn_style(payload: dict) -> dict:
     run_id = payload.get("resumeRunId") or "run-" + uuid.uuid4().hex
     state = checkpoint.resume_or_new(run_id)
 
+    pasted = _pasted_index(payload)
+    # Normal UI flow: pasted rows are new raw posts. Store them first, then
+    # rebuild from every raw post so previous learning is never overwritten.
+    if pasted and not payload.get("posts") and not payload.get("resumeRunId"):
+        for post_id, body in pasted.items():
+            _store_raw(post_id, body)
+        return rebuild_from_stored()
+
     posts = _discover_posts(payload)
     if not posts:
         raise MablopError(
             "bad_request",
-            "??? ???? ????. ??? ?? ??? ???? ???? ?? ???? postId? ??? ?????.",
+            "\ud559\uc2b5\ud560 \ud3ec\uc2a4\ud2b8\uac00 \uc5c6\uc2b5\ub2c8\ub2e4. \ub124\uc774\ubc84 \uc790\ub3d9 \uc218\uc9d1\uc774 \uc2e4\ud328\ud558\uba74 \ubd99\uc5ec\ub123\uae30 \ud589\uc744 \ucd94\uac00\ud558\uace0 postId\uc640 \ubcf8\ubb38\uc744 \uc785\ub825\ud558\uc138\uc694.",
         )
-    pasted = _pasted_index(payload)
     start = time.monotonic()
     failures: list[str] = []
 
