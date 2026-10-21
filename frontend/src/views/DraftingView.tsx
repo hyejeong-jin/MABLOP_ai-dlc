@@ -46,6 +46,7 @@ export function DraftingView() {
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [markdown, setMarkdown] = useState<string | undefined>(undefined);
   const [error, setError] = useState<string | undefined>(undefined);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     if (!loading) {
@@ -89,6 +90,22 @@ export function DraftingView() {
 
   function removeImage(i: number) {
     setImages((cur) => cur.filter((_, j) => j !== i));
+  }
+
+  async function copyDraft(text: string) {
+    await navigator.clipboard.writeText(text);
+    setCopied(true);
+    window.setTimeout(() => setCopied(false), 1800);
+  }
+
+  function downloadDraft(text: string) {
+    const blob = new Blob([text], { type: "text/markdown" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "mablop-draft.md";
+    link.click();
+    URL.revokeObjectURL(url);
   }
 
   // Upload flow: resize -> presign -> PUT bytes to S3 -> analyze -> generate.
@@ -246,6 +263,9 @@ export function DraftingView() {
         elapsedSeconds={elapsedSeconds}
         markdown={markdown}
         error={error}
+        copied={copied}
+        onCopy={copyDraft}
+        onDownload={downloadDraft}
       />
     </section>
   );
@@ -272,8 +292,11 @@ function DraftResult(props: {
   elapsedSeconds: number;
   markdown?: string;
   error?: string;
+  copied: boolean;
+  onCopy: (text: string) => void;
+  onDownload: (text: string) => void;
 }) {
-  const { loading, stage, elapsedSeconds, markdown, error } = props;
+  const { loading, stage, elapsedSeconds, markdown, error, copied, onCopy, onDownload } = props;
   if (loading) {
     return (
       <div role="status">
@@ -284,6 +307,23 @@ function DraftResult(props: {
     );
   }
   if (error) return <p role="alert">{error}</p>;
-  if (markdown) return <pre aria-label="초안 결과">{markdown}</pre>;
+  if (markdown) {
+    return (
+      <div className="draft-result-inline">
+        <div className="draft-result-actions">
+          <strong>생성된 초안</strong>
+          <div>
+            <button type="button" onClick={() => onCopy(markdown)}>
+              {copied ? "복사됨" : "복사"}
+            </button>
+            <button type="button" onClick={() => onDownload(markdown)}>
+              다운로드
+            </button>
+          </div>
+        </div>
+        <pre aria-label="초안 결과">{markdown}</pre>
+      </div>
+    );
+  }
   return null;
 }

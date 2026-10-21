@@ -38,6 +38,17 @@ interface PasteRow {
 
 const TOKEN_KEY = "mablop-token";
 
+function formatKst(value?: string) {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return new Intl.DateTimeFormat("ko-KR", {
+    timeZone: "Asia/Seoul",
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(date);
+}
+
 export function StyleLearningView() {
   const [token, setToken] = useState(() => localStorage.getItem(TOKEN_KEY) ?? "");
   const [showToken, setShowToken] = useState(() => !localStorage.getItem(TOKEN_KEY));
@@ -119,7 +130,7 @@ export function StyleLearningView() {
               </li>
             ))}
           </ul>
-          {learningStatus.updatedAt && <small>최근 학습: {learningStatus.updatedAt}</small>}
+          {learningStatus.updatedAt && <small>최근 학습: {formatKst(learningStatus.updatedAt)}</small>}
           <button type="button" onClick={loadLearningStatus}>학습 목록 새로고침</button>
         </section>
       )}

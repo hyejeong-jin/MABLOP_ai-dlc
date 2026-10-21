@@ -67,3 +67,9 @@ main pre { max-height: 650px; overflow: auto; padding: 22px; white-space: pre-wr
 }
 .token-saved { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 14px; border: 1px solid #dedcea; border-radius: 10px; color: #514e67; background: #fbfbfe; font-size: 12px; }
 .token-saved button { padding: 7px 10px; font-size: 11px; }
+
+.draft-result-inline { margin-top: 22px; }
+.draft-result-actions { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+.draft-result-actions > div { display: flex; gap: 8px; }
+.draft-result-actions button { padding: 8px 12px; font-size: 12px; }
+@media (max-width: 680px) { .draft-result-actions { align-items: flex-start; flex-direction: column; } }
