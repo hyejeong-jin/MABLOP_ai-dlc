@@ -48,6 +48,15 @@ main ul { padding-left: 20px; line-height: 1.8; }
 main [role="alert"] { padding: 12px; color: #a33a4d; border-radius: 10px; background: #fff0f2; }
 main [role="status"] { padding: 14px; border-radius: 12px; color: #514e67; background: var(--soft-purple); }
 main pre { max-height: 650px; overflow: auto; padding: 22px; white-space: pre-wrap; line-height: 1.75; border: 1px solid var(--line); border-radius: 12px; background: #fbfbfd; }
+
+.app-brand { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; }
+.brand-mark { width: 40px; height: 40px; display: grid; place-items: center; border-radius: 13px; color: white; font-weight: 900; background: linear-gradient(135deg, #806cff, #5742cc); box-shadow: 0 8px 18px rgba(103,83,223,.25); }
+.app-brand h1 { margin: 0; font-size: 28px; letter-spacing: .12em; }
+.app-subtitle { margin: 3px 0 0; color: var(--muted); font-size: 12px; }
+.tab-button.active { color: white !important; background: var(--primary) !important; box-shadow: 0 7px 16px rgba(103,83,223,.22); }
+.tab-button.active:hover { color: white !important; background: var(--primary-dark) !important; }
+.content-panel { min-height: 300px; }
+
 @media (max-width: 680px) {
   main { width: calc(100% - 24px); padding-top: 24px; }
   main > h1 { font-size: 26px; }

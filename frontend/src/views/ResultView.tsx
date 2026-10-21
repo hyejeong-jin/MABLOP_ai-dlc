@@ -63,7 +63,7 @@ export function ResultView({ loading = false, markdown, error }: ResultViewProps
             </button>
             {copied && <span role="status">복사됨</span>}
           </div>
-          <pre aria-label="생성된 마크다운">{markdown}</pre>
+          <pre aria-label="생성된 마크다운">{shownMarkdown}</pre>
         </div>
       )}
     </section>
