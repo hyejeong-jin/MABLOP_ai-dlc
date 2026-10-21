@@ -132,6 +132,14 @@ Resources:
                   - "arn:aws:bedrock:us-east-1::foundation-model/anthropic.claude-sonnet-4-5-20250929-v1:0"
                   - "arn:aws:bedrock:us-east-2::foundation-model/anthropic.claude-sonnet-4-5-20250929-v1:0"
                   - "arn:aws:bedrock:us-west-2::foundation-model/anthropic.claude-sonnet-4-5-20250929-v1:0"
+              - Sid: ListRawPosts
+                Effect: Allow
+                Action: s3:ListBucket
+                Resource: !Sub "arn:aws:s3:::${MablopBucket}"
+                Condition:
+                  StringLike:
+                    s3:prefix:
+                      - raw-posts/*
               - Sid: S3Prefixes
                 Effect: Allow
                 Action:

@@ -247,6 +247,27 @@ def _learning_status(state: dict) -> dict:
     }
 
 
+def rebuild_from_stored() -> dict:
+    """Rebuild the RAG index/profile from all raw-posts already in S3."""
+    import boto3
+
+    s3 = boto3.client("s3", region_name=os.environ.get("MABLOP_BEDROCK_REGION", "us-east-1"))
+    bucket = s3store._bucket()
+    keys = []
+    for page in s3.get_paginator("list_objects_v2").paginate(Bucket=bucket, Prefix=_RAW_PREFIX):
+        keys.extend(obj["Key"] for obj in page.get("Contents", []) if obj["Key"].endswith(".txt"))
+    if not keys:
+        raise MablopError("bad_request", "??? raw-posts? ????.")
+
+    state = checkpoint.new_state("rebuild-" + uuid.uuid4().hex)
+    for key in sorted(keys):
+        post_id = key[len(_RAW_PREFIX):-4]
+        body = s3store.get_bytes(key).decode("utf-8")
+        chunk_meta, vectors = _embed_post(post_id, body)
+        checkpoint.record_post(state, post_id, chunk_meta, vectors)
+    return _complete(state, [])
+
+
 def get_learning_status() -> dict:
     """Return the last completed learning summary for the shared workspace."""
     try:
