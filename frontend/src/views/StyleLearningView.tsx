@@ -40,6 +40,7 @@ const TOKEN_KEY = "mablop-token";
 
 export function StyleLearningView() {
   const [token, setToken] = useState(() => localStorage.getItem(TOKEN_KEY) ?? "");
+  const [showToken, setShowToken] = useState(() => !localStorage.getItem(TOKEN_KEY));
   const [blogUrl, setBlogUrl] = useState("");
   const [maxPosts, setMaxPosts] = useState(15);
   const [pasteRows, setPasteRows] = useState<PasteRow[]>([]);
@@ -54,11 +55,15 @@ export function StyleLearningView() {
     localStorage.setItem(TOKEN_KEY, v); // persist pre-shared token locally
   }
 
-  useEffect(() => {
+  function loadLearningStatus() {
     if (!token) return;
     postJson<LearningStatus>({ action: "get-learning-status" }, token)
       .then(setLearningStatus)
       .catch(() => undefined);
+  }
+
+  useEffect(() => {
+    loadLearningStatus();
   }, []);
 
   function addPasteRow() {
@@ -91,8 +96,9 @@ export function StyleLearningView() {
       // in-progress -> keep runId so the user can resume (Req 1.9)
       setResumeRunId(res.status === "in-progress" ? res.runId : null);
     } catch (err) {
-      const msg =
-        err instanceof ApiRequestError ? `${err.code}: ${err.message}` : String(err);
+      const msg = err instanceof ApiRequestError && err.code === "bad_request"
+        ? "학습할 포스트가 없습니다. 붙여넣기 행을 추가하고 postId와 본문을 입력해주세요."
+        : err instanceof ApiRequestError ? `${err.code}: ${err.message}` : String(err);
       setError(msg);
     } finally {
       setStatus("idle");
@@ -114,17 +120,25 @@ export function StyleLearningView() {
             ))}
           </ul>
           {learningStatus.updatedAt && <small>최근 학습: {learningStatus.updatedAt}</small>}
+          <button type="button" onClick={loadLearningStatus}>학습 목록 새로고침</button>
         </section>
       )}
       <form onSubmit={submit}>
-        <label>
-          토큰
-          <input
-            type="password"
-            value={token}
-            onChange={(e) => updateToken(e.target.value)}
-          />
-        </label>
+        {showToken ? (
+          <label>
+            토큰
+            <input
+              type="password"
+              value={token}
+              onChange={(e) => updateToken(e.target.value)}
+            />
+          </label>
+        ) : (
+          <div className="token-saved">
+            <span>저장된 톨큰을 사용하는 중</span>
+            <button type="button" onClick={() => setShowToken(true)}>톨큰 변경</button>
+          </div>
+        )}
         <label>
           네이버 블로그 URL
           <input

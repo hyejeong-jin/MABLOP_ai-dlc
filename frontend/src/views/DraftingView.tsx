@@ -36,6 +36,7 @@ interface DraftResponse {
 
 export function DraftingView() {
   const [token, setToken] = useState(() => localStorage.getItem(TOKEN_KEY) ?? "");
+  const [showToken, setShowToken] = useState(() => !localStorage.getItem(TOKEN_KEY));
   const [title, setTitle] = useState("");
   const [outline, setOutline] = useState("");
   const [notes, setNotes] = useState("");
@@ -169,14 +170,21 @@ export function DraftingView() {
     <section>
       <h1>초안 작성</h1>
       <form onSubmit={submit}>
-        <label>
-          토큰
-          <input
-            type="password"
-            value={token}
-            onChange={(e) => updateToken(e.target.value)}
-          />
-        </label>
+        {showToken ? (
+          <label>
+            토큰
+            <input
+              type="password"
+              value={token}
+              onChange={(e) => updateToken(e.target.value)}
+            />
+          </label>
+        ) : (
+          <div className="token-saved">
+            <span>저장된 톨큰을 사용하는 중</span>
+            <button type="button" onClick={() => setShowToken(true)}>톨수 변경</button>
+          </div>
+        )}
         <label>
           제목
           <input value={title} onChange={(e) => setTitle(e.target.value)} />

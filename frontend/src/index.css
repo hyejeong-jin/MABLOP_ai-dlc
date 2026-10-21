@@ -65,3 +65,5 @@ main pre { max-height: 650px; overflow: auto; padding: 22px; white-space: pre-wr
   main fieldset > div:not([role="group"]) { grid-template-columns: 72px 1fr; }
   main fieldset > div:not([role="group"]) button { grid-column: 2; justify-self: start; }
 }
+.token-saved { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 14px; border: 1px solid #dedcea; border-radius: 10px; color: #514e67; background: #fbfbfe; font-size: 12px; }
+.token-saved button { padding: 7px 10px; font-size: 11px; }
