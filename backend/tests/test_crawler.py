@@ -109,3 +109,17 @@ def test_crawl_surfaces_failure(monkeypatch):
     monkeypatch.setattr(urllib.request, "urlopen", boom)
     with pytest.raises(crawler.CrawlError):
         crawler.crawl("https://m.blog.naver.com/x/1")
+
+
+def test_discover_naver_posts_from_public_rss(monkeypatch):
+    rss = """<?xml version="1.0"?><rss><channel>
+      <item><title>Post one</title><link>https://blog.naver.com/woonii__/123</link>
+      <description><![CDATA[<p>?? RSS ?? ??</p>]]></description></item>
+      <item><title>Post two</title><link>https://blog.naver.com/woonii__/456</link>
+      <description><![CDATA[? ?? ?? ??]]></description></item>
+    </channel></rss>"""
+    monkeypatch.setattr(crawler, "crawl", lambda url: rss)
+    posts = crawler.discover_naver_posts("https://blog.naver.com/woonii__", max_posts=1)
+    assert len(posts) == 1
+    assert posts[0]["url"].endswith("/123")
+    assert "?? RSS ?? ??" in posts[0]["fallbackText"]

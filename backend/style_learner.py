@@ -76,14 +76,24 @@ def _discover_posts(payload: dict) -> list[dict]:
     """
     seen: dict[str, dict] = {}
 
-    for i, raw in enumerate(payload.get("posts") or []):
+    explicit_posts = payload.get("posts") or []
+    if not explicit_posts and payload.get("blogUrl"):
+        try:
+            explicit_posts = crawler.discover_naver_posts(
+                payload["blogUrl"], _max_post_count()
+            )
+        except Exception:
+            explicit_posts = []
+
+    for i, raw in enumerate(explicit_posts):
         if isinstance(raw, str):
-            url, given_id = raw, None
+            url, given_id, fallback = raw, None, ""
         else:
             url, given_id = raw.get("url"), raw.get("postId")
+            fallback = raw.get("fallbackText", "")
         post_id = given_id or _post_id_from_url(url) or f"p{i}"
-        if url:
-            seen.setdefault(post_id, {"postId": post_id, "url": url})
+        if url or fallback:
+            seen.setdefault(post_id, {"postId": post_id, "url": url, "fallbackText": fallback})
 
     # pastedTexts can introduce posts that have no crawlable URL at all.
     for pasted in payload.get("pastedTexts") or []:
@@ -131,7 +141,7 @@ def _get_body(post: dict, pasted: dict[str, str]) -> str:
             return body
     except crawler.CrawlError:
         pass
-    return pasted.get(post["postId"], "")
+    return pasted.get(post["postId"], "") or post.get("fallbackText", "")
 
 
 def _store_raw(post_id: str, body: str) -> None:

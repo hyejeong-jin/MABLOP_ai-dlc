@@ -64,3 +64,8 @@ These IDs are wired as `infra/template.yaml` parameter defaults (EmbeddingModelI
 ## Account availability note
 
 Claude Haiku 5.5 returned `not available for this account` in the Bedrock console. Sonnet 4.5 succeeded in the same account and region, so MVP style analysis and image captioning use Sonnet 4.5 until Haiku access is granted.
+
+
+## D15 Naver collection policy
+
+Use public RSS discovery and public page extraction only. Do not bypass login, robots rules, private-post settings, or access controls. Keep full-body paste as the reliable fallback.

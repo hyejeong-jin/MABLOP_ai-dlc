@@ -1,8 +1,11 @@
 """HTTP crawl + HTML->text body extraction (Req 1.2, 1.7). Stdlib only."""
 
+import html
 import re
 import urllib.request
 from html.parser import HTMLParser
+from urllib.parse import urlsplit
+from xml.etree import ElementTree
 from urllib.error import URLError
 from urllib.request import Request
 
@@ -89,3 +92,33 @@ def _is_naver_body(attrs) -> bool:
         if name == "id" and value and _NAVER_BODY_ID in value:
             return True
     return False
+
+
+def discover_naver_posts(blog_url: str, max_posts: int = 20) -> list[dict]:
+    """Discover public Naver posts from the official public RSS feed.
+
+    RSS is a public feed. This does not bypass login, robots, or access
+    controls. Each item returns a post URL and a short public description that
+    can be used only as a crawl-failure fallback.
+    """
+    path = urlsplit(blog_url.strip()).path.strip("/")
+    blog_id = path.split("/", 1)[0] if path else ""
+    if not blog_id:
+        return []
+    rss = crawl(f"https://rss.blog.naver.com/{blog_id}.xml")
+    root = ElementTree.fromstring(rss)
+    posts = []
+    for item in root.findall(".//item"):
+        link = (item.findtext("link") or "").strip()
+        if not link:
+            continue
+        description = html.unescape(item.findtext("description") or "").strip()
+        posts.append({
+            "url": link,
+            "title": (item.findtext("title") or "").strip(),
+            "fallbackText": extract_body(description) if description else "",
+        })
+        if len(posts) >= max_posts:
+            break
+    return posts
+
