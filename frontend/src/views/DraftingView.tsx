@@ -3,7 +3,9 @@
 // (Req 3.1, 6.1). Resize/compress + 10-image cap via images.ts (Req 7.3, 7.4).
 // Browser never ships bytes to the Lambda; NO Bedrock/AWS SDK (Req 6.1). YAGNI: local state.
 import { useEffect, useState } from "react";
+import { CircleAlert, Check, Copy, Download, Info } from "lucide-react";
 import { postJson, ApiRequestError } from "../api";
+import { TokenField } from "../TokenField";
 import { capImages, resizeImage, MAX_IMAGES } from "../images";
 
 // shared token key (same as StyleLearningView) so the pre-shared token is reused.
@@ -113,7 +115,7 @@ export function DraftingView() {
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
-    setStage("\uc900\ube44 \uc911...");
+    setStage("준비 중...");
     setError(undefined);
     setMarkdown(undefined);
     try {
@@ -121,7 +123,7 @@ export function DraftingView() {
       let imageKeys: string[] = [];
 
       if (capped.length) {
-        setStage(`\uc774\ubbf8\uc9c0 ${capped.length}\uc7a5 \uc555\ucd95 \ubc0f \uc5c5\ub85c\ub4dc \uc911...`);
+        setStage(`이미지 ${capped.length}장 압축 및 업로드 중...`);
         // 1. compress each image client-side (Req 7.3).
         const blobs = await Promise.all(capped.map((a) => resizeImage(a.file)));
 
@@ -151,7 +153,7 @@ export function DraftingView() {
 
         imageKeys = presign.uploads.map((u) => u.key);
 
-        setStage("\uc774\ubbf8\uc9c0 \ub9e5\ub77d \ubd84\uc11d \uc911... (\uc774\ubbf8\uc9c0 \uc218\uc5d0 \ub530\ub77c \uc218\ubd84 \uac78\ub9b4 \uc218 \uc788\uc2b5\ub2c8\ub2e4)");
+        setStage("이미지 맥락 분석 중... (이미지 수에 따라 수분 걸릴 수 있습니다)");
         // 4. analyze-images: send keys (+ optional user description for cost-0 skip).
         await postJson(
           {
@@ -165,7 +167,7 @@ export function DraftingView() {
         );
       }
 
-      setStage("\uc544\uc774\uac00 \ucd08\uc548 \uc791\uc131 \uc911... (\uac80\uc0c9\u00b7\ubb38\uccb4 \ubd84\uc11d\u00b7\ubcf8\ubb38 \uc0dd\uc131\uc744 \uc9c4\ud589\ud569\ub2c8\ub2e4)");
+      setStage("내 문체로 초안을 쓰는 중... (자료 검색, 문체 분석, 본문 생성 순서로 진행합니다)");
       // 5. generate-draft: keys only, synchronous return.
       const draft = await postJson<DraftResponse>(
         { action: "generate-draft", title, outline, notes, imageKeys },
@@ -185,40 +187,29 @@ export function DraftingView() {
 
   return (
     <section>
-      <h1>초안 작성</h1>
-      <form onSubmit={submit}>
-        {showToken ? (
-          <label>
-            토큰
-            <input
-              type="password"
-              value={token}
-              onChange={(e) => updateToken(e.target.value)}
-            />
-          </label>
-        ) : (
-          <div className="token-saved">
-            <span>저장된 톨큰을 사용하는 중</span>
-            <button type="button" onClick={() => setShowToken(true)}>톨수 변경</button>
-          </div>
-        )}
-        <label>
+      <h2 className="page-title">초안 작성</h2>
+      <p className="page-lead">제목과 개요, 메모를 적고 사진을 붙이면 학습한 문체로 초안을 만들어요. 2~5분쯤 걸립니다.</p>
+
+      <form className="stack" onSubmit={submit}>
+        <TokenField token={token} show={showToken} onChange={updateToken} onShow={() => setShowToken(true)} />
+        <label className="field">
           제목
           <input value={title} onChange={(e) => setTitle(e.target.value)} />
         </label>
-        <label>
+        <label className="field">
           개요
           <textarea value={outline} onChange={(e) => setOutline(e.target.value)} />
         </label>
-        <label>
+        <label className="field">
           메모
           <textarea value={notes} onChange={(e) => setNotes(e.target.value)} />
         </label>
 
         <fieldset>
           <legend>이미지 첨부 (최대 {MAX_IMAGES}장)</legend>
-          <p aria-live="polite">선택된 이미지: {images.length}/{MAX_IMAGES}</p>
+          <p className="field-hint mono" aria-live="polite">선택된 이미지: {images.length}/{MAX_IMAGES}</p>
           <div
+            className="dropzone"
             role="group"
             aria-label="이미지 끌어놓기 영역"
             onDragOver={(e) => e.preventDefault()}
@@ -235,28 +226,29 @@ export function DraftingView() {
             />
           </div>
           {images.map((a, i) => (
-            <div key={`${a.file.name}-${i}`}>
+            <div className="attach-row" key={`${a.file.name}-${i}`}>
               <ImagePreview file={a.file} />
-              <span>{a.file.name}</span>
-              <input
-                aria-label={`이미지 설명 ${i}`}
-                value={a.description}
-                onChange={(e) => setDescription(i, e.target.value)}
-                placeholder="설명 (선택: 입력하면 비전 호출 생략)"
-              />
-              <button type="button" onClick={() => removeImage(i)}>
+              <div className="attach-body">
+                <span className="attach-name">{a.file.name}</span>
+                <input
+                  aria-label={`이미지 설명 ${i}`}
+                  value={a.description}
+                  onChange={(e) => setDescription(i, e.target.value)}
+                  placeholder="설명 (선택: 입력하면 비전 호출 생략)"
+                />
+              </div>
+              <button type="button" className="btn-sm" onClick={() => removeImage(i)}>
                 제거
               </button>
             </div>
           ))}
         </fieldset>
 
-        <button type="submit" disabled={loading}>
+        <button type="submit" className="btn-primary btn-block" disabled={loading}>
           초안 생성
         </button>
       </form>
 
-      {/* synchronous result area (ResultView full impl in 11.6; keys-only path done) */}
       <DraftResult
         loading={loading}
         stage={stage}
@@ -281,11 +273,10 @@ function ImagePreview({ file }: { file: File }) {
     return () => URL.revokeObjectURL(url);
   }, [file]);
 
-  return src ? <img src={src} alt={file.name} width={96} height={96} /> : null;
+  return src ? <img src={src} alt={file.name} width={72} height={72} /> : <span aria-hidden="true" />;
 }
 
 // Prop-driven result renderer (mirrors ResultView's {loading, markdown?, error?} shape).
-// Inlined here so 11.4 stays self-contained; 11.6 owns the shared ResultView.
 function DraftResult(props: {
   loading: boolean;
   stage: string;
@@ -299,29 +290,41 @@ function DraftResult(props: {
   const { loading, stage, elapsedSeconds, markdown, error, copied, onCopy, onDownload } = props;
   if (loading) {
     return (
-      <div role="status">
-        <p>\ucd08\uc548 \uc0dd\uc131 \uc911...</p>
-        <p>{stage}</p>
-        <p>\uacbd\uacfc \uc2dc\uac04: {elapsedSeconds}\ucd08</p>
+      <div className="callout page-section" role="status">
+        <Info size={16} aria-hidden="true" />
+        <div>
+          <p>초안 생성 중...</p>
+          <p className="meta">{stage}</p>
+          <p className="meta mono">경과 시간: {elapsedSeconds}초</p>
+        </div>
       </div>
     );
   }
-  if (error) return <p role="alert">{error}</p>;
+  if (error) {
+    return (
+      <div className="callout callout-error page-section" role="alert">
+        <CircleAlert size={16} aria-hidden="true" />
+        <p>{error}</p>
+      </div>
+    );
+  }
   if (markdown) {
     return (
       <div className="draft-result-inline">
         <div className="draft-result-actions">
-          <strong>생성된 초안</strong>
+          <h3 className="section-title">생성된 초안</h3>
           <div>
-            <button type="button" onClick={() => onCopy(markdown)}>
+            <button type="button" className="btn-sm btn-with-icon" onClick={() => onCopy(markdown)}>
+              {copied ? <Check size={14} aria-hidden="true" /> : <Copy size={14} aria-hidden="true" />}
               {copied ? "복사됨" : "복사"}
             </button>
-            <button type="button" onClick={() => onDownload(markdown)}>
+            <button type="button" className="btn-sm btn-with-icon" onClick={() => onDownload(markdown)}>
+              <Download size={14} aria-hidden="true" />
               다운로드
             </button>
           </div>
         </div>
-        <pre aria-label="초안 결과">{markdown}</pre>
+        <pre className="draft-output" aria-label="초안 결과">{markdown}</pre>
       </div>
     );
   }
