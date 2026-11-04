@@ -24,6 +24,7 @@ DISPATCH = {
     "generate-draft": lambda body: drafting_engine.generate_draft(body),
     "get-result": lambda body: _get_result(body),
     "get-learning-status": lambda body: style_learner.get_learning_status(),
+    "preview-learning-sources": lambda body: style_learner.preview_learning_sources(body),
     "rebuild-from-stored": lambda body: style_learner.rebuild_from_stored(),
 }
 

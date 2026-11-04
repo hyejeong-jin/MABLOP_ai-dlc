@@ -285,6 +285,24 @@ def rebuild_from_stored() -> dict:
     return _complete(state, [])
 
 
+def preview_learning_sources(payload: dict) -> dict:
+    """Preview public RSS-discovered posts without writing data or calling Bedrock."""
+    payload = payload or {}
+    posts = _discover_posts(payload)
+    return {
+        "count": len(posts),
+        "posts": [
+            {
+                "postId": post["postId"],
+                "url": post.get("url"),
+                "title": post.get("title", ""),
+                "hasRssFallback": bool(post.get("fallbackText")),
+            }
+            for post in posts
+        ],
+    }
+
+
 def get_learning_status() -> dict:
     """Return the last completed learning summary for the shared workspace."""
     try:

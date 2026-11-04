@@ -36,6 +36,19 @@ interface PasteRow {
   text: string;
 }
 
+interface PreviewPost {
+  postId: string;
+  url?: string;
+  title?: string;
+  hasRssFallback?: boolean;
+}
+
+interface PreviewResponse {
+  count: number;
+  posts: PreviewPost[];
+}
+
+
 const TOKEN_KEY = "mablop-token";
 
 function formatKst(value?: string) {
@@ -60,6 +73,9 @@ export function StyleLearningView() {
   const [result, setResult] = useState<LearnStyleResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [learningStatus, setLearningStatus] = useState<LearningStatus | null>(null);
+  const [preview, setPreview] = useState<PreviewResponse | null>(null);
+  const [previewLoading, setPreviewLoading] = useState(false);
+  const [previewError, setPreviewError] = useState<string | null>(null);
 
   function updateToken(v: string) {
     setToken(v);
@@ -76,6 +92,26 @@ export function StyleLearningView() {
   useEffect(() => {
     loadLearningStatus();
   }, []);
+
+  async function previewSources() {
+    if (!blogUrl || !token) {
+      setPreviewError("토큰과 네이버 블로그 URL을 먼저 입력하세요.");
+      return;
+    }
+    setPreviewLoading(true);
+    setPreviewError(null);
+    try {
+      const data = await postJson<PreviewResponse>(
+        { action: "preview-learning-sources", blogUrl, maxPosts },
+        token,
+      );
+      setPreview(data);
+    } catch (err) {
+      setPreviewError(err instanceof ApiRequestError ? `${err.code}: ${err.message}` : String(err));
+    } finally {
+      setPreviewLoading(false);
+    }
+  }
 
   function addPasteRow() {
     setPasteRows((rows) => [...rows, { postId: "", text: "" }]);
@@ -169,6 +205,28 @@ export function StyleLearningView() {
           />
         </label>
 
+        <div className="source-preview-action">
+          <button type="button" onClick={previewSources} disabled={previewLoading || !blogUrl}>
+            {previewLoading ? "공개 포스트 확인 중..." : "공개 포스트 미리보기"}
+          </button>
+          <span>학습 전에 공개 RSS에서 발견되는 포스트를 확인합니다.</span>
+        </div>
+        {previewError && <p role="alert">{previewError}</p>}
+        {preview && (
+          <fieldset className="source-preview">
+            <legend>발견된 공개 포스트 {preview.count}개</legend>
+            {preview.posts.length === 0 && <p>발견된 포스트가 없습니다. 붙여넣기 입력을 사용하세요.</p>}
+            <ul>
+              {preview.posts.map((post) => (
+                <li key={post.postId}>
+                  <strong>{post.postId}</strong>
+                  {post.title && <span> · {post.title}</span>}
+                  {post.hasRssFallback && <small> · RSS fallback 가능</small>}
+                </li>
+              ))}
+            </ul>
+          </fieldset>
+        )}
         <fieldset>
           <legend>붙여넣기 대체 입력</legend>
           <p>자동 수집이 실패하면 행을 추가하고 고유한 postId와 포스트 본문을 붙여넣으세요.</p>
