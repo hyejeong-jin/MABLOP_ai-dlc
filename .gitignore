@@ -35,3 +35,4 @@ temp/
 
 # Original logo artwork (the web-sized copies live in frontend/public)
 /마블롭_로고_*.png
+*.tsbuildinfo
