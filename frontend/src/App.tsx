@@ -33,7 +33,7 @@ function Shell() {
         <img className="brand-mark" src={`${import.meta.env.BASE_URL}logo-mark.png`} alt="" width="44" height="26" />
         <div className="brand-text">
           <h1 className="wordmark">MABLOP</h1>
-          <p className="app-subtitle">내 블로그 문체로 쓰는 초안 도구</p>
+          <p className="app-subtitle">쌓일수록 나다워지는 글쓰기 AI</p>
         </div>
       </header>
       <nav className="tabs" aria-label="주요 기능">

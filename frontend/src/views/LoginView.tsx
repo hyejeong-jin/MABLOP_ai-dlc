@@ -83,7 +83,7 @@ export function LoginView() {
       <header className="app-header">
         <img className="auth-logo" src={`${import.meta.env.BASE_URL}logo-full.png`} alt="" width="220" height="152" />
         <h1 className="wordmark sr-only">MABLOP</h1>
-        <p className="app-subtitle">내 블로그 문체로 쓰는 초안 도구</p>
+        <p className="app-subtitle">쌓일수록 나다워지는 글쓰기 AI</p>
       </header>
 
       <div className="mode-tabs" role="tablist" aria-label="로그인 방식">
