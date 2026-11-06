@@ -9,7 +9,7 @@ import { ApiRequestError, postJson } from "../api";
 import { formatKst, formatKstDate } from "../format";
 
 type UserStatus = "pending" | "active" | "disabled";
-type UserAction = "approve" | "reject" | "disable" | "enable" | "reset";
+type UserAction = "approve" | "reject" | "disable" | "enable" | "reset" | "delete";
 type GrantAction = "approve" | "reject" | "revoke";
 type ExpiryDays = 7 | 30 | 90;
 
@@ -70,6 +70,7 @@ const USER_ACTION_NAME: Record<UserAction, string> = {
   disable: "admin-disable-user",
   enable: "admin-enable-user",
   reset: "admin-reset-password",
+  delete: "admin-delete-user",
 };
 
 const GRANT_ACTION_NAME: Record<GrantAction, string> = {
@@ -82,6 +83,7 @@ const USER_CONFIRM_TEXT: Partial<Record<UserAction, string>> = {
   reject: "이 가입 신청을 거절할까요?",
   disable: "이 계정을 비활성화할까요?",
   reset: "비밀번호를 초기화할까요?",
+  delete: "정말 삭제할까요? 이 사용자의 모든 데이터가 영구 삭제됩니다.",
 };
 
 const GRANT_CONFIRM_TEXT: Partial<Record<GrantAction, string>> = {
@@ -258,7 +260,7 @@ export function AdminView() {
         });
         setCopyState("idle");
       }
-      if (action === "reject") {
+      if (action === "reject" || action === "delete") {
         setLegacyNotices((prev) => omitKey(prev, userId));
       }
       await loadUsers();
@@ -506,6 +508,14 @@ export function AdminView() {
                               onClick={() => openUserConfirm(user.userId, "reset")}
                             >
                               비밀번호 초기화
+                            </button>
+                            <button
+                              type="button"
+                              className="btn-sm btn-danger"
+                              disabled={isBusy}
+                              onClick={() => openUserConfirm(user.userId, "delete")}
+                            >
+                              계정 삭제
                             </button>
                           </>
                         )}

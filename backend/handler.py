@@ -44,6 +44,7 @@ DISPATCH = {
     "admin-reject-user": auth_service.admin_reject_user,
     "admin-disable-user": auth_service.admin_disable_user,
     "admin-enable-user": auth_service.admin_enable_user,
+    "admin-delete-user": auth_service.admin_delete_user,
     "admin-reset-password": auth_service.admin_reset_password,
     # Bedrock usage Grants
     "grant-request": grant_service.request,
@@ -72,6 +73,7 @@ AUTH_SCOPE_ACTIONS = frozenset(
         "admin-reject-user",
         "admin-disable-user",
         "admin-enable-user",
+        "admin-delete-user",
         "admin-reset-password",
         "grant-request",
         "grant-list-mine",

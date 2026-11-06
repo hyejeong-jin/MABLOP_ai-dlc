@@ -73,6 +73,8 @@ button:hover:not(:disabled) { background: #f3f1ed; }
 .btn-quiet { border-color: transparent; background: transparent; color: var(--ink-2); padding: 6px 10px; font-size: 13px; }
 .btn-quiet:hover:not(:disabled) { background: #f3f1ed; }
 .btn-sm { padding: 6px 11px; font-size: 13px; }
+.btn-danger { color: #a33a2a; border-color: #d9aaa2; }
+.btn-danger:hover:not(:disabled) { background: #fbefec; }
 .btn-with-icon { display: inline-flex; align-items: center; gap: 6px; }
 
 /* feedback */
@@ -109,7 +111,7 @@ button:hover:not(:disabled) { background: #f3f1ed; }
 .draft-output { max-height: 70dvh; margin: 0; overflow: auto; padding: 24px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); font-family: inherit; font-size: 16px; font-weight: 450; line-height: 1.95; white-space: pre-wrap; word-break: keep-all; overflow-wrap: anywhere; }
 
 /* login: one centered column, no navigation */
-.auth-shell { display: grid; place-content: center; justify-items: stretch; gap: 20px; width: min(360px, calc(100% - 40px)); min-height: 100dvh; margin: 0 auto; padding: 48px 0; }
+.auth-shell { display: grid; grid-template-columns: minmax(0, 1fr); place-content: center; justify-items: stretch; gap: 20px; width: min(360px, calc(100% - 40px)); min-height: 100dvh; margin: 0 auto; padding: 48px 0; }
 .auth-shell .app-header { margin-bottom: 4px; text-align: center; }
 .auth-shell form { display: grid; gap: 16px; }
 .mode-tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--line); overflow-x: auto; }

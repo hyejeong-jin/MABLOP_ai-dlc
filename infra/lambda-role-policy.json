@@ -55,8 +55,7 @@
       "Action": "s3:DeleteObject",
       "Resource": [
         "arn:aws:s3:::${BucketName}/users/_auth/login/*",
-        "arn:aws:s3:::${BucketName}/users/*/account.json",
-        "arn:aws:s3:::${BucketName}/users/*/generated-posts/*"
+        "arn:aws:s3:::${BucketName}/users/u_*"
       ]
     },
     {

@@ -13,7 +13,7 @@ Lambda role grants only:
 - `bedrock:InvokeModel` on enumerated model ARNs (no `bedrock:*`).
 - `s3:GetObject`/`s3:PutObject` scoped to the 8 legacy prefixes plus `users/*` (no bucket-wide `s3:*`).
 - `s3:ListBucket` with an `s3:prefix` condition: `raw-posts/*`, `users/*`, `generated-posts/*`.
-- `s3:DeleteObject` only on `users/_auth/login/*`, `users/*/account.json`, `users/*/generated-posts/*`. No delete permission on any legacy prefix.
+- `s3:DeleteObject` only on `users/_auth/login/*` and `users/u_*` (per-user prefixes; `users/_auth/` is otherwise excluded). No delete permission on any legacy prefix.
 - `ssm:GetParameter` on exactly two parameters: the Bootstrap_Token (`/mablop/token`) and the Signing_Secret (`/mablop/signing-secret`).
 - logs: `CreateLogStream`/`PutLogEvents` on the Lambda log group only (no account-wide logs).
 
@@ -45,7 +45,7 @@ Replaces the single shared Pre_Shared_Token with per-user accounts.
 - **Signing_Secret**: SSM SecureString read at runtime (only the path is configured). A missing, unreadable, or shorter-than-32-character secret, or one stored at the Bootstrap_Token path, fails closed with `internal_error`. Rotating it logs everyone out.
 - **Bootstrap_Token**: the former shared token, now accepted only by `bootstrap-admin`, which creates the single administrator with an empty workspace. A create-once administrator pointer (`users/_auth/admin.json`) makes a second call fail with 403 before any input is read. The token does not authenticate any other action.
 - **Throttling** (state in S3, no new service): 5 failed logins per loginId in 10 minutes block that loginId for 10 minutes, even for a correct password. 30 failures across all loginIds (login, change-password, bootstrap-admin) in 10 minutes block logins and `bootstrap-admin` for 10 minutes. Registration is limited to 5 per hour. Wrong current passwords in `change-password` count as failures. The existing request rate limit and body-length cap stay in front.
-- **Roles**: `member` and `admin`. Eleven actions are administrator-only: `migrate-legacy-data`, the six `admin-*-user` account actions (list, approve, reject, disable, enable, reset password), and four `admin-grant-*` actions (list, approve, reject, revoke). The administrator account itself cannot be changed through the API.
+- **Roles**: `member` and `admin`. Twelve actions are administrator-only: `migrate-legacy-data`, the seven `admin-*-user` account actions (list, approve, reject, disable, enable, reset password, delete), and four `admin-grant-*` actions (list, approve, reject, revoke). The administrator account itself cannot be changed through the API.
 - **Logging**: the audit log records only event, outcome, and the userId of an existing user. It never records passwords, tokens, or the loginId of an unknown account. Unexpected exceptions return a generic message and log only the exception class name.
 
 ## Per-user data separation

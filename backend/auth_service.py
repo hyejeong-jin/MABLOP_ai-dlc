@@ -477,6 +477,24 @@ def admin_reset_password(body, ctx, now=None) -> dict:
     return {"userId": target["userId"], "temporaryPassword": temporary}
 
 
+def admin_delete_user(body, ctx, now=None) -> dict:
+    """Permanently delete a non-administrator account and all of its data.
+
+    Data objects go first; the loginId lookup and account.json go last, so an interrupted run can
+    be repeated (deletes are idempotent). Legacy originals and the legacy binding are untouched.
+    """
+    target = _resolve_target(body)
+    user_id = target["userId"]
+    prefix = f"users/{user_id}/"
+    account_key = f"{prefix}account.json"
+    for obj in s3store.list_keys(prefix):
+        if obj["key"] != account_key:
+            s3store.delete(obj["key"])
+    auth_store.release_login_id(target["loginId"], user_id)
+    auth_store.delete_user(user_id)
+    auth_log.log("admin-delete-user", "success", user_id)
+    return {"userId": user_id, "deleted": True}
+
 # --- migrate-legacy-data --------------------------------------------------------------------
 
 

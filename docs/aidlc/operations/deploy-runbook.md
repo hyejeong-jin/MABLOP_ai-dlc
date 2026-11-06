@@ -256,7 +256,7 @@ aws cloudformation delete-stack --stack-name mablop --region us-east-1
 
 - `S3Prefixes`: Get/Put 대상에 `users/*` 추가. 기존 레거시 prefix 8개 권한은 유지.
 - `ListRawPosts`(Sid 유지): `s3:ListBucket`의 `s3:prefix` 조건에 `users/*`, `generated-posts/*` 추가. 이름은 `raw-posts/*`만 허용하던 때의 것이며 지금은 좁은 이름입니다.
-- `DeleteUserObjects`(신규): `s3:DeleteObject`를 `users/_auth/login/*`, `users/*/account.json`, `users/*/generated-posts/*` 세 패턴에만 허용. 레거시 prefix에는 삭제 권한이 없습니다. 이 권한으로 Lambda는 모든 사용자의 초안과 계정 객체를 삭제할 수 있어 사용자 간 분리는 애플리케이션 코드가 지킵니다. 세 패턴 중 `account.json`과 loginId 조회 패턴을 허용하지 않기로 하면 `admin-reject-user`는 `{"status": "rejected"}` 표식으로 덮어쓰는 대체 구현이 필요합니다. `delete-draft`는 대체 수단이 없습니다.
+- `DeleteUserObjects`(신규): `s3:DeleteObject`를 `users/_auth/login/*`, `users/u_*` 두 패턴에만 허용(관리자 계정 삭제 `admin-delete-user`가 사용자 데이터 전체를 지움). 레거시 prefix에는 삭제 권한이 없습니다. 이 권한으로 Lambda는 모든 사용자의 초안과 계정 객체를 삭제할 수 있어 사용자 간 분리는 애플리케이션 코드가 지킵니다. 세 패턴 중 `account.json`과 loginId 조회 패턴을 허용하지 않기로 하면 `admin-reject-user`는 `{"status": "rejected"}` 표식으로 덮어쓰는 대체 구현이 필요합니다. `delete-draft`는 대체 수단이 없습니다.
 - `ReadToken`: `ssm:GetParameter` 대상에 서명 비밀 파라미터 ARN 추가(두 개). SecureString은 AWS 관리형 `aws/ssm` 키를 쓰므로 `kms:Decrypt` 추가는 필요 없습니다.
 - 바뀌지 않는 것: Function URL CORS(`Content-Type`, `X-Mablop-Token`), 버킷 CORS, 과금 알람, 리소스 유형, GitHub 배포 역할.
 

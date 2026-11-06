@@ -25,6 +25,7 @@ ACCOUNT_ACTIONS = {
     "admin-disable-user",
     "admin-enable-user",
     "admin-reset-password",
+    "admin-delete-user",
 }
 GRANT_ACTIONS = {
     "grant-request",
@@ -54,6 +55,7 @@ ADMIN_ONLY = {
     "admin-disable-user",
     "admin-enable-user",
     "admin-reset-password",
+    "admin-delete-user",
     "admin-grant-list",
     "admin-grant-approve",
     "admin-grant-reject",
@@ -99,15 +101,15 @@ def _body(resp):
 # --- tables ------------------------------------------------------------------------------
 
 
-def test_dispatch_contains_the_eight_legacy_and_twenty_new_actions(h):
-    assert len(NEW_ACTIONS) == 20
+def test_dispatch_contains_the_eight_legacy_and_twentyone_new_actions(h):
+    assert len(NEW_ACTIONS) == 21
     assert set(h.DISPATCH) == LEGACY_ACTIONS | NEW_ACTIONS
     assert all(callable(fn) for fn in h.DISPATCH.values())
 
 
-def test_auth_scope_actions_are_exactly_the_twenty_new_actions(h):
+def test_auth_scope_actions_are_exactly_the_twentyone_new_actions(h):
     assert h.AUTH_SCOPE_ACTIONS == frozenset(NEW_ACTIONS)
-    assert len(h.AUTH_SCOPE_ACTIONS) == 20
+    assert len(h.AUTH_SCOPE_ACTIONS) == 21
     assert h.AUTH_SCOPE_ACTIONS.isdisjoint(LEGACY_ACTIONS)
 
 
@@ -115,7 +117,7 @@ def test_admin_only_and_bedrock_action_sets(h):
     import access_controller
 
     assert access_controller.ADMIN_ONLY_ACTIONS == frozenset(ADMIN_ONLY)
-    assert len(access_controller.ADMIN_ONLY_ACTIONS) == 11
+    assert len(access_controller.ADMIN_ONLY_ACTIONS) == 12
     assert access_controller.BEDROCK_ACTIONS == frozenset(BEDROCK)
     assert len(access_controller.BEDROCK_ACTIONS) == 5
     assert access_controller.ADMIN_ONLY_ACTIONS <= set(h.DISPATCH)

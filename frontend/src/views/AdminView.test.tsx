@@ -450,6 +450,35 @@ test("재활성화 sends immediately without a confirmation and reloads", async 
   expect(actions(calls, "admin-list-users")).toHaveLength(2);
 });
 
+test("계정 삭제 needs 확인, then calls admin-delete-user and reloads the list", async () => {
+  const { calls } = wireApi({
+    handlers: {
+      "admin-delete-user": (body, state) => {
+        state.users = state.users.filter((u) => u.userId !== body.userId);
+        return { userId: body.userId, deleted: true };
+      },
+    },
+  });
+  await renderLoaded();
+
+  const row = userRow("전체 사용자", "활동자");
+  fireEvent.click(button(row, "계정 삭제"));
+  expect(
+    within(row).getByText("정말 삭제할까요? 이 사용자의 모든 데이터가 영구 삭제됩니다."),
+  ).toBeInTheDocument();
+  expect(actions(calls, "admin-delete-user")).toHaveLength(0);
+
+  fireEvent.click(button(row, "취소"));
+  expect(actions(calls, "admin-delete-user")).toHaveLength(0);
+
+  fireEvent.click(button(row, "계정 삭제"));
+  fireEvent.click(button(row, "확인"));
+
+  await waitFor(() => expect(actions(calls, "admin-delete-user")).toEqual([{ action: "admin-delete-user", userId: "u_act" }]));
+  await waitFor(() => expect(actions(calls, "admin-list-users")).toHaveLength(2));
+  await waitFor(() => expect(screen.queryByText("활동자")).toBeNull());
+});
+
 test("비밀번호 초기화 needs 확인, then shows the temporary password with copy, notice and 닫기", async () => {
   const writeText = vi.fn().mockResolvedValue(undefined);
   stubClipboard(writeText);

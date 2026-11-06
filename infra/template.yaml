@@ -164,15 +164,14 @@ Resources:
                   - !Sub "arn:aws:s3:::${MablopBucket}/prompt-templates/*"
                   - !Sub "arn:aws:s3:::${MablopBucket}/metadata/*"
                   - !Sub "arn:aws:s3:::${MablopBucket}/users/*"
-              # Delete is limited to login lookups, account records, and per-user drafts.
+              # Delete is limited to login lookups and per-user prefixes (users/u_*; not users/_auth).
               # No delete permission on any legacy prefix (Req 18.5, 18.11).
               - Sid: DeleteUserObjects
                 Effect: Allow
                 Action: s3:DeleteObject
                 Resource:
                   - !Sub "arn:aws:s3:::${MablopBucket}/users/_auth/login/*"
-                  - !Sub "arn:aws:s3:::${MablopBucket}/users/*/account.json"
-                  - !Sub "arn:aws:s3:::${MablopBucket}/users/*/generated-posts/*"
+                  - !Sub "arn:aws:s3:::${MablopBucket}/users/u_*"
               - Sid: LogsOnly
                 Effect: Allow
                 Action:

@@ -177,6 +177,7 @@ ADMIN_ONLY_ACTIONS = frozenset(
         "admin-reject-user",
         "admin-disable-user",
         "admin-enable-user",
+        "admin-delete-user",
         "admin-reset-password",
         "admin-grant-list",
         "admin-grant-approve",

@@ -89,8 +89,7 @@ def _as_list(x):
 LIST_PREFIX_VALUES = {"raw-posts/*", "users/*", "generated-posts/*"}
 DELETE_PATTERNS = {
     "users/_auth/login/*",
-    "users/*/account.json",
-    "users/*/generated-posts/*",
+    "users/u_*",
 }
 _BUCKET = "arn:aws:s3:::${Bucket}"
 
@@ -153,7 +152,7 @@ def _assert_delete_statement(statements, norm):
     assert stmt.get("Effect") == "Allow"
     assert _as_list(stmt["Action"]) == ["s3:DeleteObject"]
     resources = [norm(r) for r in _as_list(stmt["Resource"])]
-    assert len(resources) == len(set(resources)) == 3
+    assert len(resources) == len(set(resources)) == 2
     assert set(resources) == {f"{_BUCKET}/{p}" for p in DELETE_PATTERNS}
     assert "Condition" not in stmt
     # Only the dedicated statement may grant delete.
@@ -180,6 +179,7 @@ def _assert_delete_matching(patterns):
         "users/_auth/login/jhe8888.json",
         "users/u_0123456789abcdef/account.json",
         "users/u_0123456789abcdef/generated-posts/post-1.md",
+        "users/u_0123456789abcdef/metadata/grants.json",
     ]
     for key in allowed:
         assert deletable(key), f"should be deletable: {key}"
@@ -195,12 +195,6 @@ def _assert_delete_matching(patterns):
     other_user_keys = [
         "users/_auth/legacy-owner.json",
         "users/_auth/admin.json",
-        "users/u_0123456789abcdef/raw-posts/a.txt",
-        "users/u_0123456789abcdef/metadata/grants.json",
-        "users/u_0123456789abcdef/metadata/drafts.json",
-        "users/u_0123456789abcdef/style-profile/profile.json",
-        "users/u_0123456789abcdef/images/i.png",
-        "users/u_0123456789abcdef/account.json.bak",
     ]
     for key in legacy_keys + other_user_keys:
         assert not deletable(key), f"must NOT be deletable: {key}"
