@@ -18,6 +18,7 @@ import errors
 import grant_service
 import image_analyzer
 import style_learner
+import usage_meter
 import user_scope
 from errors import MablopError
 
@@ -56,6 +57,7 @@ DISPATCH = {
     # Draft history
     "list-drafts": draft_history.list_drafts,
     "delete-draft": draft_history.delete_draft,
+    "get-usage": usage_meter.get_usage,
 }
 
 # The twenty actions added by user-auth-admin: an unexpected exception there is
@@ -83,6 +85,7 @@ AUTH_SCOPE_ACTIONS = frozenset(
         "admin-grant-revoke",
         "list-drafts",
         "delete-draft",
+        "get-usage",
     }
 )
 

@@ -36,6 +36,7 @@ py-modules = [
     "s3store",
     "style_learner",
     "style_profile",
+    "usage_meter",
     "user_scope",
 ]
 

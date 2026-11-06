@@ -10,6 +10,8 @@ import os
 
 import boto3
 
+import usage_meter
+
 _REGION_ENV = "MABLOP_BEDROCK_REGION"  # default us-east-1 (Req 8.1)
 _DEFAULT_REGION = "us-east-1"
 
@@ -32,7 +34,9 @@ def invoke(model_id: str, body: dict) -> dict:
         accept="application/json",
         contentType="application/json",
     )
-    return json.loads(resp["body"].read())
+    out = json.loads(resp["body"].read())
+    usage_meter.record(model_id, out)
+    return out
 
 
 def embed(text: str) -> list[float]:

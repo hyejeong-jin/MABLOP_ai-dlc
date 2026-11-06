@@ -157,7 +157,7 @@ test("logout from 내 정보 clears the session and returns to the login screen"
   openTab("내 정보");
   expect(await screen.findByRole("heading", { name: "내 정보" })).toBeInTheDocument();
 
-  fireEvent.click(screen.getByRole("button", { name: "로그아웃" }));
+  fireEvent.click(screen.getAllByRole("button", { name: "로그아웃" })[0]);
 
   expect(localStorage.getItem(SESSION_KEY)).toBeNull();
   expect(screen.getByRole("button", { name: "로그인" })).toBeInTheDocument();
