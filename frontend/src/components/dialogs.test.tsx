@@ -22,7 +22,8 @@ test("UsageSection shows month total, per-model rows and the reset time", async 
 
   expect(await screen.findByText("$0.0121")).toBeInTheDocument();
   expect(screen.getAllByText("Claude Sonnet 4.5").length).toBeGreaterThan(0);
-  expect(screen.getByText(/4회 · 입력 17,351/)).toBeInTheDocument();
+  expect(screen.getByText("4")).toBeInTheDocument();
+  expect(screen.getByText("17,351")).toBeInTheDocument();
   expect(screen.getByText(/다음 초기화/)).toBeInTheDocument();
   expect(api.postJson).toHaveBeenCalledWith({ action: "get-usage" });
 });

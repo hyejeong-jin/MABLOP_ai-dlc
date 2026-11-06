@@ -61,6 +61,10 @@ def record(model_id: str, out, now=None) -> None:
             doc["v"] = 1
             doc["month"] = month
             doc["models"] = models
+            activity = dict(doc.get("activity") or {})
+            day = datetime.datetime.fromtimestamp(time.time() if now is None else now, KST).strftime("%Y-%m-%d")
+            activity[day] = int(activity.get(day, 0)) + tokens_in + tokens_out
+            doc["activity"] = activity
             return doc
 
         s3store.update_json(_key(month), mutate, default={"v": 1, "month": month, "models": {}})
@@ -106,6 +110,8 @@ def get_usage(body, ctx, now=None) -> dict:
         "totalUsd": round(total, 6),
         "resetAt": _reset_at(now_s),
         "models": rows,
+        "activity": stored.get("activity") or {},
+        "totalTokens": sum(int((e or {}).get("inputTokens", 0)) + int((e or {}).get("outputTokens", 0)) for e in (stored.get("models") or {}).values() if isinstance(e, dict)),
         "pricing": [
             {"label": p["label"], "inputPerMillion": p["input"], "outputPerMillion": p["output"]}
             for p in PRICES

@@ -233,4 +233,36 @@ select:focus-visible { outline: 2px solid var(--accent); outline-offset: 0; bord
 .avatar { display: inline-grid; place-items: center; flex: none; width: 28px; height: 28px; border-radius: 50%; background: var(--accent); color: #fff; font-size: 11px; font-weight: 700; letter-spacing: .02em; }
 .account-id { overflow: hidden; color: var(--ink-2); font-size: 13px; font-weight: 650; text-overflow: ellipsis; white-space: nowrap; }
 .site-footer { margin-top: 56px; padding: 18px 0 72px; border-top: 1px solid var(--line); color: var(--ink-3); font-size: 12.5px; text-align: center; }
-.site-footer strong { color: var(--ink-2); font-weight: 650; }
+.site-footer strong { color: var(--ink-2); font-weight: 650; }.theme-toggle { width: 36px; min-height: 36px; margin-right: 4px; padding: 0; border: 1px solid var(--line); border-radius: 9px; background: var(--surface); color: var(--ink-2); font-size: 17px; }
+.theme-toggle:hover { color: var(--accent); }
+.usage-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.usage-period { color: var(--ink-3); font-size: 13px; font-variant-numeric: tabular-nums; }
+.usage-summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; margin: 18px 0 24px; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.usage-summary-grid > div { display: grid; gap: 4px; padding: 14px; border-right: 1px solid var(--line); }
+.usage-summary-grid > div:last-child { border-right: 0; }
+.usage-summary-grid span { color: var(--ink-3); font-size: 12px; }
+.usage-summary-grid strong { font-size: 16px; font-variant-numeric: tabular-nums; }
+.usage-subtitle { margin: 20px 0 10px; font-size: 14px; }
+.usage-table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 9px; }
+.usage-table { width: 100%; min-width: 620px; border-collapse: collapse; font-size: 13px; font-variant-numeric: tabular-nums; }
+.usage-table th, .usage-table td { padding: 11px 12px; border-bottom: 1px solid var(--line); text-align: right; white-space: nowrap; }
+.usage-table th { background: var(--bg); color: var(--ink-2); font-size: 12px; font-weight: 650; }
+.usage-table th:first-child, .usage-table td:first-child { text-align: left; }
+.usage-table tbody tr:last-child td { border-bottom: 0; }
+.usage-table td:first-child { display: grid; gap: 1px; }
+.usage-table td small { color: var(--ink-3); font-size: 11px; }
+.table-empty { padding: 20px !important; color: var(--ink-3); text-align: center !important; }
+.activity-title { display: flex; justify-content: space-between; align-items: baseline; }
+.activity-title span { color: var(--ink-3); font-size: 12px; font-weight: 500; }
+.activity-grid { padding: 12px 0 4px; overflow: hidden; }
+.activity-months { display: flex; justify-content: space-between; color: var(--ink-3); font-size: 11px; }
+.heatmap { display: grid; grid-template-columns: repeat(26, 1fr); grid-auto-flow: column; grid-template-rows: repeat(7, 10px); gap: 3px; margin: 7px 0 8px; }
+.heat-cell { display: block; min-width: 8px; min-height: 8px; border-radius: 2px; background: var(--heat-0); }
+.level-0 { background: var(--heat-0); }.level-1 { background: var(--heat-1); }.level-2 { background: var(--heat-2); }.level-3 { background: var(--heat-3); }.level-4 { background: var(--heat-4); }
+.heat-legend { display: flex; align-items: center; justify-content: flex-end; gap: 4px; color: var(--ink-3); font-size: 10px; }
+.heat-legend span { margin: 0 4px; }
+:root { --heat-0: #ecebe7; --heat-1: #cbe0d3; --heat-2: #93c3a4; --heat-3: #559a73; --heat-4: #246b4d; }
+:root[data-theme="dark"] { --bg: #171917; --surface: #202420; --ink: #edf2ec; --ink-2: #c2cbc2; --ink-3: #89948b; --line: #343c35; --line-strong: #4b584c; --accent: #8fcaa4; --accent-hover: #a6d8b8; --accent-soft: #263d2d; --danger: #e89d91; --danger-soft: #432b28; --heat-0: #2c322e; --heat-1: #3c5d47; --heat-2: #548467; --heat-3: #72ad85; --heat-4: #a5d7b4; }
+:root[data-theme="dark"] body { background: var(--bg); }
+:root[data-theme="dark"] button:hover:not(:disabled) { background: #2a302b; }
+@media (max-width: 640px) { .usage-summary-grid { grid-template-columns: 1fr; } .usage-summary-grid > div { border-right: 0; border-bottom: 1px solid var(--line); } .usage-summary-grid > div:last-child { border-bottom: 0; } }

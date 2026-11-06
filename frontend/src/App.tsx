@@ -56,10 +56,13 @@ function Shell() {
   const { user, logout } = useAuth();
   const [view, setView] = useState<View>("style");
   const [dialog, setDialog] = useState<Dialog>(null);
+  const [dark, setDark] = useState(() => localStorage.getItem("mablop-theme") === "dark");
   const help = usePopover();
   const account = usePopover();
   // Draft just generated; ResultView selects it once, then clears it (Req 23.5).
   const [latestDraftId, setLatestDraftId] = useState<string | null>(null);
+
+  useEffect(() => { document.documentElement.dataset.theme = dark ? "dark" : "light"; localStorage.setItem("mablop-theme", dark ? "dark" : "light"); }, [dark]);
 
   const isAdmin = user?.role === "admin";
   const tabs = TABS.filter((tab) => !tab.adminOnly || isAdmin);
@@ -81,6 +84,7 @@ function Shell() {
         </div>
         {isAdmin && <span className="admin-chip">관리자 모드</span>}
         <div className="top-actions popover-host" ref={help.ref}>
+          <button type="button" className="theme-toggle" aria-label={dark ? "일반 모드로 전환" : "다크 모드로 전환"} onClick={() => setDark(!dark)}>{dark ? "☀" : "◐"}</button>
           <button
             type="button"
             className="icon-button"
