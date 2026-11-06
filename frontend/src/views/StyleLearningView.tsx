@@ -79,7 +79,7 @@ export function StyleLearningView() {
 
   async function previewSources() {
     if (!blogUrl) {
-      setPreviewError("네이버 블로그 URL을 먼저 입력하세요.");
+      setPreviewError("블로그 URL을 먼저 입력하세요.");
       return;
     }
     setPreviewLoading(true);
@@ -141,7 +141,7 @@ export function StyleLearningView() {
   return (
     <section>
       <h2 className="page-title">스타일 학습</h2>
-      <p className="page-lead">내 네이버 블로그 글을 읽어 문체를 익힙니다. 학습한 글이 쌓일수록 초안이 내 말투에 가까워져요.</p>
+      <p className="page-lead">내 공개 블로그 글을 읽어 문체를 익힙니다. 학습한 글이 쌓일수록 초안이 내 말투에 가까워져요.</p>
 
       {learningStatus && learningStatus.posts.length > 0 && (
         <section className="card" aria-label="학습 완료된 포스트">
@@ -165,12 +165,12 @@ export function StyleLearningView() {
       <form className="stack page-section" onSubmit={submit}>
         <GrantSelect grants={grants} />
         <label className="field">
-          네이버 블로그 URL
+          블로그 URL
           <input
             type="url"
             value={blogUrl}
             onChange={(e) => setBlogUrl(e.target.value)}
-            placeholder="https://blog.naver.com/<id>"
+            placeholder="https://blog.naver.com/<id> 또는 https://아이디.tistory.com"
           />
         </label>
         <label className="field">

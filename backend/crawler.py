@@ -4,7 +4,7 @@ import html
 import re
 import urllib.request
 from html.parser import HTMLParser
-from urllib.parse import urlsplit
+from urllib.parse import urlsplit, urljoin
 from xml.etree import ElementTree
 from urllib.error import URLError
 from urllib.request import Request
@@ -94,31 +94,61 @@ def _is_naver_body(attrs) -> bool:
     return False
 
 
-def discover_naver_posts(blog_url: str, max_posts: int = 20) -> list[dict]:
-    """Discover public Naver posts from the official public RSS feed.
-
-    RSS is a public feed. This does not bypass login, robots, or access
-    controls. Each item returns a post URL and a short public description that
-    can be used only as a crawl-failure fallback.
-    """
-    path = urlsplit(blog_url.strip()).path.strip("/")
-    blog_id = path.split("/", 1)[0] if path else ""
-    if not blog_id:
+def _feed_candidates(blog_url: str) -> list[str]:
+    """Return public feed candidates for Naver, Tistory, Velog, and common RSS sites."""
+    parsed = urlsplit(blog_url.strip())
+    if not parsed.scheme or not parsed.netloc:
         return []
-    rss = crawl(f"https://rss.blog.naver.com/{blog_id}.xml")
-    root = ElementTree.fromstring(rss)
+    base = f"{parsed.scheme}://{parsed.netloc}"
+    host = parsed.netloc.lower().split(":", 1)[0]
+    path = parsed.path.rstrip("/")
+    candidates = []
+    if host.endswith("naver.com"):
+        blog_id = next((part for part in path.split("/") if part), "")
+        if blog_id:
+            candidates.append(f"https://rss.blog.naver.com/{blog_id}.xml")
+    elif host.endswith("tistory.com"):
+        candidates.extend([urljoin(base + path + "/", "rss"), urljoin(base + path + "/", "feed")])
+    elif host in {"velog.io", "www.velog.io"}:
+        user = next((part[1:] for part in path.split("/") if part.startswith("@")), "")
+        if user:
+            candidates.extend([f"https://v2.velog.io/rss/@{user}", f"https://velog.io/@{user}/rss"])
+    candidates.extend([urljoin(base + path + "/", "feed"), urljoin(base + path + "/", "rss.xml"), urljoin(base + path + "/", "atom.xml")])
+    return list(dict.fromkeys(candidates))
+
+
+def _discover_from_feed(feed: str, max_posts: int = 20) -> list[dict]:
+    """Parse RSS 2.0 or Atom and return public post links with description fallback."""
+    root = ElementTree.fromstring(feed)
+    items = root.findall(".//item")
+    if not items:
+        items = root.findall(".//{*}entry")
     posts = []
-    for item in root.findall(".//item"):
+    for item in items:
         link = (item.findtext("link") or "").strip()
         if not link:
+            link_node = item.find("{*}link")
+            link = (link_node.attrib.get("href", "") if link_node is not None else "").strip()
+        if not link:
             continue
-        description = html.unescape(item.findtext("description") or "").strip()
-        posts.append({
-            "url": link,
-            "title": (item.findtext("title") or "").strip(),
-            "fallbackText": extract_body(description) if description else "",
-        })
+        description = item.findtext("description") or item.findtext("{*}summary") or item.findtext("{*}content") or ""
+        title = item.findtext("title") or item.findtext("{*}title") or ""
+        posts.append({"url": link, "title": html.unescape(title).strip(), "fallbackText": extract_body(html.unescape(description)) if description else ""})
         if len(posts) >= max_posts:
             break
     return posts
 
+
+def discover_posts(blog_url: str, max_posts: int = 20) -> list[dict]:
+    """Discover public posts from common public feeds; no login or access-control bypass."""
+    for feed_url in _feed_candidates(blog_url):
+        try:
+            return _discover_from_feed(crawl(feed_url), max_posts)
+        except (CrawlError, ElementTree.ParseError, ValueError):
+            continue
+    return []
+
+
+def discover_naver_posts(blog_url: str, max_posts: int = 20) -> list[dict]:
+    """Backward-compatible Naver discovery wrapper."""
+    return discover_posts(blog_url, max_posts)

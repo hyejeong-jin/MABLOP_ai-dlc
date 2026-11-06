@@ -219,9 +219,9 @@ select:focus-visible { outline: 2px solid var(--accent); outline-offset: 0; bord
 .top-bar { position: relative; }
 .top-bar .admin-chip { margin-left: 4px; }
 .admin-chip { padding: 1px 8px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); font-size: 11px; font-weight: 700; letter-spacing: .02em; white-space: nowrap; }
-.top-actions { margin-left: auto; }
+.top-actions { display: flex; align-items: center; gap: 8px; margin-left: auto; }
 .popover-host { position: relative; }
-.icon-button { display: inline-grid; place-items: center; width: 40px; min-height: 40px; padding: 0; border: 0; border-radius: 999px; background: transparent; color: var(--ink-3); }
+.icon-button, .theme-toggle { display: inline-grid; place-items: center; width: 40px; min-height: 40px; margin: 0; padding: 0; border: 1px solid var(--line-strong); border-radius: 9px; background: var(--surface); color: var(--ink-3); }
 .icon-button:hover:not(:disabled) { background: #efece7; color: var(--ink); }
 .popover { position: absolute; z-index: 40; display: grid; gap: 2px; min-width: 190px; padding: 6px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); box-shadow: 0 10px 30px rgba(31, 29, 26, .14); }
 .popover-right { top: calc(100% + 6px); right: 0; }
@@ -233,7 +233,7 @@ select:focus-visible { outline: 2px solid var(--accent); outline-offset: 0; bord
 .avatar { display: inline-grid; place-items: center; flex: none; width: 28px; height: 28px; border-radius: 50%; background: var(--accent); color: #fff; font-size: 11px; font-weight: 700; letter-spacing: .02em; }
 .account-id { overflow: hidden; color: var(--ink-2); font-size: 13px; font-weight: 650; text-overflow: ellipsis; white-space: nowrap; }
 .site-footer { margin-top: 56px; padding: 18px 0 72px; border-top: 1px solid var(--line); color: var(--ink-3); font-size: 12.5px; text-align: center; }
-.site-footer strong { color: var(--ink-2); font-weight: 650; }.theme-toggle { width: 36px; min-height: 36px; margin-right: 4px; padding: 0; border: 1px solid var(--line); border-radius: 9px; background: var(--surface); color: var(--ink-2); font-size: 17px; }
+.site-footer strong { color: var(--ink-2); font-weight: 650; }.theme-toggle { font-size: 17px; }
 .theme-toggle:hover { color: var(--accent); }
 .usage-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
 .usage-period { color: var(--ink-3); font-size: 13px; font-variant-numeric: tabular-nums; }

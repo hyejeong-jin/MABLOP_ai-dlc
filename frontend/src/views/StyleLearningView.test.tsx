@@ -63,7 +63,7 @@ afterEach(() => {
 test("renders url, maxPosts and grant select without a token field", async () => {
   mockApi();
   render(<StyleLearningView />);
-  expect(screen.getByLabelText("네이버 블로그 URL")).toBeInTheDocument();
+  expect(screen.getByLabelText("블로그 URL")).toBeInTheDocument();
   expect(screen.getByLabelText("최대 포스트 수")).toBeInTheDocument();
   expect(screen.queryByLabelText("토큰")).not.toBeInTheDocument();
   expect(await screen.findByLabelText("Bedrock 사용 권한")).toBeInTheDocument();
@@ -84,7 +84,7 @@ test("submits learn-style payload with grantId and renders status and failedPost
   render(<StyleLearningView />);
 
   await selectGrant();
-  fireEvent.change(screen.getByLabelText("네이버 블로그 URL"), {
+  fireEvent.change(screen.getByLabelText("블로그 URL"), {
     target: { value: "https://blog.naver.com/me" },
   });
 
@@ -188,7 +188,7 @@ test("preview needs only the URL and sends no grantId", async () => {
   render(<StyleLearningView />);
   await screen.findByRole("option", { name: /^Bedrock 사용 권한 · / });
 
-  fireEvent.change(screen.getByLabelText("네이버 블로그 URL"), {
+  fireEvent.change(screen.getByLabelText("블로그 URL"), {
     target: { value: "https://blog.naver.com/me" },
   });
   fireEvent.click(screen.getByRole("button", { name: "공개 포스트 미리보기" }));

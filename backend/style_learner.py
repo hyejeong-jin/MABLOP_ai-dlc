@@ -31,6 +31,9 @@ def resolve_url(blog_url: str) -> str:
     `https://m.blog.naver.com/{blogId}/{logNo}`. Raises ValueError if the
     blogId/logNo pair cannot be extracted.
     """
+    parts = urlsplit(blog_url.strip())
+    if parts.scheme in {"http", "https"} and parts.netloc and "naver.com" not in parts.netloc.lower():
+        return blog_url.strip()
     blog_id, log_no = _extract_ids(blog_url)
     if not blog_id or not log_no:
         raise ValueError(f"cannot resolve Naver blogId/logNo from: {blog_url!r}")
@@ -79,7 +82,7 @@ def _discover_posts(payload: dict) -> list[dict]:
     explicit_posts = payload.get("posts") or []
     if not explicit_posts and payload.get("blogUrl"):
         try:
-            explicit_posts = crawler.discover_naver_posts(
+            explicit_posts = crawler.discover_posts(
                 payload["blogUrl"], _max_post_count()
             )
         except Exception:

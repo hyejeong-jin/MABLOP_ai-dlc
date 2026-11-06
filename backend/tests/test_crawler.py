@@ -123,3 +123,22 @@ def test_discover_naver_posts_from_public_rss(monkeypatch):
     assert len(posts) == 1
     assert posts[0]["url"].endswith("/123")
     assert "?? RSS ?? ??" in posts[0]["fallbackText"]
+
+def test_discover_tistory_rss_and_atom(monkeypatch):
+    rss = """<rss><channel><item><title>Tistory post</title><link>https://myblog.tistory.com/entry/one</link><description>본문</description></item></channel></rss>"""
+    requested = []
+    monkeypatch.setattr(crawler, "crawl", lambda url: requested.append(url) or rss)
+    posts = crawler.discover_posts("https://myblog.tistory.com", max_posts=5)
+    assert posts[0]["title"] == "Tistory post"
+    assert posts[0]["url"].endswith("/one")
+    assert requested[0].endswith("/rss")
+
+
+def test_discover_velog_public_rss(monkeypatch):
+    atom = """<feed xmlns='http://www.w3.org/2005/Atom'><entry><title>Velog post</title><link href='https://velog.io/@me/one'/><summary>본문</summary></entry></feed>"""
+    requested = []
+    monkeypatch.setattr(crawler, "crawl", lambda url: requested.append(url) or atom)
+    posts = crawler.discover_posts("https://velog.io/@me", max_posts=5)
+    assert posts[0]["title"] == "Velog post"
+    assert posts[0]["url"].endswith("/@me/one")
+    assert "v2.velog.io/rss/@me" in requested[0]
