@@ -205,18 +205,17 @@ def test_get_result_without_id_errors(env):
         de.get_result({"kind": "draft"})
 
 
-def test_generate_draft_without_learned_index_is_bad_request(env, monkeypatch):
-    from errors import MablopError
-
+def test_generate_draft_without_learned_index_uses_general_style(env, monkeypatch):
     de = env
     captured = _patch_bedrock(de, monkeypatch, "# 제목\n\n본문")
 
-    with pytest.raises(MablopError) as exc:
-        de.generate_draft({"title": "제목", "imageKeys": []})
-    assert exc.value.code == "bad_request"
-    assert str(exc.value.message) == NO_LEARNED_MSG
-    assert captured["invoked"] == 0
-    assert _index_draft_ids(ACTING_USER_ID) == []
+    out = de.generate_draft({"title": "제목", "imageKeys": []})
+
+    assert out["generalStyle"] is True
+    assert out["topK"] == 0
+    assert "본문" in out["markdown"]
+    assert captured["invoked"] == 1
+    assert _index_draft_ids(ACTING_USER_ID) == [out["draftId"]]
 
 
 @pytest.mark.parametrize(

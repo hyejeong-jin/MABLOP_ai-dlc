@@ -265,7 +265,7 @@ def _retrieve_chunks(query_text: str) -> list:
         matrix, row_map = index_store.load_index()
     except ClientError as err:
         if str(err.response.get("Error", {}).get("Code", "")) in _MISSING_CODES:
-            raise MablopError("bad_request", auth_messages.NO_LEARNED_POSTS) from err
+            return None  # nothing learned yet: write in a general style (caller flags it)
         raise
     query = bedrock.embed(query_text)
     import numpy as np
@@ -303,7 +303,9 @@ def generate_draft(payload: dict) -> dict:
     metas = _load_image_meta(image_keys)
     captions = _captions_from_meta(metas)
     image_names = _image_names(image_keys, metas)
-    chunks = _retrieve_chunks(_input_text(title, outline, notes))
+    retrieved = _retrieve_chunks(_input_text(title, outline, notes))
+    general_style = retrieved is None  # no learned posts: general style, no style references
+    chunks = retrieved or []
     profile = _load_profile()
 
     prompt = prompt_builder.build_prompt(
@@ -319,6 +321,7 @@ def generate_draft(payload: dict) -> dict:
         title=title,
     )
     result["topK"] = len(chunks)
+    result["generalStyle"] = general_style
     return result
 
 

@@ -31,6 +31,7 @@ interface DraftResponse {
   markdown: string;
   draftKey?: string;
   topK?: number;
+  generalStyle?: boolean;
 }
 
 // onDraftCreated hands the new draftId to App so the Results tab can focus it (Req 23.5).
@@ -48,6 +49,7 @@ export function DraftingView({ onDraftCreated }: DraftingViewProps = {}) {
   const [stage, setStage] = useState("");
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [markdown, setMarkdown] = useState<string | undefined>(undefined);
+  const [generalStyle, setGeneralStyle] = useState(false);
   const [error, setError] = useState<string | undefined>(undefined);
   const [copied, setCopied] = useState(false);
 
@@ -114,6 +116,7 @@ export function DraftingView({ onDraftCreated }: DraftingViewProps = {}) {
     setStage("준비 중...");
     setError(undefined);
     setMarkdown(undefined);
+    setGeneralStyle(false);
     try {
       const capped = capImages(images); // defensive re-cap (Req 7.4)
       let imageKeys: string[] = [];
@@ -167,6 +170,7 @@ export function DraftingView({ onDraftCreated }: DraftingViewProps = {}) {
         grants.withGrant({ action: "generate-draft", title, outline, notes, imageKeys }),
       );
       setMarkdown(draft.markdown);
+      setGeneralStyle(draft.generalStyle === true);
       onDraftCreated?.(draft.draftId);
     } catch (err) {
       // 403 forbidden: grant options are reloaded; show the backend message.
@@ -261,6 +265,7 @@ export function DraftingView({ onDraftCreated }: DraftingViewProps = {}) {
         stage={stage}
         elapsedSeconds={elapsedSeconds}
         markdown={markdown}
+        generalStyle={generalStyle}
         error={error}
         copied={copied}
         onCopy={copyDraft}
@@ -289,12 +294,13 @@ function DraftResult(props: {
   stage: string;
   elapsedSeconds: number;
   markdown?: string;
+  generalStyle?: boolean;
   error?: string;
   copied: boolean;
   onCopy: (text: string) => void;
   onDownload: (text: string) => void;
 }) {
-  const { loading, stage, elapsedSeconds, markdown, error, copied, onCopy, onDownload } = props;
+  const { loading, stage, elapsedSeconds, markdown, generalStyle, error, copied, onCopy, onDownload } = props;
   if (loading) {
     return (
       <div className="callout page-section" role="status">
@@ -331,6 +337,11 @@ function DraftResult(props: {
             </button>
           </div>
         </div>
+        {generalStyle && (
+          <p className="callout" role="status">
+            아직 학습한 글이 없어 일반 문체로 작성되었습니다. 스타일 학습을 마치면 내 문체가 반영됩니다.
+          </p>
+        )}
         <pre className="draft-output" aria-label="초안 결과">{markdown}</pre>
       </div>
     );

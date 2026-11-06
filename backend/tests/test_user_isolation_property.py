@@ -345,8 +345,10 @@ def _step(w, op):
             assert len(_world["prompts"]) == before
             assert {c["key"] for c in w.recorder.writes()} <= {RATELIMIT_KEY}
         elif not w.a_posts:
-            assert status == 400 and _error(body)["message"] == NO_LEARNED_MSG
-            assert len(_world["prompts"]) == before
+            assert status == 200 and body["generalStyle"] is True
+            assert len(_world["prompts"]) == before + 1
+            assert "BETA" not in _world["prompts"][-1][1]  # no style data of any other user
+            w.a_drafts[body["draftId"]] = body["markdown"]
         else:
             assert status == 200
             assert body["draftKey"] == f"users/{a.user_id}/generated-posts/{body['draftId']}.md"
@@ -474,7 +476,8 @@ def test_new_member_reports_an_empty_workspace_despite_other_users_data(
     assert status == 200 and body == {"drafts": []}
 
     status, body, _raw, _ = w.call(c, {"action": "generate-draft", "title": "t", "imageKeys": []}, grant=True)
-    assert status == 400 and _error(body)["message"] == NO_LEARNED_MSG
+    assert status == 200 and body["generalStyle"] is True
+    assert "BETA" not in _world["prompts"][-1][1]
 
     status, body, _raw, _ = w.call(c, {"action": "rebuild-from-stored"}, grant=True)
     assert status == 400 and _error(body)["message"] == NO_RAW_MSG

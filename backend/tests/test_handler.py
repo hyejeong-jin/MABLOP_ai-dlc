@@ -147,14 +147,14 @@ def test_component_error_becomes_500_without_stacktrace(h, monkeypatch):
     assert set(body["error"].keys()) == {"code", "message"}
 
 
-def test_generate_draft_without_learned_index_is_clean_400(h):
-    """Real component on an empty workspace: bad_request with the Korean message, no S3 error text."""
+def test_generate_draft_without_learned_index_uses_general_style(h, monkeypatch):
+    """Real component on an empty workspace: a general-style draft, flagged with generalStyle."""
+    import drafting_engine
+
+    monkeypatch.setattr(drafting_engine.bedrock, "text_generate", lambda *a, **k: "# t\n\nbody")
     resp = h.handler(_event({"action": "generate-draft", "title": "t"}))
-    assert resp["statusCode"] == 400
-    assert _body(resp)["error"] == {
-        "code": "bad_request",
-        "message": "학습된 글이 없습니다. 먼저 스타일 학습을 진행하세요.",
-    }
+    assert resp["statusCode"] == 200
+    assert _body(resp)["generalStyle"] is True
 
 
 def test_unexpected_generate_draft_failure_becomes_500(h, monkeypatch):

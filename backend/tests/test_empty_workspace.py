@@ -111,7 +111,7 @@ def test_new_member_learning_status_ignores_other_users_data(h, member):
     assert body == {"processedPosts": 0, "chunks": 0, "posts": []}
 
 
-def test_generate_draft_before_learning_is_korean_bad_request(h, member, bedrock_calls):
+def test_generate_draft_before_learning_writes_in_general_style(h, member, bedrock_calls):
     _put_other_users_data()
 
     status, body = _call(
@@ -120,9 +120,10 @@ def test_generate_draft_before_learning_is_korean_bad_request(h, member, bedrock
         member.token,
     )
 
-    assert status == 400
-    assert body["error"] == {"code": "bad_request", "message": NO_LEARNED_MSG}
-    assert bedrock_calls["invoke"] == 0
+    assert status == 200
+    assert body["generalStyle"] is True and body["topK"] == 0
+    assert bedrock_calls["invoke"] == 1  # only the text generation; nothing to embed or retrieve
+    assert bedrock_calls["embed"] == 0
 
 
 def test_get_result_of_other_users_draft_id_fails_without_content(h, member):

@@ -52,6 +52,6 @@ test("dialogs close with the close button and with Escape", async () => {
 test("UpdateNotesDialog lists releases newest first", () => {
   render(<UpdateNotesDialog onClose={() => {}} />);
   const versions = screen.getAllByText(/^v\d+\.\d+\.\d+$/).map((el) => el.textContent);
-  expect(versions[0]).toBe("v1.2.0");
+  expect(versions[0]).toBe("v1.3.0");
   expect(versions).toContain("v1.0.0");
 });

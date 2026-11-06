@@ -10,6 +10,14 @@ interface Release {
 
 export const RELEASES: Release[] = [
   {
+    version: "v1.3.0",
+    date: "2026.11.07",
+    title: "학습 없이도 초안 작성",
+    items: [
+      "스타일 학습을 하지 않아도 초안을 작성할 수 있습니다. 이 경우 일반 문체로 작성되며 안내 문구가 표시됩니다.",
+    ],
+  },
+  {
     version: "v1.2.0",
     date: "2026.11.07",
     title: "사이드 메뉴와 사용량 보기",

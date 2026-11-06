@@ -250,3 +250,20 @@ test("403 forbidden shows the message and reloads grant options", async () => {
   expect(await screen.findByRole("alert")).toHaveTextContent("사용 권한이 만료되었습니다.");
   await waitFor(() => expect(listCalls.length).toBe(2));
 });
+
+test("shows the general-style notice when nothing has been learned yet", async () => {
+  const { postJson } = wireApi();
+  const base = postJson.getMockImplementation()!;
+  postJson.mockImplementation((async (body: Record<string, unknown>) =>
+    body.action === "generate-draft"
+      ? { draftId: "draft-2", markdown: "# 제목\n\n본문", generalStyle: true }
+      : base(body as never)) as never);
+
+  render(<DraftingView />);
+  await selectGrant();
+  fireEvent.change(screen.getByLabelText("제목"), { target: { value: "제목" } });
+  fireEvent.click(screen.getByRole("button", { name: "초안 생성" }));
+
+  expect(await screen.findByLabelText("초안 결과")).toBeInTheDocument();
+  expect(screen.getByText(/일반 문체로 작성되었습니다/)).toBeInTheDocument();
+});
