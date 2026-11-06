@@ -1,0 +1,1667 @@
+{
+  "pbtResults": {
+    "1.4 키 빌더 속성 테스트 작성": {
+      "status": "passed",
+      "lastRunTimestamp": 1793891159653
+    },
+    "2.3 Session_Token 왕복/구조 속성 테스트 작성": {
+      "status": "passed",
+      "lastRunTimestamp": 1793893332884
+    },
+    "2.5 비밀번호 해시 왕복 속성 테스트 작성": {
+      "status": "passed",
+      "lastRunTimestamp": 1793893347043
+    },
+    "2.4 변조/만료/외부 토큰 거부 속성 테스트 작성": {
+      "status": "passed",
+      "lastRunTimestamp": 1793893396401
+    },
+    "2.6 약하거나 없는 Signing_Secret은 실패로 닫힘 속성 테스트 작성": {
+      "status": "passed",
+      "lastRunTimestamp": 1793893462433
+    },
+    "2.11 스로틀 상태 유지/가지치기 속성 테스트 작성": {
+      "status": "passed",
+      "lastRunTimestamp": 1793894313226
+    },
+    "2.12 전역 실패 게이트와 가입 제한 속성 테스트 작성": {
+      "status": "passed",
+      "lastRunTimestamp": 1793894621932
+    },
+    "4.3 자격 증명 검증 규칙 속성 테스트 작성": {
+      "status": "passed",
+      "lastRunTimestamp": 1793895195628
+    },
+    "4.4 가입 멱등성과 계정 비노출 속성 테스트 작성": {
+      "status": "passed",
+      "lastRunTimestamp": 1793895263025
+    },
+    "4.5 로그인 실패 구별 불가 속성 테스트 작성": {
+      "status": "passed",
+      "lastRunTimestamp": 1793895341990
+    },
+    "4.7 loginId별 스로틀 기준 모델 속성 테스트 작성": {
+      "status": "passed",
+      "lastRunTimestamp": 1793895554055
+    },
+    "4.8 부트스트랩 속성 테스트 작성 (사용자 핵심 속성: 빈 작업공간)": {
+      "status": "passed",
+      "lastRunTimestamp": 1793965804669
+    },
+    "5.2 Grant 상태 전이 속성 테스트 작성": {
+      "status": "passed",
+      "lastRunTimestamp": 1793966068723
+    },
+    "5.3 Grant 생성 제한 속성 테스트 작성": {
+      "status": "passed",
+      "lastRunTimestamp": 1793966258411
+    },
+    "6.4 초안 인덱스 정합성 속성 테스트 작성 (사용자 핵심 속성: 초안 인덱스 정합성)": {
+      "status": "passed",
+      "lastRunTimestamp": 1793966811280
+    },
+    "7.5 관리자 전용 액션 속성 테스트 작성": {
+      "status": "passed",
+      "lastRunTimestamp": 1793968060604
+    },
+    "7.6 자격 증명 변경 시 이전 토큰 무효화 속성 테스트 작성": {
+      "status": "passed",
+      "lastRunTimestamp": 1793968062319
+    },
+    "7.4 인증 게이트 속성 테스트 작성": {
+      "status": "passed",
+      "lastRunTimestamp": 1793968122037
+    },
+    "7.7 Grant 검증 게이트 속성 테스트 작성 (사용자 핵심 속성: Grant 검증)": {
+      "status": "passed",
+      "lastRunTimestamp": 1793968173787
+    },
+    "7.8 비밀/개인정보 비노출 속성 테스트 작성": {
+      "status": "passed",
+      "lastRunTimestamp": 1793968228893
+    },
+    "7.9 예기치 않은 실패의 일반 메시지 속성 테스트 작성": {
+      "status": "passed",
+      "lastRunTimestamp": 1793968488445
+    },
+    "9.10 이미지 키 소유권 속성 테스트 작성": {
+      "status": "passed",
+      "lastRunTimestamp": 1793970354328
+    },
+    "9.9 사용자 데이터 격리 속성 테스트 작성 (사용자 핵심 속성: 사용자 격리)": {
+      "status": "passed",
+      "lastRunTimestamp": 1793970556545
+    },
+    "9.8 사용자 신원은 토큰에서만 온다 속성 테스트 작성": {
+      "status": "passed",
+      "lastRunTimestamp": 1793970611050
+    },
+    "10.4 마이그레이션 검증/실패 보고 속성 테스트 작성": {
+      "status": "passed",
+      "lastRunTimestamp": 1793971104409
+    },
+    "10.5 레거시 바인딩 1회성/멱등 속성 테스트 작성": {
+      "status": "passed",
+      "lastRunTimestamp": 1793971106598
+    },
+    "10.3 복사 전용/멱등 마이그레이션 속성 테스트 작성 (사용자 핵심 속성: 마이그레이션 멱등성)": {
+      "status": "passed",
+      "lastRunTimestamp": 1793971132966
+    }
+  },
+  "executionHistory": {
+    "1.1 `errors.py`에 `forbidden`(403), `not_found`(404) 추가": [
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793889923683
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793889949419
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793890167832
+      }
+    ],
+    "1.2 `user_scope.py`, `auth_messages.py`, `auth_log.py` 작성": [
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793889925621
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793889949705
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793890168094
+      }
+    ],
+    "1.3 `s3store.py` 확장 (기존 네 함수 시그니처는 유지)": [
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793889926028
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793890343003
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793890889812
+      }
+    ],
+    "2.1 `auth_crypto.py` 작성": [
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793889926363
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793891047965
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793891291085
+      }
+    ],
+    "2.2 `backend/tests/conftest.py` 공용 fixture 추가": [
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793889926515
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793891300086
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793891598729
+      }
+    ],
+    "2.8 `auth_store.py` 작성": [
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793889926744
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793891300493
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793891599012
+      }
+    ],
+    "2.10 `auth_throttle.py` 작성": [
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793889926982
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793891301277
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793891599137
+      }
+    ],
+    "3. Checkpoint - 백엔드 기반 범위 최소 검증": [
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793889927156
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793971594552
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793971769879
+      }
+    ],
+    "4.1 `auth_service.py` 작성: 검증, `register`, `login`, `get-me`, `change-password`": [
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793889927446
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793891617243
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793893243684
+      }
+    ],
+    "4.2 `auth_service.py` 작성: `bootstrap-admin`, 관리자 계정 액션, `migrate-legacy-data` 뼈대": [
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793889927628
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793894649828
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793894977560
+      }
+    ],
+    "5.1 `grant_service.py` 작성": [
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793889927786
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793894650011
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793894977693
+      }
+    ],
+    "6.1 `draft_history.py` 작성": [
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793889927940
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793894650158
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793894977787
+      }
+    ],
+    "7.1 `access_controller.py` 변경": [
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793889928110
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793895013106
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793895378747
+      }
+    ],
+    "7.2 `handler.py` 변경": [
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793889928264
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793967434722
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793967851673
+      }
+    ],
+    "7.3 `backend/pyproject.toml`의 `py-modules`에 새 모듈 10개 추가": [
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793889928409
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793970639574
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793970888314
+      }
+    ],
+    "8. Checkpoint - 인증/Grant/handler 범위 최소 검증": [
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793889928560
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793971774046
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793972108588
+      }
+    ],
+    "9.1 `index_store.py`, `style_profile.py`, `checkpoint.py` 키 전환": [
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793889928744
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793968707154
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793969268981
+      }
+    ],
+    "9.2 `style_learner.py` 키 전환": [
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793889928892
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793969279144
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793969934983
+      }
+    ],
+    "9.3 `style_learner.rebuild_from_stored`의 깨진 한글 오류 메시지 수정": [
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793889929013
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793969939192
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793970190358
+      }
+    ],
+    "9.4 `image_analyzer.py` 키 전환": [
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793889929148
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793968707332
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793969269414
+      }
+    ],
+    "9.5 `drafting_engine.py` 키 전환과 초안 기록": [
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793889929276
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793969279616
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793969935263
+      }
+    ],
+    "9.6 이미지 marker 파일명 확인과 원본 파일명 보존": [
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793889929391
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793969939952
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793970190544
+      }
+    ],
+    "9.7 `preview-learning-sources` 백엔드 테스트 추가": [
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793889929574
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793969940510
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793970191155
+      }
+    ],
+    "10.1 `legacy_migrator.py` 작성": [
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793889929722
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793970198324
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793970633487
+      }
+    ],
+    "10.2 `auth_service`에 레거시 바인딩 연결": [
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793889929882
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793970640092
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793970889103
+      }
+    ],
+    "11. Checkpoint - 백엔드 컴포넌트/레거시 범위 최소 검증": [
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793889930031
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793972117650
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793972495135
+      }
+    ],
+    "12.1 `infra/template.yaml` 편집": [
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793889930172
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793889950042
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793890168504
+      }
+    ],
+    "12.2 `infra/lambda-role-policy.json` 미러 편집": [
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793889930294
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793889950675
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793890169330
+      }
+    ],
+    "12.3 `infra/tests/test_iac_config.py` 갱신": [
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793889930415
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793890343936
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793890889700
+      }
+    ],
+    "13.1 `frontend/src/format.ts` 추가": [
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793889930584
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793889951377
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793890170048
+      }
+    ],
+    "13.2 `frontend/src/auth/session.ts` 작성": [
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793889930765
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793890187182
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793890336669
+      }
+    ],
+    "13.3 `frontend/src/api.ts` 변경": [
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793889930911
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793890344582
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793890889985
+      }
+    ],
+    "13.4 `frontend/src/auth/AuthContext.tsx` 작성": [
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793889931066
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793891048143
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793891291576
+      }
+    ],
+    "13.5 `frontend/src/views/LoginView.tsx` 작성": [
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793889931260
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793891302098
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793891599474
+      }
+    ],
+    "13.6 `frontend/src/grants/useGrants.ts`, `GrantSelect.tsx` 작성": [
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793889931427
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793891303021
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793891600227
+      }
+    ],
+    "14.1 `frontend/src/views/ProfileView.tsx` 작성 (\"내 정보\")": [
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793889931783
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793891617376
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793893243815
+      }
+    ],
+    "14.2 `frontend/src/views/AdminView.tsx` 작성 (\"관리\")": [
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793889932041
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793891617545
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793893244332
+      }
+    ],
+    "14.3 `frontend/src/views/ResultView.tsx` 재작성 (ChatGPT 기록 스타일)": [
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793889932207
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793891618194
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793893245430
+      }
+    ],
+    "14.4 `StyleLearningView.tsx` 수정": [
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793889932360
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793891618722
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793893246215
+      }
+    ],
+    "14.5 `DraftingView.tsx` 수정": [
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793889932561
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793893256219
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793894154327
+      }
+    ],
+    "14.6 `App.tsx` 변경과 `TokenField.tsx` 삭제": [
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793889932712
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793894651147
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793894978181
+      }
+    ],
+    "14.7 `frontend/src/index.css` 확장": [
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793889932846
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793890187400
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793890336930
+      }
+    ],
+    "15. Checkpoint - 프론트엔드 범위 최소 검증": [
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793889933000
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793972501800
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793972676175
+      }
+    ],
+    "16.1 문서 갱신": [
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793889933215
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793970897422
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793971567840
+      }
+    ],
+    "17. 최종 체크포인트 - 전체 테스트 한 번에 실행": [
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793889933348
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793972680801
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793974303838
+      }
+    ],
+    "12. infra: 템플릿과 IAM 파일 편집 (파일 편집만, 적용은 사용자 확인 후)": [
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793890890101
+      }
+    ],
+    "1. 백엔드 기반: errors, user_scope, 메시지/로그, s3store 확장": [
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793890890208
+      }
+    ],
+    "1.4 키 빌더 속성 테스트 작성": [
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793890938256
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793891048266
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793891292385
+      }
+    ],
+    "1.5 s3store, user_scope, auth_messages 단위 테스트 작성": [
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793890938966
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793891049178
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793891293341
+      }
+    ],
+    "13.7 `session.ts` 단위 테스트 작성": [
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793890939804
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793890968463
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793891036794
+      }
+    ],
+    "13.8 `api.ts` 테스트 작성 (Property 28)": [
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793890940475
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793891049792
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793891293923
+      }
+    ],
+    "13. 프론트엔드 인증 기반": [
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793891600370
+      }
+    ],
+    "2.3 Session_Token 왕복/구조 속성 테스트 작성": [
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793893256619
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793894154452
+      }
+    ],
+    "2.4 변조/만료/외부 토큰 거부 속성 테스트 작성": [
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793893257713
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793894155214
+      }
+    ],
+    "2.5 비밀번호 해시 왕복 속성 테스트 작성": [
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793893258498
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793894156034
+      }
+    ],
+    "2.6 약하거나 없는 Signing_Secret은 실패로 닫힘 속성 테스트 작성": [
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793893259438
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793894156891
+      }
+    ],
+    "2. 인증 코어: auth_crypto, auth_store, auth_throttle": [
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793894154658
+      }
+    ],
+    "2.7 auth_crypto 단위 테스트 작성": [
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793894176276
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793894348397
+      }
+    ],
+    "2.9 auth_store 단위 테스트 작성": [
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793894176444
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793894348521
+      }
+    ],
+    "2.11 스로틀 상태 유지/가지치기 속성 테스트 작성": [
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793894176711
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793894348594
+      }
+    ],
+    "13.9 `LoginView` 테스트 작성": [
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793894177537
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793894349260
+      }
+    ],
+    "13.10 `useGrants` 테스트 작성 (Property 38)": [
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793894178307
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793894350501
+      }
+    ],
+    "2.12 전역 실패 게이트와 가입 제한 속성 테스트 작성": [
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793894351130
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793894639139
+      }
+    ],
+    "2.13 auth_throttle 단위 테스트 작성": [
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793894351922
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793894639914
+      }
+    ],
+    "13.11 `GrantSelect` 테스트 작성": [
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793894352469
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793894640652
+      }
+    ],
+    "14.8 `ProfileView` 테스트 작성": [
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793894651828
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793894979010
+      }
+    ],
+    "4. auth_service: 가입, 로그인, 계정 관리": [
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793894977851
+      }
+    ],
+    "5. grant_service: Bedrock 사용 Grant": [
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793894977998
+      }
+    ],
+    "6. draft_history: 초안 기록": [
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793894978104
+      }
+    ],
+    "14. 프론트엔드 화면": [
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793894978274
+      }
+    ],
+    "14.9 `AdminView` 테스트 작성": [
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793894979608
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793895379387
+      }
+    ],
+    "4.3 자격 증명 검증 규칙 속성 테스트 작성": [
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793894999700
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793895379056
+      }
+    ],
+    "4.4 가입 멱등성과 계정 비노출 속성 테스트 작성": [
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793894999856
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793895379236
+      }
+    ],
+    "4.5 로그인 실패 구별 불가 속성 테스트 작성": [
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793894999974
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793895379609
+      }
+    ],
+    "4.6 계정 상태별 로그인 결과 속성 테스트 작성": [
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793895000539
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793965840677
+      }
+    ],
+    "4.7 loginId별 스로틀 기준 모델 속성 테스트 작성": [
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793895392838
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793965840303
+      }
+    ],
+    "4.8 부트스트랩 속성 테스트 작성 (사용자 핵심 속성: 빈 작업공간)": [
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793895392983
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793965840535
+      }
+    ],
+    "4.9 관리자 액션 상태 머신 속성 테스트 작성": [
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793895393488
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793965840808
+      }
+    ],
+    "4.10 사용자 목록 속성 테스트 작성": [
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793895394221
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793965840924
+      }
+    ],
+    "4.11 임시 비밀번호 속성 테스트 작성": [
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793965841510
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793966355810
+      }
+    ],
+    "4.12 비밀번호 변경 속성 테스트 작성": [
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793965842614
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793966355939
+      }
+    ],
+    "4.13 auth_service 단위 테스트 작성": [
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793965843436
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793966356126
+      }
+    ],
+    "5.2 Grant 상태 전이 속성 테스트 작성": [
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793965844472
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793966356301
+      }
+    ],
+    "5.3 Grant 생성 제한 속성 테스트 작성": [
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793965845019
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793966356654
+      }
+    ],
+    "5.4 Grant 목록 범위/정렬/만료 표시 속성 테스트 작성": [
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793966358003
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793966849959
+      }
+    ],
+    "5.5 grant_service 단위 테스트 작성": [
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793966358843
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793966850316
+      }
+    ],
+    "6.2 제목 도출 속성 테스트 작성": [
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793966360041
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793966850147
+      }
+    ],
+    "6.3 `list-drafts` 정렬/상한 속성 테스트 작성": [
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793966361008
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793966850550
+      }
+    ],
+    "6.4 초안 인덱스 정합성 속성 테스트 작성 (사용자 핵심 속성: 초안 인덱스 정합성)": [
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793966362905
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793966850982
+      }
+    ],
+    "6.5 `delete-draft` 속성 테스트 작성": [
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793966851852
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793967410339
+      }
+    ],
+    "6.6 draft_history 단위 테스트 작성": [
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793966852642
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793967411166
+      }
+    ],
+    "14.10 앱 인증 흐름 테스트 작성": [
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793966853327
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793967411941
+      }
+    ],
+    "14.11 레거시 키 문자열 정적 검사 테스트 작성": [
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793967435148
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793967852120
+      }
+    ],
+    "7.4 인증 게이트 속성 테스트 작성": [
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793967867135
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793968252021
+      }
+    ],
+    "7.5 관리자 전용 액션 속성 테스트 작성": [
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793967867836
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793968251799
+      }
+    ],
+    "7.6 자격 증명 변경 시 이전 토큰 무효화 속성 테스트 작성": [
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793967868583
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793968252335
+      }
+    ],
+    "7.7 Grant 검증 게이트 속성 테스트 작성 (사용자 핵심 속성: Grant 검증)": [
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793967869399
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793968253388
+      }
+    ],
+    "7.8 비밀/개인정보 비노출 속성 테스트 작성": [
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793967870218
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793968254275
+      }
+    ],
+    "7.9 예기치 않은 실패의 일반 메시지 속성 테스트 작성": [
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793968255042
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793968690185
+      }
+    ],
+    "7.10 access_controller 인증 단위 테스트 작성": [
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793968255820
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793968690428
+      }
+    ],
+    "7.11 handler 인증 단위 테스트 작성": [
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793968256738
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793968691107
+      }
+    ],
+    "7.12 Grant 훅 단위 테스트 작성": [
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793968257328
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793968691680
+      }
+    ],
+    "9. 기존 컴포넌트 userId 키 전환": [
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793970191299
+      }
+    ],
+    "9.8 사용자 신원은 토큰에서만 온다 속성 테스트 작성": [
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793970204028
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793970633189
+      }
+    ],
+    "9.9 사용자 데이터 격리 속성 테스트 작성 (사용자 핵심 속성: 사용자 격리)": [
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793970204556
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793970633702
+      }
+    ],
+    "9.10 이미지 키 소유권 속성 테스트 작성": [
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793970205392
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793970634094
+      }
+    ],
+    "9.11 신규 멤버 빈 작업공간 단위 테스트 작성": [
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793970206219
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793970635133
+      }
+    ],
+    "7. access_controller와 handler: 인증 파이프라인, Grant 훅, DISPATCH 규약": [
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793970888493
+      }
+    ],
+    "10. legacy_migrator: 승인 시 `jhe8888` 바인딩": [
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793970889218
+      }
+    ],
+    "10.3 복사 전용/멱등 마이그레이션 속성 테스트 작성 (사용자 핵심 속성: 마이그레이션 멱등성)": [
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793970897697
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793971568088
+      }
+    ],
+    "10.4 마이그레이션 검증/실패 보고 속성 테스트 작성": [
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793970898591
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793971569022
+      }
+    ],
+    "10.5 레거시 바인딩 1회성/멱등 속성 테스트 작성": [
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793970899385
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793971570094
+      }
+    ],
+    "10.6 legacy_migrator 단위 테스트 작성": [
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793970900237
+      },
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793971570915
+      }
+    ],
+    "16. 문서와 runbook": [
+      {
+        "executionId": "d7bc88ab-edce-46bf-91a1-34d9001981fd",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1793971568227
+      }
+    ]
+  }
+}

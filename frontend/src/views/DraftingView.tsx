@@ -5,12 +5,9 @@
 import { useEffect, useState } from "react";
 import { CircleAlert, Check, Copy, Download, Info } from "lucide-react";
 import { postJson, ApiRequestError } from "../api";
-import { TokenField } from "../TokenField";
+import { GrantSelect } from "../grants/GrantSelect";
+import { useGrants } from "../grants/useGrants";
 import { capImages, resizeImage, MAX_IMAGES } from "../images";
-
-// shared token key (same as StyleLearningView) so the pre-shared token is reused.
-const TOKEN_KEY = "mablop-token";
-const LAST_DRAFT_KEY = "mablop-last-draft";
 
 // one attached image + its optional user description (cost-0 caption path, Req 3.4).
 interface Attached {
@@ -36,9 +33,13 @@ interface DraftResponse {
   topK?: number;
 }
 
-export function DraftingView() {
-  const [token, setToken] = useState(() => localStorage.getItem(TOKEN_KEY) ?? "");
-  const [showToken, setShowToken] = useState(() => !localStorage.getItem(TOKEN_KEY));
+// onDraftCreated hands the new draftId to App so the Results tab can focus it (Req 23.5).
+export interface DraftingViewProps {
+  onDraftCreated?: (draftId: string) => void;
+}
+
+export function DraftingView({ onDraftCreated }: DraftingViewProps = {}) {
+  const grants = useGrants();
   const [title, setTitle] = useState("");
   const [outline, setOutline] = useState("");
   const [notes, setNotes] = useState("");
@@ -62,11 +63,6 @@ export function DraftingView() {
     );
     return () => window.clearInterval(timer);
   }, [loading]);
-
-  function updateToken(v: string) {
-    setToken(v);
-    localStorage.setItem(TOKEN_KEY, v); // persist shared token locally
-  }
 
   // Native input + drop zone. Ignore non-images and cap at 10 (Req 7.4).
   function addFiles(files: File[]) {
@@ -137,7 +133,6 @@ export function DraftingView() {
               size: b.size,
             })),
           },
-          token,
         );
 
         // 3. PUT bytes straight to S3 -- raw fetch, bypassing api.ts (never to Lambda).
@@ -156,26 +151,29 @@ export function DraftingView() {
         setStage("이미지 맥락 분석 중... (이미지 수에 따라 수분 걸릴 수 있습니다)");
         // 4. analyze-images: send keys (+ optional user description for cost-0 skip).
         await postJson(
-          {
+          grants.withGrant({
             action: "analyze-images",
             images: presign.uploads.map((u, i) => {
               const desc = capped[i].description.trim();
               return desc ? { key: u.key, description: desc } : { key: u.key };
             }),
-          },
-          token,
+          }),
         );
       }
 
       setStage("내 문체로 초안을 쓰는 중... (자료 검색, 문체 분석, 본문 생성 순서로 진행합니다)");
       // 5. generate-draft: keys only, synchronous return.
       const draft = await postJson<DraftResponse>(
-        { action: "generate-draft", title, outline, notes, imageKeys },
-        token,
+        grants.withGrant({ action: "generate-draft", title, outline, notes, imageKeys }),
       );
       setMarkdown(draft.markdown);
-      localStorage.setItem(LAST_DRAFT_KEY, draft.markdown);
+      onDraftCreated?.(draft.draftId);
     } catch (err) {
+      // 403 forbidden: grant options are reloaded; show the backend message.
+      if (grants.handleGrantError(err)) {
+        setError(err instanceof ApiRequestError ? err.message : String(err));
+        return;
+      }
       const msg =
         err instanceof ApiRequestError ? `${err.code}: ${err.message}` : String(err);
       setError(msg);
@@ -191,19 +189,28 @@ export function DraftingView() {
       <p className="page-lead">제목과 개요, 메모를 적고 사진을 붙이면 학습한 문체로 초안을 만들어요. 2~5분쯤 걸립니다.</p>
 
       <form className="stack" onSubmit={submit}>
-        <TokenField token={token} show={showToken} onChange={updateToken} onShow={() => setShowToken(true)} />
-        <label className="field">
-          제목
-          <input value={title} onChange={(e) => setTitle(e.target.value)} />
-        </label>
-        <label className="field">
-          개요
-          <textarea value={outline} onChange={(e) => setOutline(e.target.value)} />
-        </label>
-        <label className="field">
-          메모
-          <textarea value={notes} onChange={(e) => setNotes(e.target.value)} />
-        </label>
+        <GrantSelect grants={grants} />
+        <div className="field-group">
+          <label className="field">
+            제목
+            <input value={title} onChange={(e) => setTitle(e.target.value)} aria-describedby="hint-title" />
+          </label>
+          <p id="hint-title" className="field-hint">블로그 포스트 제목을 작성해주세요.</p>
+        </div>
+        <div className="field-group">
+          <label className="field">
+            개요
+            <textarea value={outline} onChange={(e) => setOutline(e.target.value)} aria-describedby="hint-outline" />
+          </label>
+          <p id="hint-outline" className="field-hint">어떤 내용을 작성할지 글의 개요를 개괄적으로 작성해주세요.</p>
+        </div>
+        <div className="field-group">
+          <label className="field">
+            메모
+            <textarea value={notes} onChange={(e) => setNotes(e.target.value)} aria-describedby="hint-notes" />
+          </label>
+          <p id="hint-notes" className="field-hint">글을 어떻게 써내려갈지 방향성과 말투 등을 작성해주세요. 작성자 관점에서 AI에게 요청할 사항을 입력해도 됩니다.</p>
+        </div>
 
         <fieldset>
           <legend>이미지 첨부 (최대 {MAX_IMAGES}장)</legend>
@@ -244,7 +251,7 @@ export function DraftingView() {
           ))}
         </fieldset>
 
-        <button type="submit" className="btn-primary btn-block" disabled={loading}>
+        <button type="submit" className="btn-primary btn-block" disabled={loading || !grants.canCallBedrock}>
           초안 생성
         </button>
       </form>

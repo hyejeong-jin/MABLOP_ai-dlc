@@ -1,9 +1,61 @@
 import { render, screen } from "@testing-library/react";
+import { afterEach, expect, test, vi } from "vitest";
 import { App } from "./App";
+import * as api from "./api";
+import { SESSION_KEY } from "./auth/session";
 
-// Smoke test: app renders and shows the default style-learning view.
-test("renders app and the style-learning view by default", () => {
+function seedSession(role: "admin" | "member") {
+  localStorage.setItem(
+    SESSION_KEY,
+    JSON.stringify({
+      token: "t",
+      expiresAt: new Date(Date.now() + 3600_000).toISOString(),
+      user: { loginId: "user1", name: "사용자", role },
+    }),
+  );
+}
+
+// Views call the API on mount; answer with empty data so no network is used.
+function mockApi() {
+  return vi.spyOn(api, "postJson").mockImplementation((async (body: Record<string, unknown>) => {
+    if (body.action === "get-learning-status") return { processedPosts: 0, chunks: 0, posts: [] };
+    return { grants: [], drafts: [] };
+  }) as never);
+}
+
+afterEach(() => {
+  vi.restoreAllMocks();
+  localStorage.clear();
+});
+
+// Smoke test: without a session only the login screen is shown.
+test("shows the login view and no tabs when there is no session", () => {
+  mockApi();
+  render(<App />);
+  expect(screen.getByRole("heading", { name: "MABLOP" })).toBeInTheDocument();
+  expect(screen.queryByRole("navigation", { name: "주요 기능" })).not.toBeInTheDocument();
+  expect(screen.queryByRole("heading", { name: "스타일 학습" })).not.toBeInTheDocument();
+});
+
+// Smoke test: with a valid session the app renders the style-learning view by default.
+test("renders app and the style-learning view by default with a session", () => {
+  seedSession("member");
+  mockApi();
   render(<App />);
   expect(screen.getByRole("heading", { name: "MABLOP" })).toBeInTheDocument();
   expect(screen.getByRole("heading", { name: "스타일 학습" })).toBeInTheDocument();
+});
+
+test("hides the 관리 tab from members and shows it to admins", () => {
+  seedSession("member");
+  mockApi();
+  const { unmount } = render(<App />);
+  expect(screen.getByRole("button", { name: "내 정보" })).toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: "관리" })).not.toBeInTheDocument();
+  unmount();
+
+  localStorage.clear();
+  seedSession("admin");
+  render(<App />);
+  expect(screen.getByRole("button", { name: "관리" })).toBeInTheDocument();
 });

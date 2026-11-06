@@ -3,11 +3,14 @@
 moto S3 for storage; bedrock.invoke monkeypatched to canned Markdown (no real calls).
 """
 import importlib
+import json
 import re
 
 import boto3
 import pytest
 from moto import mock_aws
+
+from conftest import ACTING_USER_ID
 
 BUCKET = "mablop-test"
 TEXT_MODEL = "test-quality-korean"
@@ -54,12 +57,62 @@ def test_invokes_quality_model_and_stores_and_returns(de, monkeypatch):
     out = de.generate_from_prompt("프롬프트", image_count=2)
 
     assert captured["model_id"] == TEXT_MODEL  # quality model invoked
-    assert out["draftKey"] == "generated-posts/{}.md".format(out["draftId"])
+    assert out["draftKey"] == f"users/{ACTING_USER_ID}/generated-posts/{out['draftId']}.md"
     assert out["draftId"].startswith("draft-")
-    # stored under generated-posts/ and matches returned markdown
+    # stored under the user's generated-posts/ and matches returned markdown
     stored = boto3.client("s3").get_object(Bucket=BUCKET, Key=out["draftKey"])["Body"].read()
     assert stored.decode("utf-8") == out["markdown"]
     assert _counts(out["markdown"]) == {1: 1, 2: 1}
+    # no object under the legacy (unprefixed) key
+    assert boto3.client("s3").list_objects_v2(Bucket=BUCKET, Prefix="generated-posts/").get("KeyCount", 0) == 0
+
+
+def _index_entries():
+    """Entries of the acting user's Draft_Index (users/{id}/metadata/drafts.json)."""
+    body = boto3.client("s3").get_object(
+        Bucket=BUCKET, Key=f"users/{ACTING_USER_ID}/metadata/drafts.json"
+    )["Body"].read()
+    return json.loads(body.decode("utf-8"))["drafts"]
+
+
+def test_requested_title_is_recorded_in_draft_index(de, monkeypatch):
+    _, fake = _canned("# 본문 제목\n\n본문")
+    monkeypatch.setattr(de.bedrock, "invoke", fake)
+
+    out = de.generate_from_prompt("p", image_count=0, title="  요청 제목  ")
+
+    entries = _index_entries()
+    assert [e["draftId"] for e in entries] == [out["draftId"]]
+    assert entries[0]["title"] == "요청 제목"  # trimmed request title wins over the '#' line
+    assert entries[0]["createdAt"].endswith("Z")
+
+
+def test_title_falls_back_to_first_heading_without_request_title(de, monkeypatch):
+    _, fake = _canned("# 본문 제목\n\n본문")
+    monkeypatch.setattr(de.bedrock, "invoke", fake)
+
+    de.generate_from_prompt("p", image_count=0)
+
+    assert _index_entries()[0]["title"] == "본문 제목"
+
+
+def test_index_failure_does_not_fail_generation_and_logs_class_name_only(de, monkeypatch, capsys):
+    _, fake = _canned("# 제목\n\n비밀 본문")
+    monkeypatch.setattr(de.bedrock, "invoke", fake)
+
+    def broken_record(*args, **kwargs):
+        raise RuntimeError("secret detail 비밀 본문")
+
+    monkeypatch.setattr(de.draft_history, "record", broken_record)
+
+    out = de.generate_from_prompt("p", image_count=0, title="제목")
+
+    # draft is stored and returned despite the index failure (Req 22.4)
+    stored = boto3.client("s3").get_object(Bucket=BUCKET, Key=out["draftKey"])["Body"].read()
+    assert stored.decode("utf-8") == out["markdown"]
+    logged = capsys.readouterr().out
+    assert "RuntimeError" in logged
+    assert "secret detail" not in logged and "비밀 본문" not in logged
 
 
 def test_appends_omitted_placeholders(de, monkeypatch):
@@ -117,3 +170,21 @@ def test_delegates_to_real_modules():
     prompt = mod.build_prompt({"tone": "warm"}, ["chunk a"],
                               {"title": "T", "outline": "O", "notes": "N"})
     assert "T" in prompt and "O" in prompt
+
+
+def test_marker_shows_original_filename_without_user_prefix(de):
+    prefix = f"users/{ACTING_USER_ID}/images/"
+    keys = [prefix + "abc123.jpg", prefix + "def456.png", prefix + "ghi789.png"]
+    de.s3store.put_json(prefix + "abc123.json", {"filename": "제주 일출.jpg", "caption": "일출"})
+    de.s3store.put_json(prefix + "def456.json", {"filename": "../../evil(1).png"})  # hostile stored value
+    # ghi789 has no metadata -> falls back to the object's file name only
+
+    metas = de._load_image_meta(keys)
+    names = de._image_names(keys, metas)
+    assert names == {1: "제주 일출.jpg", 2: "evil1.png", 3: "ghi789.png"}
+    assert de._captions_from_meta(metas) == {1: "일출"}
+
+    md = de.normalize_placeholders("본문 ![img-1] ![img-2] ![img-3]", 3, image_names=names)
+    assert "![img-1](제주 일출.jpg)" in md
+    assert "![img-2](evil1.png)" in md
+    assert "users/" not in md and "/images/" not in md and ".." not in md

@@ -127,8 +127,22 @@ def test_check_request_uses_content_length_header(ac, monkeypatch):
     assert e.value.code == "body_too_large"
 
 
-def test_check_request_happy_path(ac):
-    assert ac.check_request({"X-Mablop-Token": SECRET}, body="{}", now=1000.0) is True
+def test_check_request_happy_path(s3_bucket, signing_secret, create_user, make_session_token):
+    """A valid Session_Token of an active user passes and yields the user context (Req 4.3)."""
+    import time
+
+    import access_controller
+
+    importlib.reload(access_controller)
+    now = time.time()
+    user = create_user("tester", role="member", now_ms=int(now * 1000) - 60_000)
+    token = make_session_token(user["userId"], now_ms=int(now * 1000))
+    ctx = access_controller.check_request(
+        {"X-Mablop-Token": token}, body='{"action": "get-me"}', now=now
+    )
+    assert ctx.action == "get-me"
+    assert ctx.user_id == user["userId"] and ctx.role == "member"
+    assert ctx.user["loginId"] == "tester"
 
 
 def test_check_request_body_checked_before_token(ac, monkeypatch):

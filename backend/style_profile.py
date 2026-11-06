@@ -15,7 +15,7 @@ _STYLE_MODEL_ENV = "MABLOP_STYLE_MODEL"  # cheap style/proof model (Design tieri
 # Locked in decisions.md: Claude Sonnet 4.5 fallback (verified account access, us-east-1).
 _DEFAULT_STYLE_MODEL = "us.anthropic.claude-sonnet-4-5-20250929-v1:0"
 
-_PROFILE_KEY = "style-profile/profile.json"
+_PROFILE_KEY = "style-profile/profile.json"  # relative; stored under s3store.user_key(...)
 
 # Schema keys we expect back from the model (builtAt/sourcePostCount filled by us).
 _MODEL_KEYS = (
@@ -40,8 +40,8 @@ def generate_profile(post_bodies: list[str]) -> dict:
 
 
 def store_profile(profile: dict) -> str:
-    """Write the profile to style-profile/profile.json (1.6, 4.4). Return the key."""
-    return s3store.put_json(_PROFILE_KEY, profile)
+    """Write the profile to the acting user's style-profile/profile.json (1.6, 4.4, 8.3). Return the full key."""
+    return s3store.put_json(s3store.user_key(_PROFILE_KEY), profile)
 
 
 def _build_prompt(post_bodies: list[str]) -> str:

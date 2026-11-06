@@ -146,7 +146,7 @@ def _get_body(post: dict, pasted: dict[str, str]) -> str:
 
 def _store_raw(post_id: str, body: str) -> None:
     """Persist the raw body under raw-posts/<postId>.txt (1.7)."""
-    s3store.put_bytes(f"{_RAW_PREFIX}{post_id}.txt", body.encode("utf-8"),
+    s3store.put_bytes(s3store.user_key(f"{_RAW_PREFIX}{post_id}.txt"), body.encode("utf-8"),
                       content_type="text/plain; charset=utf-8")
 
 
@@ -240,7 +240,7 @@ def _in_progress(state: dict, failures: list[str]) -> dict:
 def _load_raw(post_id: str) -> str:
     """Read a stored raw body back; '' if missing (profile source on resume)."""
     try:
-        return s3store.get_bytes(f"{_RAW_PREFIX}{post_id}.txt").decode("utf-8")
+        return s3store.get_bytes(s3store.user_key(f"{_RAW_PREFIX}{post_id}.txt")).decode("utf-8")
     except Exception:  # noqa: BLE001 - missing raw body is tolerable
         return ""
 
@@ -266,19 +266,14 @@ def _learning_status(state: dict) -> dict:
 
 def rebuild_from_stored() -> dict:
     """Rebuild the RAG index/profile from all raw-posts already in S3."""
-    import boto3
-
-    s3 = boto3.client("s3", region_name=os.environ.get("MABLOP_BEDROCK_REGION", "us-east-1"))
-    bucket = s3store._bucket()
-    keys = []
-    for page in s3.get_paginator("list_objects_v2").paginate(Bucket=bucket, Prefix=_RAW_PREFIX):
-        keys.extend(obj["Key"] for obj in page.get("Contents", []) if obj["Key"].endswith(".txt"))
+    prefix = s3store.user_key(_RAW_PREFIX)
+    keys = [obj["key"] for obj in s3store.list_keys(prefix) if obj["key"].endswith(".txt")]
     if not keys:
-        raise MablopError("bad_request", "??? raw-posts? ????.")
+        raise MablopError("bad_request", "저장된 raw-posts가 없습니다. 먼저 스타일 학습을 진행하세요.")
 
     state = checkpoint.new_state("rebuild-" + uuid.uuid4().hex)
     for key in sorted(keys):
-        post_id = key[len(_RAW_PREFIX):-4]
+        post_id = key[len(prefix):-4]
         body = s3store.get_bytes(key).decode("utf-8")
         chunk_meta, vectors = _embed_post(post_id, body)
         checkpoint.record_post(state, post_id, chunk_meta, vectors)
@@ -304,11 +299,11 @@ def preview_learning_sources(payload: dict) -> dict:
 
 
 def get_learning_status() -> dict:
-    """Return the last completed learning summary for the shared workspace."""
-    try:
-        return s3store.get_json(_STATUS_KEY)
-    except Exception:
+    """Return the acting user's last completed learning summary (empty when absent)."""
+    found = s3store.read_json_optional(s3store.user_key(_STATUS_KEY))
+    if found is None:
         return {"processedPosts": 0, "chunks": 0, "posts": []}
+    return found[0]
 
 
 def _complete(state: dict, failures: list[str]) -> dict:
@@ -323,14 +318,14 @@ def _complete(state: dict, failures: list[str]) -> dict:
     checkpoint.finalize(state)
     learning_status = _learning_status(state)
     learning_status["updatedAt"] = profile.get("builtAt")
-    s3store.put_json(_STATUS_KEY, learning_status)
+    s3store.put_json(s3store.user_key(_STATUS_KEY), learning_status)
     return {
         "runId": state["runId"],
         "status": "completed",
         "processedPosts": len(state["processedPosts"]),
         "chunks": len(state["chunks"]),
         "styleProfileKey": profile_key,
-        "indexKey": index_store.INDEX_KEY,
+        "indexKey": s3store.user_key(index_store.INDEX_KEY),
         "checkpoint": None,
         "failedPosts": failures,
         "learningStatus": learning_status,

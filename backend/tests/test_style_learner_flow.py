@@ -12,7 +12,15 @@ import numpy as np
 import pytest
 from moto import mock_aws
 
+from conftest import ACTING_USER_ID
+
 BUCKET = "mablop-test"
+USER_PREFIX = f"users/{ACTING_USER_ID}/"  # every key is under the acting user (D12, Req 8.3)
+
+
+def _uk(relative):
+    """Full object key of a per-user relative path."""
+    return USER_PREFIX + relative
 
 
 @pytest.fixture
@@ -104,18 +112,24 @@ def test_happy_path_two_crawlable_posts(sl, monkeypatch):
     assert out["status"] == "completed"
     assert out["processedPosts"] == 2
     assert out["chunks"] >= 2
-    assert out["styleProfileKey"] == "style-profile/profile.json"
-    assert out["indexKey"] == "embeddings/index.npy"
+    assert out["styleProfileKey"] == _uk("style-profile/profile.json")
+    assert out["indexKey"] == _uk("embeddings/index.npy")
     assert out["checkpoint"] is None
     assert out["failedPosts"] == []
 
     # raw bodies stored under raw-posts/<postId>.txt (postId == logNo)
-    assert _exists("raw-posts/111.txt")
-    assert _exists("raw-posts/222.txt")
+    assert _exists(_uk("raw-posts/111.txt"))
+    assert _exists(_uk("raw-posts/222.txt"))
     # profile + index artifacts persisted
-    assert _exists("style-profile/profile.json")
-    assert _exists("embeddings/index.npy")
-    assert _exists("embeddings/index-map.json")
+    assert _exists(_uk("style-profile/profile.json"))
+    assert _exists(_uk("embeddings/index.npy"))
+    assert _exists(_uk("embeddings/index-map.json"))
+    assert _exists(_uk("metadata/learning-status.json"))
+    # nothing is written at the legacy shared keys
+    assert not _exists("raw-posts/111.txt")
+    assert not _exists("style-profile/profile.json")
+    assert not _exists("embeddings/index.npy")
+    assert not _exists("metadata/learning-status.json")
 
     # profile built from both bodies; checkpoint cleared
     assert len(captured["profile_bodies"]) == 2
@@ -141,7 +155,7 @@ def test_crawl_failure_falls_back_to_pasted(sl, monkeypatch):
     assert out["processedPosts"] == 2
     assert out["failedPosts"] == []
     # the failed-crawl post used its pasted body
-    stored = _s3().get_object(Bucket=BUCKET, Key="raw-posts/222.txt")["Body"].read()
+    stored = _s3().get_object(Bucket=BUCKET, Key=_uk("raw-posts/222.txt"))["Body"].read()
     assert stored.decode("utf-8") == "pasted fallback 본문"
 
 
@@ -155,7 +169,7 @@ def test_crawl_failure_with_no_paste_is_skipped(sl, monkeypatch):
     assert out["status"] == "completed"
     assert out["processedPosts"] == 1
     assert out["failedPosts"] == ["222"]
-    assert not _exists("raw-posts/222.txt")
+    assert not _exists(_uk("raw-posts/222.txt"))
 
 
 # --- MAX_POST_COUNT cap respected ---
@@ -186,7 +200,8 @@ def test_resume_pauses_then_completes(sl, monkeypatch):
 
     assert first["status"] == "in-progress"
     assert first["processedPosts"] == 1
-    assert first["checkpoint"] == "metadata/learn-checkpoint-{}.json".format(first["runId"])
+    assert first["checkpoint"] == _uk("metadata/learn-checkpoint-{}.json".format(first["runId"]))
+    assert _exists(first["checkpoint"])
     assert first["styleProfileKey"] is None and first["indexKey"] is None
     embed_after_first = captured["embed_calls"]
 
@@ -234,3 +249,47 @@ def test_relearn_fresh_run_overwrites_index(sl, monkeypatch):
     # index now reflects ONLY run 2 (fixed keys overwritten, no accumulation)
     assert {v["postId"] for v in map2.values()} == {"999"}
     assert m2.shape[0] == second["chunks"]
+
+
+# --- per-user isolation of rebuild-from-stored and learning status (Req 8.3, 8.8) ---
+
+def test_rebuild_from_stored_reads_only_own_raw_posts(sl, monkeypatch):
+    from conftest import OTHER_USER_ID
+
+    _patch(sl, monkeypatch)
+    _s3().put_object(Bucket=BUCKET, Key=_uk("raw-posts/own1.txt"), Body="내 글 본문".encode("utf-8"))
+    _s3().put_object(Bucket=BUCKET, Key=f"users/{OTHER_USER_ID}/raw-posts/theirs.txt", Body=b"other")
+    _s3().put_object(Bucket=BUCKET, Key="raw-posts/legacy.txt", Body=b"legacy")
+
+    out = sl.rebuild_from_stored()
+
+    assert out["status"] == "completed"
+    assert out["processedPosts"] == 1
+    assert [p["postId"] for p in out["learningStatus"]["posts"]] == ["own1"]
+    assert out["indexKey"] == _uk("embeddings/index.npy")
+
+
+def test_rebuild_from_stored_with_no_raw_posts_reports_korean_message(sl, monkeypatch):
+    from errors import MablopError
+
+    _patch(sl, monkeypatch)
+    # Another user's and legacy raw-posts must not count for this user.
+    _s3().put_object(Bucket=BUCKET, Key="raw-posts/legacy.txt", Body=b"legacy")
+
+    with pytest.raises(MablopError) as exc:
+        sl.rebuild_from_stored()
+
+    assert exc.value.code == "bad_request"
+    assert exc.value.message == "저장된 raw-posts가 없습니다. 먼저 스타일 학습을 진행하세요."
+
+
+def test_learning_status_is_per_user_and_empty_when_absent(sl, monkeypatch):
+    import user_scope
+    from conftest import OTHER_USER_ID
+
+    _patch(sl, monkeypatch, crawl_bodies={sl.resolve_url(_url("111")): "본문 하나"})
+    sl.learn_style({"posts": [_url("111")]})
+
+    assert sl.get_learning_status()["processedPosts"] == 1
+    with user_scope.bind(OTHER_USER_ID):
+        assert sl.get_learning_status() == {"processedPosts": 0, "chunks": 0, "posts": []}

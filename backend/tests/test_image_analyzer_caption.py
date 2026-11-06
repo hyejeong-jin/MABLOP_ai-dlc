@@ -7,7 +7,21 @@ from hypothesis import given, settings
 from hypothesis import strategies as st
 from moto import mock_aws
 
+from conftest import ACTING_USER_ID, OTHER_USER_ID
+
 BUCKET = "mablop-test"
+P = f"users/{ACTING_USER_ID}/images/"  # acting user's image key prefix
+
+
+@pytest.fixture(autouse=True)
+def _restore_environ():
+    """The Property 10/11 test sets os.environ directly (hypothesis forbids function-scoped monkeypatch); undo it."""
+    import os
+
+    saved = dict(os.environ)
+    yield
+    os.environ.clear()
+    os.environ.update(saved)
 
 
 @pytest.fixture
@@ -41,48 +55,69 @@ def _put_image(key, data=b"\xff\xd8\xff"):
 
 def test_user_description_skips_vision_and_used_verbatim(ia):
     mod, calls = ia
-    out = mod.analyze_images([{"key": "images/a.jpg", "description": "제주 성산일출봉 전경"}])
+    out = mod.analyze_images([{"key": f"{P}a.jpg", "description": "제주 성산일출봉 전경"}])
     assert calls["n"] == 0  # no model call (3.4)
     cap = out["captions"][0]
-    assert cap == {"key": "images/a.jpg", "caption": "제주 성산일출봉 전경", "source": "user"}
+    assert cap == {"key": f"{P}a.jpg", "caption": "제주 성산일출봉 전경", "source": "user"}
 
 
 def test_missing_description_calls_vision_once(ia):
     mod, calls = ia
-    _put_image("images/b.jpg")
-    out = mod.analyze_images([{"key": "images/b.jpg"}])
+    _put_image(f"{P}b.jpg")
+    out = mod.analyze_images([{"key": f"{P}b.jpg"}])
     assert calls["n"] == 1  # exactly one vision call (3.3)
     cap = out["captions"][0]
     assert cap["source"] == "vision"
     assert cap["caption"] == "a generated caption"
 
 
-def test_metadata_stored_as_images_json(ia):
+def test_metadata_stored_as_images_json_in_user_prefix(ia):
     mod, _ = ia
-    _put_image("images/c.jpg")
-    mod.analyze_images([{"key": "images/c.jpg", "contentType": "image/jpeg"}])
-    meta = mod.s3store.get_json("images/c.json")
-    assert meta["key"] == "images/c.jpg"
+    _put_image(f"{P}c.jpg")
+    mod.analyze_images([{"key": f"{P}c.jpg", "contentType": "image/jpeg"}])
+    meta = mod.s3store.get_json(f"{P}c.json")
+    assert meta["key"] == f"{P}c.jpg"
     assert meta["source"] == "vision"
     assert meta["contentType"] == "image/jpeg"
     assert meta["caption"] == "a generated caption"
 
 
+@pytest.mark.parametrize(
+    "bad_key",
+    [
+        "images/a.jpg",  # legacy shared key
+        f"users/{OTHER_USER_ID}/images/a.jpg",  # another user's image
+        f"users/{ACTING_USER_ID}/metadata/a.jpg",  # own prefix but not images/
+        f"{P}../../{OTHER_USER_ID}/images/a.jpg",  # traversal
+    ],
+)
+def test_foreign_image_key_rejected_before_any_work(ia, bad_key):
+    from errors import MablopError
+
+    mod, calls = ia
+    _put_image(f"{P}ok.jpg")
+    with pytest.raises(MablopError) as exc:
+        mod.analyze_images([{"key": f"{P}ok.jpg"}, {"key": bad_key, "description": "x"}])
+    assert exc.value.code == "bad_request"
+    assert calls["n"] == 0  # validation happens before any vision call
+    assert [k["key"] for k in mod.s3store.list_keys("")] == [f"{P}ok.jpg"]  # no caption JSON written
+
+
 def test_caption_truncated_to_max(ia, monkeypatch):
     mod, _ = ia
     monkeypatch.setenv("MABLOP_CAPTION_MAX_CHARS", "5")
-    out = mod.analyze_images([{"key": "images/d.jpg", "description": "0123456789"}])
+    out = mod.analyze_images([{"key": f"{P}d.jpg", "description": "0123456789"}])
     assert out["captions"][0]["caption"] == "01234"
 
 
 def test_mixed_batch_call_counts(ia):
     mod, calls = ia
-    _put_image("images/e.jpg")
-    _put_image("images/f.jpg")
+    _put_image(f"{P}e.jpg")
+    _put_image(f"{P}f.jpg")
     images = [
-        {"key": "images/e.jpg"},
-        {"key": "images/g.jpg", "description": "유저 설명"},
-        {"key": "images/f.jpg"},
+        {"key": f"{P}e.jpg"},
+        {"key": f"{P}g.jpg", "description": "유저 설명"},
+        {"key": f"{P}f.jpg"},
     ]
     out = mod.analyze_images(images)
     assert calls["n"] == 2  # one per description-less image, zero for the described one
@@ -127,7 +162,7 @@ def test_property_caption_counts_and_length_bound(flags, maxchars):
         want_vision = 0
         long_desc = "d" * 300
         for i, has_desc in enumerate(flags):
-            key = f"images/p{i}.jpg"
+            key = f"{P}p{i}.jpg"
             if has_desc:
                 images.append({"key": key, "description": long_desc})
             else:
@@ -140,3 +175,12 @@ def test_property_caption_counts_and_length_bound(flags, maxchars):
         assert calls["n"] == want_vision  # Property 10: exactly one call per description-less image
         for cap in out["captions"]:
             assert len(cap["caption"]) <= maxchars  # Property 11: length bound
+
+
+def test_analyze_keeps_original_filename_saved_at_issue_time(ia):
+    mod, _ = ia
+    mod.s3store.put_json(f"{P}h.json", {"key": f"{P}h.jpg", "filename": "성산일출봉.jpg"})
+    mod.analyze_images([{"key": f"{P}h.jpg", "description": "일출"}])
+    meta = mod.s3store.get_json(f"{P}h.json")
+    assert meta["filename"] == "성산일출봉.jpg"
+    assert meta["caption"] == "일출"

@@ -3,7 +3,9 @@
 import { useEffect, useState } from "react";
 import { CircleAlert, Info } from "lucide-react";
 import { postJson, ApiRequestError } from "../api";
-import { TokenField } from "../TokenField";
+import { formatKst } from "../format";
+import { GrantSelect } from "../grants/GrantSelect";
+import { useGrants } from "../grants/useGrants";
 
 // learn-style response (design: Interfaces / learn-style).
 interface LearnStyleResponse {
@@ -51,22 +53,8 @@ interface PreviewResponse {
 }
 
 
-const TOKEN_KEY = "mablop-token";
-
-function formatKst(value?: string) {
-  if (!value) return "";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-  return new Intl.DateTimeFormat("ko-KR", {
-    timeZone: "Asia/Seoul",
-    dateStyle: "medium",
-    timeStyle: "short",
-  }).format(date);
-}
-
 export function StyleLearningView() {
-  const [token, setToken] = useState(() => localStorage.getItem(TOKEN_KEY) ?? "");
-  const [showToken, setShowToken] = useState(() => !localStorage.getItem(TOKEN_KEY));
+  const grants = useGrants();
   const [blogUrl, setBlogUrl] = useState("");
   const [maxPosts, setMaxPosts] = useState(15);
   const [pasteRows, setPasteRows] = useState<PasteRow[]>([]);
@@ -79,14 +67,8 @@ export function StyleLearningView() {
   const [previewLoading, setPreviewLoading] = useState(false);
   const [previewError, setPreviewError] = useState<string | null>(null);
 
-  function updateToken(v: string) {
-    setToken(v);
-    localStorage.setItem(TOKEN_KEY, v); // persist pre-shared token locally
-  }
-
   function loadLearningStatus() {
-    if (!token) return;
-    postJson<LearningStatus>({ action: "get-learning-status" }, token)
+    postJson<LearningStatus>({ action: "get-learning-status" })
       .then(setLearningStatus)
       .catch(() => undefined);
   }
@@ -96,17 +78,15 @@ export function StyleLearningView() {
   }, []);
 
   async function previewSources() {
-    if (!blogUrl || !token) {
-      setPreviewError("토큰과 네이버 블로그 URL을 먼저 입력하세요.");
+    if (!blogUrl) {
+      setPreviewError("네이버 블로그 URL을 먼저 입력하세요.");
       return;
     }
     setPreviewLoading(true);
     setPreviewError(null);
     try {
-      const data = await postJson<PreviewResponse>(
-        { action: "preview-learning-sources", blogUrl, maxPosts },
-        token,
-      );
+      // preview-learning-sources is not a Bedrock action: no grantId.
+      const data = await postJson<PreviewResponse>({ action: "preview-learning-sources", blogUrl, maxPosts });
       setPreview(data);
     } catch (err) {
       setPreviewError(err instanceof ApiRequestError ? `${err.code}: ${err.message}` : String(err));
@@ -131,20 +111,24 @@ export function StyleLearningView() {
     const pastedTexts = pasteRows.filter((r) => r.postId.trim() && r.text.trim());
     try {
       const res = await postJson<LearnStyleResponse>(
-        {
+        grants.withGrant({
           action: "learn-style",
           blogUrl,
           maxPosts,
           ...(pastedTexts.length ? { pastedTexts } : {}),
           resumeRunId,
-        },
-        token,
+        }),
       );
       setResult(res);
       if (res.learningStatus) setLearningStatus(res.learningStatus);
       // in-progress -> keep runId so the user can resume (Req 1.9)
       setResumeRunId(res.status === "in-progress" ? res.runId : null);
     } catch (err) {
+      // 403 forbidden: grant options are reloaded; show the backend message.
+      if (grants.handleGrantError(err)) {
+        setError(err instanceof ApiRequestError ? err.message : String(err));
+        return;
+      }
       const msg = err instanceof ApiRequestError && err.code === "bad_request"
         ? "학습할 포스트가 없습니다. 붙여넣기 행을 추가하고 postId와 본문을 입력해주세요."
         : err instanceof ApiRequestError ? `${err.code}: ${err.message}` : String(err);
@@ -179,7 +163,7 @@ export function StyleLearningView() {
       )}
 
       <form className="stack page-section" onSubmit={submit}>
-        <TokenField token={token} show={showToken} onChange={updateToken} onShow={() => setShowToken(true)} />
+        <GrantSelect grants={grants} />
         <label className="field">
           네이버 블로그 URL
           <input
@@ -255,7 +239,7 @@ export function StyleLearningView() {
           </div>
         </fieldset>
 
-        <button type="submit" className="btn-primary btn-block" disabled={status === "running"}>
+        <button type="submit" className="btn-primary btn-block" disabled={status === "running" || !grants.canCallBedrock}>
           {resumeRunId ? "이어서 학습" : "학습 시작"}
         </button>
       </form>

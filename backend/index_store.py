@@ -11,7 +11,7 @@ from retrieval import load_index as _load_npy
 
 INDEX_KEY = "embeddings/index.npy"
 MAP_KEY = "embeddings/index-map.json"
-MANIFEST_KEY = "vector-index/manifest.json"
+MANIFEST_KEY = "vector-index/manifest.json"  # relative; wrap with s3store.user_key(...)
 
 _EMBED_MODEL_ENV = "MABLOP_EMBED_MODEL"
 
@@ -46,14 +46,14 @@ def build_and_store_index(vectors, chunk_meta):
         "checksum": hashlib.sha256(npy).hexdigest(),
     }
 
-    s3store.put_bytes(INDEX_KEY, npy, content_type="application/octet-stream")
-    s3store.put_json(MAP_KEY, row_map)
-    s3store.put_json(MANIFEST_KEY, manifest)
+    s3store.put_bytes(s3store.user_key(INDEX_KEY), npy, content_type="application/octet-stream")
+    s3store.put_json(s3store.user_key(MAP_KEY), row_map)
+    s3store.put_json(s3store.user_key(MANIFEST_KEY), manifest)
     return manifest
 
 
 def load_index():
     """Load stored index; return (matrix [N, D] float32, row-map dict)."""
-    matrix = _load_npy(s3store.get_bytes(INDEX_KEY))
-    row_map = s3store.get_json(MAP_KEY)
+    matrix = _load_npy(s3store.get_bytes(s3store.user_key(INDEX_KEY)))
+    row_map = s3store.get_json(s3store.user_key(MAP_KEY))
     return matrix, row_map

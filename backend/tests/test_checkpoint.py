@@ -145,3 +145,20 @@ def test_fresh_runid_overwrites_not_inherits(mod):
     assert matrix.shape == (1, 3)
     assert np.allclose(matrix, np.asarray([[7.0, 8.0, 9.0]], dtype=np.float32))
     assert row_map["0"]["chunkId"] == "p9-c0"
+
+def test_checkpoint_key_is_user_scoped_and_saved_there(mod):
+    import s3store
+
+    key = mod.checkpoint_key("run-1")
+    assert key == "users/u_0123456789abcdef/metadata/learn-checkpoint-run-1.json"
+    assert mod.save(mod.new_state("run-1")) == key
+    assert s3store.get_json(key)["runId"] == "run-1"
+
+
+def test_checkpoint_key_rejects_dotdot_run_id(mod):
+    from errors import MablopError
+
+    for fn in (mod.checkpoint_key, mod.load, mod.clear):
+        with pytest.raises(MablopError) as err:
+            fn("../run")
+        assert err.value.code == "bad_request"

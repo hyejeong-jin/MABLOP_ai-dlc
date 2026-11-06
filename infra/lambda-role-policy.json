@@ -16,6 +16,21 @@
       ]
     },
     {
+      "Sid": "ListRawPosts",
+      "Effect": "Allow",
+      "Action": "s3:ListBucket",
+      "Resource": "arn:aws:s3:::${BucketName}",
+      "Condition": {
+        "StringLike": {
+          "s3:prefix": [
+            "raw-posts/*",
+            "users/*",
+            "generated-posts/*"
+          ]
+        }
+      }
+    },
+    {
       "Sid": "S3Prefixes",
       "Effect": "Allow",
       "Action": [
@@ -30,7 +45,18 @@
         "arn:aws:s3:::${BucketName}/images/*",
         "arn:aws:s3:::${BucketName}/generated-posts/*",
         "arn:aws:s3:::${BucketName}/prompt-templates/*",
-        "arn:aws:s3:::${BucketName}/metadata/*"
+        "arn:aws:s3:::${BucketName}/metadata/*",
+        "arn:aws:s3:::${BucketName}/users/*"
+      ]
+    },
+    {
+      "Sid": "DeleteUserObjects",
+      "Effect": "Allow",
+      "Action": "s3:DeleteObject",
+      "Resource": [
+        "arn:aws:s3:::${BucketName}/users/_auth/login/*",
+        "arn:aws:s3:::${BucketName}/users/*/account.json",
+        "arn:aws:s3:::${BucketName}/users/*/generated-posts/*"
       ]
     },
     {
@@ -41,6 +67,15 @@
         "logs:PutLogEvents"
       ],
       "Resource": "arn:aws:logs:us-east-1:${AccountId}:log-group:/aws/lambda/${FunctionName}:*"
+    },
+    {
+      "Sid": "ReadToken",
+      "Effect": "Allow",
+      "Action": "ssm:GetParameter",
+      "Resource": [
+        "arn:aws:ssm:us-east-1:${AccountId}:parameter${MablopTokenSsmPath}",
+        "arn:aws:ssm:us-east-1:${AccountId}:parameter${MablopSigningSecretSsmPath}"
+      ]
     }
   ]
 }

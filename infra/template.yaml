@@ -14,6 +14,13 @@ Parameters:
     Default: /mablop/token
     Description: SSM Parameter Store path holding the Pre_Shared_Token (SecureString).
 
+  # Signing_Secret source: only the PATH lives here. The owner creates the SecureString
+  # (32+ random chars) out of band; its value never appears in this template (Req 7.4, 18.6).
+  MablopSigningSecretSsmPath:
+    Type: String
+    Default: /mablop/signing-secret
+    Description: SSM Parameter Store path holding the Session_Token Signing_Secret (SecureString).
+
   # Bedrock model ids - locked us-east-1 selections (decisions.md D14); override per-env.
   EmbeddingModelId:
     Type: String
@@ -140,6 +147,8 @@ Resources:
                   StringLike:
                     s3:prefix:
                       - raw-posts/*
+                      - users/*
+                      - generated-posts/*
               - Sid: S3Prefixes
                 Effect: Allow
                 Action:
@@ -154,6 +163,16 @@ Resources:
                   - !Sub "arn:aws:s3:::${MablopBucket}/generated-posts/*"
                   - !Sub "arn:aws:s3:::${MablopBucket}/prompt-templates/*"
                   - !Sub "arn:aws:s3:::${MablopBucket}/metadata/*"
+                  - !Sub "arn:aws:s3:::${MablopBucket}/users/*"
+              # Delete is limited to login lookups, account records, and per-user drafts.
+              # No delete permission on any legacy prefix (Req 18.5, 18.11).
+              - Sid: DeleteUserObjects
+                Effect: Allow
+                Action: s3:DeleteObject
+                Resource:
+                  - !Sub "arn:aws:s3:::${MablopBucket}/users/_auth/login/*"
+                  - !Sub "arn:aws:s3:::${MablopBucket}/users/*/account.json"
+                  - !Sub "arn:aws:s3:::${MablopBucket}/users/*/generated-posts/*"
               - Sid: LogsOnly
                 Effect: Allow
                 Action:
@@ -163,7 +182,9 @@ Resources:
               - Sid: ReadToken
                 Effect: Allow
                 Action: ssm:GetParameter
-                Resource: !Sub "arn:aws:ssm:us-east-1:${AWS::AccountId}:parameter${MablopTokenSsmPath}"
+                Resource:
+                  - !Sub "arn:aws:ssm:us-east-1:${AWS::AccountId}:parameter${MablopTokenSsmPath}"
+                  - !Sub "arn:aws:ssm:us-east-1:${AWS::AccountId}:parameter${MablopSigningSecretSsmPath}"
 
   # Single Python Lambda, routed by `action` (Req 8.1).
   MablopFunction:
@@ -190,6 +211,8 @@ Resources:
           # Lambda reads the token from SSM at runtime (ssm-secure is not supported
           # in Lambda env vars). Only the parameter PATH lives here, never the value.
           MABLOP_TOKEN_SSM_PATH: !Ref MablopTokenSsmPath
+          # Signing_Secret is read from SSM at runtime; only the path is configured here.
+          MABLOP_SIGNING_SECRET_SSM_PATH: !Ref MablopSigningSecretSsmPath
           MABLOP_EMBED_MODEL: !Ref EmbeddingModelId
           MABLOP_TEXT_MODEL: !Ref TextModelId
           MABLOP_STYLE_MODEL: !Ref StyleModelId

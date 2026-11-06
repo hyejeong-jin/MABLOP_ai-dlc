@@ -5,6 +5,8 @@ import json
 STATUS = {
     "unauthorized": 401,  # token (5.1)
     "bad_request": 400,  # unknown/malformed action (8.1 dispatch)
+    "forbidden": 403,  # role/grant denied (user-auth-admin 16.7)
+    "not_found": 404,  # unknown target (user-auth-admin 16.7)
     "rate_limited": 429,  # rate (5.3)
     "body_too_large": 413,  # body length (5.4)
     "bedrock_error": 502,  # Bedrock upstream

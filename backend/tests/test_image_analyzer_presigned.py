@@ -7,7 +7,10 @@ from hypothesis import given, settings
 from hypothesis import strategies as st
 from moto import mock_aws
 
+from conftest import ACTING_USER_ID
+
 BUCKET = "mablop-test"
+USER_IMAGES_PREFIX = f"users/{ACTING_USER_ID}/images/"
 
 
 @pytest.fixture
@@ -26,7 +29,7 @@ def test_keys_scoped_under_images(ia):
     files = [{"filename": "a.jpg", "contentType": "image/jpeg", "size": 100}]
     out = ia.issue_presigned_urls(files)
     up = out["uploads"][0]
-    assert up["key"].startswith("images/")
+    assert up["key"].startswith(USER_IMAGES_PREFIX)
     assert up["key"].endswith(".jpg")
     assert up["method"] == "PUT"
     assert up["url"]
@@ -88,7 +91,47 @@ def test_property_scoped_and_constrained(n, ct):
         uploads = image_analyzer.issue_presigned_urls(files)["uploads"]
         assert len(uploads) == min(n, 10)  # 10-image cap never exceeded
         for up in uploads:
-            assert up["key"].startswith("images/")  # scoped prefix
+            assert up["key"].startswith(USER_IMAGES_PREFIX)  # scoped to the acting user's images/
             assert up["expiresInSeconds"] <= image_analyzer._DEFAULT_EXPIRY  # bounded expiry
             assert up["conditions"]["contentType"] == ct  # content-type condition
             assert up["conditions"]["maxSize"] > 0  # max-size condition
+
+
+def _stored_meta(ia, key):
+    return ia.s3store.get_json(key.rsplit(".", 1)[0] + ".json")
+
+
+def test_original_filename_saved_in_image_meta(ia):
+    out = ia.issue_presigned_urls([{"filename": "제주 여행 1.JPG", "contentType": "image/jpeg"}])
+    key = out["uploads"][0]["key"]
+    assert key.startswith(USER_IMAGES_PREFIX)
+    assert "제주" not in key  # the object key stays uuid-based
+    assert _stored_meta(ia, key)["filename"] == "제주 여행 1.JPG"
+
+
+@pytest.mark.parametrize(
+    "raw, expected",
+    [
+        ("../../etc/passwd.png", "passwd.png"),
+        ("C:\\photos\\a b.png", "a b.png"),
+        ("users/u_x/images/evil.png", "evil.png"),
+        ("a\x00b\x1f(1)[x].png", "ab1x.png"),
+        ("..", None),
+        ("", None),
+        (None, None),
+    ],
+)
+def test_safe_filename_is_path_and_marker_safe(ia, raw, expected):
+    assert ia.safe_filename(raw) == expected
+
+
+def test_safe_filename_bounded_keeps_extension(ia):
+    name = ia.safe_filename("가" * 300 + ".png")
+    assert len(name) <= 100 and name.endswith(".png")
+
+
+def test_hostile_filename_is_stored_sanitized(ia):
+    out = ia.issue_presigned_urls([{"filename": "../../x/y\\evil.png", "contentType": "image/png"}])
+    key = out["uploads"][0]["key"]
+    assert key.startswith(USER_IMAGES_PREFIX) and ".." not in key
+    assert _stored_meta(ia, key)["filename"] == "evil.png"

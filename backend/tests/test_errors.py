@@ -19,6 +19,8 @@ def test_error_body_defaults_message_to_code():
     "code,status",
     [
         ("unauthorized", 401),
+        ("forbidden", 403),
+        ("not_found", 404),
         ("rate_limited", 429),
         ("body_too_large", 413),
         ("bedrock_error", 502),

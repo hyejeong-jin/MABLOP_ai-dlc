@@ -81,5 +81,5 @@ def test_store_profile_round_trips_via_s3(mod, monkeypatch):
         profile = {"tone": "t", "builtAt": "2026-01-01T00:00:00Z", "sourcePostCount": 2}
         key = mod.store_profile(profile)
 
-        assert key == "style-profile/profile.json"
+        assert key == "users/u_0123456789abcdef/style-profile/profile.json"
         assert mod.s3store.get_json(key) == profile

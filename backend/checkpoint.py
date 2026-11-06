@@ -1,6 +1,6 @@
 """Learn-run checkpoint/resume on S3 for the 15-min Lambda cap (Req 1.9, 1.10).
 
-Stores accumulated chunks/embeddings at metadata/learn-checkpoint-<runId>.json so a
+Stores accumulated chunks/embeddings at users/<userId>/metadata/learn-checkpoint-<runId>.json so a
 follow-up invocation resumes without recomputing done posts. Finalize hands off to
 index_store (fixed keys => overwrite) and clears the checkpoint.
 """
@@ -15,8 +15,8 @@ _DEFAULT_BUDGET_S = 840.0  # stay under the 900s Lambda cap
 
 
 def checkpoint_key(run_id: str) -> str:
-    """S3 key for a run's checkpoint."""
-    return f"metadata/learn-checkpoint-{run_id}.json"
+    """Per-user S3 key for a run's checkpoint; a run_id containing ".." is rejected by user_key (8.3)."""
+    return s3store.user_key(f"metadata/learn-checkpoint-{run_id}.json")
 
 
 def _now() -> str:
@@ -45,8 +45,9 @@ def save(state: dict) -> str:
 
 def load(run_id: str):
     """Load prior state for run_id, or None if absent (fresh run)."""
+    key = checkpoint_key(run_id)  # outside try: an invalid run_id must raise, not look like a fresh run
     try:
-        return s3store.get_json(checkpoint_key(run_id))
+        return s3store.get_json(key)
     except Exception:
         return None
 
@@ -96,7 +97,8 @@ def finalize(state: dict):
 
 def clear(run_id: str) -> None:
     """Delete the checkpoint; ignore if already gone."""
+    key = checkpoint_key(run_id)
     try:
-        s3store._client().delete_object(Bucket=s3store._bucket(), Key=checkpoint_key(run_id))
+        s3store._client().delete_object(Bucket=s3store._bucket(), Key=key)
     except Exception:
         pass

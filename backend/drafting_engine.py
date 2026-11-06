@@ -9,16 +9,26 @@ import os
 import re
 import uuid
 
+from botocore.exceptions import ClientError
+
+import auth_log
+import auth_messages
 import bedrock
+import draft_history
+import image_analyzer
 import index_store
 import prompt_builder
 import retrieval
 import s3store
 import style_profile
+import user_scope
+from errors import MablopError
 
 _MAX_IMAGES = 10  # 10-image cap (Req 3.7, 7.4)
-_DRAFT_PREFIX = "generated-posts/"
-_PROFILE_KEY = "style-profile/profile.json"  # Style_Profile location (Req 1.6, 2.5)
+_DRAFT_PREFIX = "generated-posts/"  # relative; stored under s3store.user_key(...) (Req 8.4)
+_PROFILE_KEY = "style-profile/profile.json"  # relative Style_Profile location (Req 1.6, 2.5, 8.3)
+# A read of a missing key may come back as 403 when the role has no ListBucket (design: read_json_optional).
+_MISSING_CODES = {"NoSuchKey", "404", "NotFound", "AccessDenied", "403"}
 
 _TEXT_MODEL_ENV = "MABLOP_TEXT_MODEL"  # quality Korean text-gen (Design tiering, Req 2.7)
 # Locked in decisions.md: Claude Sonnet 4.5 (quality Korean text-gen, us-east-1).
@@ -156,12 +166,15 @@ def generate_from_prompt(
     draft_id: str = None,
     captions=None,
     image_names: dict | None = None,
+    title: str | None = None,
 ) -> dict:
     """Generate+normalize+store a Draft from an assembled prompt (2.7,2.8,2.9,3.6,3.7,4.1,4.2).
 
     Invokes the quality Korean text model, parses the Markdown, normalizes
     `![img-N]` placeholders to each supplied index 1..K (K<=10) exactly once,
-    stores it under generated-posts/<draftId>.md, and returns the draft.
+    stores it under users/{id}/generated-posts/<draftId>.md (the full key is
+    returned as `draftKey`), then records it in the Draft_Index. A failed index
+    update never fails the generation (Req 22.4; design D20).
     """
     raw = bedrock.text_generate(prompt, _text_model())
     markdown = normalize_placeholders(
@@ -169,10 +182,23 @@ def generate_from_prompt(
     )
 
     draft_id = draft_id or "draft-" + uuid.uuid4().hex
-    draft_key = _DRAFT_PREFIX + draft_id + ".md"
+    draft_key = s3store.user_key(_DRAFT_PREFIX + draft_id + ".md")
     s3store.put_bytes(draft_key, markdown.encode("utf-8"), content_type="text/markdown")
 
+    try:
+        draft_history.record(draft_id, title, markdown)
+    except Exception as err:  # noqa: BLE001 - the draft is stored; list-drafts back-fills the entry (Req 22.4, 22.6)
+        auth_log.log("draft-record", f"error:{type(err).__name__}", _acting_user_id())
+
     return {"draftId": draft_id, "markdown": markdown, "draftKey": draft_key}
+
+
+def _acting_user_id():
+    """Bound userId for the audit log; None if unavailable (logging must never fail the draft)."""
+    try:
+        return user_scope.current_user_id()
+    except Exception:  # noqa: BLE001
+        return None
 
 
 def _top_k() -> int:
@@ -189,24 +215,45 @@ def _caption_key(image_key: str) -> str:
     return image_key.rsplit(".", 1)[0] + ".json"
 
 
-def _load_captions(image_keys: list) -> dict:
-    """Map {1-based index: caption} from stored images/<imgId>.json; skip missing."""
-    captions = {}
+def _load_image_meta(image_keys: list) -> dict:
+    """Map {1-based index: meta dict} from stored images/<imgId>.json; skip missing."""
+    metas = {}
     for i, key in enumerate(image_keys, start=1):
         try:
             meta = s3store.get_json(_caption_key(key))
-        except Exception:  # noqa: BLE001 - missing caption json is tolerable
+        except Exception:  # noqa: BLE001 - missing metadata json is tolerable
             continue
-        cap = meta.get("caption") if isinstance(meta, dict) else None
-        if cap:
-            captions[i] = cap
-    return captions
+        if isinstance(meta, dict):
+            metas[i] = meta
+    return metas
+
+
+def _captions_from_meta(metas: dict) -> dict:
+    """Map {index: caption} for entries that have a caption."""
+    return {i: m["caption"] for i, m in metas.items() if m.get("caption")}
+
+
+def _load_captions(image_keys: list) -> dict:
+    """Map {1-based index: caption} from stored images/<imgId>.json; skip missing."""
+    return _captions_from_meta(_load_image_meta(image_keys))
+
+
+def _image_names(image_keys: list, metas: dict) -> dict:
+    """Marker filenames: the sanitized original filename saved at upload, else the key's last segment.
+
+    Only a filename is ever returned, never the users/{id}/images/ prefix (Req 8.6, 17.3).
+    """
+    names = {}
+    for i, key in enumerate(image_keys, start=1):
+        original = image_analyzer.safe_filename((metas.get(i) or {}).get("filename"))
+        names[i] = original or image_analyzer.safe_filename(key.rsplit("/", 1)[-1]) or ""
+    return names
 
 
 def _load_profile() -> dict:
-    """Load style-profile/profile.json; tolerate missing -> {} (2.5)."""
+    """Load the acting user's style-profile/profile.json; tolerate missing -> {} (2.5, 8.3)."""
     try:
-        prof = s3store.get_json(_PROFILE_KEY)
+        prof = s3store.get_json(s3store.user_key(_PROFILE_KEY))
     except Exception:  # noqa: BLE001 - no profile yet is tolerable
         return {}
     return prof if isinstance(prof, dict) else {}
@@ -214,7 +261,12 @@ def _load_profile() -> dict:
 
 def _retrieve_chunks(query_text: str) -> list:
     """Embed query, cosine Top_K over the stored index, map rows -> chunk texts (2.2-2.4)."""
-    matrix, row_map = index_store.load_index()
+    try:
+        matrix, row_map = index_store.load_index()
+    except ClientError as err:
+        if str(err.response.get("Error", {}).get("Code", "")) in _MISSING_CODES:
+            raise MablopError("bad_request", auth_messages.NO_LEARNED_POSTS) from err
+        raise
     query = bedrock.embed(query_text)
     import numpy as np
 
@@ -243,13 +295,14 @@ def generate_draft(payload: dict) -> dict:
     title = payload.get("title")
     outline = payload.get("outline")
     notes = payload.get("notes")
-    image_keys = (payload.get("imageKeys") or [])[:_MAX_IMAGES]
+    raw_keys = payload.get("imageKeys") or []
+    # Only the acting user's own image keys are accepted; nothing is read before this check (Req 8.7).
+    s3store.assert_own_image_keys(raw_keys)
+    image_keys = raw_keys[:_MAX_IMAGES]
 
-    captions = _load_captions(image_keys)
-    image_names = {
-        index: key.rsplit("/", 1)[-1]
-        for index, key in enumerate(image_keys, start=1)
-    }
+    metas = _load_image_meta(image_keys)
+    captions = _captions_from_meta(metas)
+    image_names = _image_names(image_keys, metas)
     chunks = _retrieve_chunks(_input_text(title, outline, notes))
     profile = _load_profile()
 
@@ -263,6 +316,7 @@ def generate_draft(payload: dict) -> dict:
         image_count=len(image_keys),
         captions=captions,
         image_names=image_names,
+        title=title,
     )
     result["topK"] = len(chunks)
     return result
@@ -273,6 +327,12 @@ def get_result(payload: dict) -> dict:
     draft_id = (payload or {}).get("id")
     if not draft_id:
         raise ValueError("get-result requires an 'id'")
-    key = _DRAFT_PREFIX + draft_id + ".md"
-    markdown = s3store.get_bytes(key).decode("utf-8")
+    # Only the acting user's prefix is read, so another user's draft id behaves like a missing draft (Req 8.5).
+    key = s3store.user_key(_DRAFT_PREFIX + str(draft_id) + ".md")
+    try:
+        markdown = s3store.get_bytes(key).decode("utf-8")
+    except ClientError as err:
+        if err.response.get("Error", {}).get("Code") in ("NoSuchKey", "404", "NotFound"):
+            raise MablopError("not_found", auth_messages.DRAFT_NOT_FOUND) from None
+        raise
     return {"status": "ready", "markdown": markdown}

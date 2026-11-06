@@ -1,12 +1,15 @@
-"""Access_Controller (Req 5): token, rate, body-length checks. Runs first.
+"""Access_Controller (Req 5; user-auth-admin Req 4, 20): body-length, rate, authentication, role, Grant.
 
 Stdlib-only (hmac/os/time/json) over s3store. Fixed-window rate limit sized
 for 2-3 users: one global window counter, warm in module memory, persisted to
 metadata/ratelimit.json. YAGNI: no token bucket, no Redis.
 """
 import hmac
+import json
 import os
+from dataclasses import dataclass
 
+import auth_messages
 from errors import MablopError
 
 RATELIMIT_KEY = "metadata/ratelimit.json"
@@ -161,13 +164,140 @@ def _body_len(headers: dict, body) -> int:
     return len(body)
 
 
-def check_request(headers: dict, body, now: float = None) -> bool:
-    """Run body-length (before parse), token, then rate. Raises MablopError on reject."""
+
+# Actions served without a Session_Token (Req 4.1). Exactly these three.
+AUTH_EXEMPT_ACTIONS = frozenset({"login", "register", "bootstrap-admin"})
+
+# Actions only the administrator role may call (Req 4.8, 19.16).
+ADMIN_ONLY_ACTIONS = frozenset(
+    {
+        "migrate-legacy-data",
+        "admin-list-users",
+        "admin-approve-user",
+        "admin-reject-user",
+        "admin-disable-user",
+        "admin-enable-user",
+        "admin-reset-password",
+        "admin-grant-list",
+        "admin-grant-approve",
+        "admin-grant-reject",
+        "admin-grant-revoke",
+    }
+)
+
+# Actions that call Bedrock (directly or through learn_style) (Req 20.1).
+BEDROCK_ACTIONS = frozenset(
+    {"learn-style", "analyze-images", "generate-draft", "rebuild-from-stored", "get-result"}
+)
+
+
+@dataclass(frozen=True)
+class RequestContext:
+    """Result of check_request: the action and, for authenticated calls, the user."""
+
+    action: str
+    user_id: str
+    role: str
+    user: dict
+
+
+def _peek_action(body):
+    """Tolerant JSON peek: the `action` value only when it is a string, else None."""
+    try:
+        if isinstance(body, (bytes, bytearray)):
+            body = bytes(body).decode("utf-8")
+        parsed = json.loads(body) if body else None
+    except Exception:
+        return None
+    if isinstance(parsed, dict) and isinstance(parsed.get("action"), str):
+        return parsed["action"]
+    return None
+
+
+def _unauthenticated() -> MablopError:
+    """The single 401 used for every authentication failure (Req 4.4)."""
+    return MablopError("unauthorized", auth_messages.UNAUTHENTICATED)
+
+
+def _authenticate(headers: dict, now: float) -> RequestContext:
+    """Verify the Session_Token and load the User_Record (one S3 read). Same 401 on any failure."""
+    import auth_crypto
+    import auth_store
+
+    now_ms = int(now * 1000)
+    payload = auth_crypto.verify_token(_header(headers, "X-Mablop-Token"), now_ms)
+    user = auth_store.get_user(payload.uid)
+    if user is None or user.get("status") != "active":
+        raise _unauthenticated()
+    try:
+        cutoff = auth_crypto.from_iso_ms(user.get("credentialsChangedAt"))
+    except Exception:
+        raise _unauthenticated()
+    if payload.iat < cutoff:
+        raise _unauthenticated()
+    return RequestContext(None, payload.uid, user.get("role"), user)
+
+
+def check_request(headers: dict, body, now: float = None) -> RequestContext:
+    """Body length, rate, then authenticate and gate by role. Raises MablopError on reject.
+
+    Order (Req 4.2): body length, global rate, read `action`, authenticate.
+    """
     import time
 
     if now is None:
         now = time.time()
     check_body_length(_body_len(headers, body))
-    check_token(headers)
     check_rate(now)
+    action = _peek_action(body)
+
+    if action in ("login", "register"):
+        return RequestContext(action, None, None, None)
+
+    try:
+        if action == "bootstrap-admin":
+            import auth_throttle
+
+            auth_throttle.guard_global(now)
+            try:
+                check_token(headers)
+            except MablopError:
+                auth_throttle.record_failure(None, now)
+                raise _unauthenticated()
+            return RequestContext(action, None, None, None)
+
+        ctx = _authenticate(headers, now)
+        if action in ADMIN_ONLY_ACTIONS and ctx.role != "admin":
+            raise MablopError("forbidden", auth_messages.ADMIN_REQUIRED)
+        return RequestContext(action, ctx.user_id, ctx.role, ctx.user)
+    except MablopError:
+        raise
+    except Exception:
+        raise MablopError("internal_error", auth_messages.INTERNAL)
+
+
+def requires_grant(action, body, role) -> bool:
+    """Pure predicate: a member calling a Bedrock action (except get-result kind=draft) needs a Grant."""
+    if role != "member" or action not in BEDROCK_ACTIONS:
+        return False
+    if action == "get-result" and isinstance(body, dict) and body.get("kind") == "draft":
+        return False
     return True
+
+
+def check_grant(ctx: RequestContext, body: dict, now: float = None) -> None:
+    """Verify the body's grantId for the acting user; identical 403 for every failure cause (Req 20)."""
+    import time
+
+    if not requires_grant(ctx.action, body, ctx.role):
+        return
+    if now is None:
+        now = time.time()
+    grant_id = body.get("grantId") if isinstance(body, dict) else None
+    import grant_service
+
+    if not grant_service.verify(ctx.user_id, grant_id, int(now * 1000)):
+        import auth_log
+
+        auth_log.log("grant", "blocked", ctx.user_id)
+        raise MablopError("forbidden", auth_messages.GRANT_REQUIRED)

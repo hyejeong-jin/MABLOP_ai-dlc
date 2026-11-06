@@ -60,5 +60,15 @@ def test_manifest_dim_count(mod):
     # checksum stable across rebuild of identical bytes
     import s3store
 
-    assert s3store.get_json(mod.MANIFEST_KEY)["checksum"] == manifest["checksum"]
+    assert s3store.get_json(s3store.user_key(mod.MANIFEST_KEY))["checksum"] == manifest["checksum"]
     assert stored.shape == (2, 4)
+
+
+def test_index_objects_live_under_acting_user_prefix(mod):
+    import s3store
+
+    mod.build_and_store_index([[1.0, 2.0]], _meta(1))
+
+    keys = {o["key"] for o in s3store.list_keys("")}
+    assert keys == {s3store.user_key(k) for k in (mod.INDEX_KEY, mod.MAP_KEY, mod.MANIFEST_KEY)}
+    assert all(k.startswith("users/u_0123456789abcdef/") for k in keys)

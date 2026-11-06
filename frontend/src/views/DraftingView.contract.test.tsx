@@ -9,8 +9,39 @@ import { DraftingView } from "./DraftingView";
 import * as api from "../api";
 import * as images from "../images";
 
+// The view reads the session user through useAuth(); the tests choose the role.
+const auth = vi.hoisted(() => ({
+  user: null as { loginId: string; name: string; role: "member" | "admin" } | null,
+}));
+vi.mock("../auth/AuthContext", () => ({
+  useAuth: () => ({
+    user: auth.user,
+    notice: null,
+    login: async () => {},
+    register: async () => "",
+    logout: () => {},
+    replaceToken: () => {},
+  }),
+}));
+
+const GRANT = {
+  id: "g1",
+  status: "approved",
+  purpose: null,
+  requestedAt: "2025-01-01T00:00:00Z",
+  decidedAt: "2025-01-02T00:00:00Z",
+  expiresAt: "2025-02-01T00:00:00Z",
+  expired: false,
+};
+
+async function selectGrant() {
+  await screen.findByRole("option", { name: /^Bedrock 사용 권한 · / });
+  fireEvent.change(screen.getByLabelText("Bedrock 사용 권한"), { target: { value: "g1" } });
+}
+
 // canvas is dead in jsdom -> resizeImage returns a tiny blob (same stub as the sibling test).
 beforeEach(() => {
+  auth.user = { loginId: "member1", name: "멤버", role: "member" };
   vi.spyOn(images, "resizeImage").mockImplementation(
     async (file: Blob) =>
       new Blob([new Uint8Array([1, 2, 3])], {
@@ -28,7 +59,8 @@ afterEach(() => {
 function wireApi() {
   const calls: Record<string, unknown>[] = [];
   vi.spyOn(api, "postJson").mockImplementation(async (body) => {
-    calls.push(body);
+    if (body.action === "grant-list-mine") return { grants: [GRANT] } as never;
+    calls.push(body); // grant-list-mine is not part of the drafting flow
     switch (body.action) {
       case "issue-presigned-urls": {
         const files = body.files as { filename: string }[];
@@ -77,7 +109,7 @@ test("never retains or uploads more than MAX_IMAGES, however many are attached",
   vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response(null, { status: 200 }));
 
   render(<DraftingView />);
-  fireEvent.change(screen.getByLabelText("토큰"), { target: { value: "t" } });
+  await selectGrant();
   fireEvent.change(screen.getByLabelText("제목"), { target: { value: "제목" } });
 
   const n = images.MAX_IMAGES + 7; // comfortably over the cap
@@ -103,7 +135,7 @@ test("every backend payload is JSON-serializable and holds no binary (keys only)
   vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response(null, { status: 200 }));
 
   render(<DraftingView />);
-  fireEvent.change(screen.getByLabelText("토큰"), { target: { value: "t" } });
+  await selectGrant();
   fireEvent.change(screen.getByLabelText("제목"), { target: { value: "제목" } });
   attach([makeFile("a.jpg"), makeFile("b.jpg")]);
   fireEvent.change(screen.getByLabelText("이미지 설명 1"), {

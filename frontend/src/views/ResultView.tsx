@@ -1,92 +1,287 @@
-// Result / Markdown view (task 11.6). Prop-driven; App.tsx (11.4) owns wiring.
-// Single synchronous loading state during generate-draft (Req 2.9). No markdown lib (YAGNI):
-// raw Markdown shown in a <pre> with native copy / download controls.
-import { useEffect, useState } from "react";
-import { CircleAlert, Copy, Download, Info } from "lucide-react";
-
-const LAST_DRAFT_KEY = "mablop-last-draft";
+// Result view: draft history in the style of a chat application (Req 23).
+// Left: the user's drafts, newest first (list-drafts). Right: the body of the selected draft
+// (get-result, kind "draft") with copy / download. Keeps no copy of a draft in the browser.
+// get-result and delete-draft need no Grant, so this view sends no grantId (Req 20.8, 20.9).
+import { useCallback, useEffect, useRef, useState } from "react";
+import { CircleAlert, Copy, Download, Info, Trash2 } from "lucide-react";
+import { postJson } from "../api";
+import { formatKst } from "../format";
 
 export interface ResultViewProps {
-  loading?: boolean; // synchronous wait during generate-draft; defaults false until 11.4 wires it
-  markdown?: string; // returned Draft (Markdown)
-  error?: string;
+  focusDraftId?: string | null; // draft just generated; selected once, then onFocusHandled
+  onFocusHandled?: () => void;
 }
 
-export function ResultView({ loading = false, markdown, error }: ResultViewProps) {
-  const [copied, setCopied] = useState(false);
-  const [storedMarkdown, setStoredMarkdown] = useState(
-    () => localStorage.getItem(LAST_DRAFT_KEY) ?? "",
-  );
-  const shownMarkdown = markdown ?? storedMarkdown;
+interface DraftEntry {
+  draftId: string;
+  title: string;
+  createdAt: string;
+}
 
-  useEffect(() => {
-    if (markdown !== undefined) {
-      setStoredMarkdown(markdown);
-      localStorage.setItem(LAST_DRAFT_KEY, markdown);
+interface ListDraftsResponse {
+  drafts?: DraftEntry[];
+}
+
+interface GetResultResponse {
+  markdown?: string;
+}
+
+function errorMessage(err: unknown, fallback: string): string {
+  return err instanceof Error && err.message ? err.message : fallback;
+}
+
+// Newest first; ties by draftId descending (same order as the backend).
+function sortNewestFirst(entries: DraftEntry[]): DraftEntry[] {
+  return [...entries].sort((a, b) => {
+    if (a.createdAt !== b.createdAt) return a.createdAt < b.createdAt ? 1 : -1;
+    if (a.draftId !== b.draftId) return a.draftId < b.draftId ? 1 : -1;
+    return 0;
+  });
+}
+
+export function ResultView({ focusDraftId = null, onFocusHandled }: ResultViewProps) {
+  const [drafts, setDrafts] = useState<DraftEntry[]>([]);
+  const [listLoaded, setListLoaded] = useState(false);
+  const [listError, setListError] = useState("");
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [body, setBody] = useState<string | null>(null);
+  const [bodyLoading, setBodyLoading] = useState(false);
+  const [bodyError, setBodyError] = useState("");
+  const [confirmingId, setConfirmingId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState<Record<string, string>>({});
+  const [copied, setCopied] = useState(false);
+
+  // Refs let async handlers compare against the *current* state (late responses are discarded).
+  const selectedRef = useRef<string | null>(null);
+  const listSeq = useRef(0);
+  const initialized = useRef(false);
+  const handledRef = useRef(onFocusHandled);
+  handledRef.current = onFocusHandled;
+
+  const select = useCallback(async (id: string) => {
+    selectedRef.current = id;
+    setSelectedId(id);
+    setBody(null);
+    setBodyError("");
+    setCopied(false);
+    setBodyLoading(true);
+    try {
+      const res = await postJson<GetResultResponse>({ action: "get-result", kind: "draft", id });
+      if (selectedRef.current !== id) return;
+      setBody(typeof res?.markdown === "string" ? res.markdown : "");
+    } catch (err) {
+      if (selectedRef.current !== id) return;
+      setBodyError(errorMessage(err, "초안 본문을 불러오지 못했습니다."));
+    } finally {
+      if (selectedRef.current === id) setBodyLoading(false);
     }
-  }, [markdown]);
+  }, []);
+
+  const loadList = useCallback(
+    async (focusId: string | null) => {
+      const seq = ++listSeq.current;
+      let selectTarget: string | null = null;
+      try {
+        const res = await postJson<ListDraftsResponse>({ action: "list-drafts" });
+        if (seq !== listSeq.current) return;
+        const entries = Array.isArray(res?.drafts) ? res.drafts : [];
+        setDrafts(sortNewestFirst(entries));
+        setListError("");
+        if (focusId && entries.some((d) => d.draftId === focusId)) selectTarget = focusId;
+      } catch (err) {
+        if (seq !== listSeq.current) return;
+        setListError(errorMessage(err, "초안 목록을 불러오지 못했습니다."));
+      }
+      setListLoaded(true);
+      if (focusId) handledRef.current?.(); // the hand-off is consumed once, listed or not
+      if (selectTarget) void select(selectTarget);
+    },
+    [select],
+  );
+
+  // Open: list-drafts. A later non-null focusDraftId reloads the list and selects it once.
+  useEffect(() => {
+    if (initialized.current && !focusDraftId) return;
+    initialized.current = true;
+    void loadList(focusDraftId);
+  }, [focusDraftId, loadList]);
+
+  function askDelete(id: string) {
+    setDeleteError((prev) => {
+      if (!(id in prev)) return prev;
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
+    setConfirmingId(id);
+  }
+
+  async function confirmDelete(id: string) {
+    setDeletingId(id);
+    try {
+      await postJson({ action: "delete-draft", draftId: id });
+      setConfirmingId(null);
+      if (selectedRef.current === id) {
+        selectedRef.current = null;
+        setSelectedId(null);
+        setBody(null);
+        setBodyError("");
+        setBodyLoading(false);
+        setCopied(false);
+      }
+      await loadList(null);
+    } catch (err) {
+      setConfirmingId(null);
+      setDeleteError((prev) => ({ ...prev, [id]: errorMessage(err, "초안을 삭제하지 못했습니다.") }));
+    } finally {
+      setDeletingId(null);
+    }
+  }
 
   // native clipboard copy; no deps
   async function copy() {
-    if (!shownMarkdown) return;
-    await navigator.clipboard.writeText(shownMarkdown);
-    setCopied(true);
+    if (!body) return;
+    try {
+      await navigator.clipboard.writeText(body);
+      setCopied(true);
+    } catch {
+      setBodyError("복사하지 못했습니다. 브라우저의 클립보드 권한을 확인하세요.");
+    }
   }
 
-  // download raw markdown as .md via blob url
+  // download raw markdown as {draftId}.md via blob url
   function download() {
-    if (!shownMarkdown) return;
-    const blob = new Blob([shownMarkdown], { type: "text/markdown" });
+    if (!body || !selectedId) return;
+    const blob = new Blob([body], { type: "text/markdown" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "draft.md";
+    a.download = `${selectedId}.md`;
     a.click();
     URL.revokeObjectURL(url);
   }
 
+  const isEmpty = listLoaded && !listError && drafts.length === 0;
+
   return (
     <section>
       <h2 className="page-title">결과</h2>
-      <p className="page-lead">가장 최근에 만든 초안입니다. 이 브라우저에 저장돼 있어서 새로고침해도 남아 있어요.</p>
+      <p className="page-lead">지금까지 만든 초안입니다. 항목을 선택하면 본문을 볼 수 있어요.</p>
 
-      {loading && (
-        <div className="callout" role="status">
-          <Info size={16} aria-hidden="true" />
-          <p>초안 생성 중...</p>
-        </div>
-      )}
-
-      {error && (
+      {listError && (
         <div className="callout callout-error" role="alert">
           <CircleAlert size={16} aria-hidden="true" />
-          <p>{error}</p>
+          <p>{listError}</p>
         </div>
       )}
 
-      {!loading && !shownMarkdown && !error && (
-        <p className="meta">아직 만든 초안이 없습니다. 초안 작성 탭에서 먼저 만들어 보세요.</p>
-      )}
-
-      {!loading && shownMarkdown && (
+      <div className="history-layout">
         <div>
-          <div className="draft-result-actions">
-            <span className="meta">Markdown</span>
-            <div>
-              <button type="button" className="btn-sm btn-with-icon" onClick={copy}>
-                <Copy size={14} aria-hidden="true" />
-                복사
-              </button>
-              <button type="button" className="btn-sm btn-with-icon" onClick={download}>
-                <Download size={14} aria-hidden="true" />
-                다운로드 (.md)
-              </button>
-              {copied && <span role="status" className="meta">복사됨</span>}
-            </div>
-          </div>
-          <pre className="draft-output" aria-label="생성된 마크다운">{shownMarkdown}</pre>
+          {!listLoaded && (
+            <p className="meta" role="status">
+              초안 목록을 불러오는 중...
+            </p>
+          )}
+          {isEmpty && <p className="meta">아직 만든 초안이 없습니다.</p>}
+          {drafts.length > 0 && (
+            <ul className="history-list" aria-label="초안 기록">
+              {drafts.map((d) => {
+                const selected = d.draftId === selectedId;
+                const confirming = d.draftId === confirmingId;
+                return (
+                  <li
+                    key={d.draftId}
+                    className="history-item"
+                    aria-current={selected ? "true" : undefined}
+                  >
+                    <button type="button" onClick={() => void select(d.draftId)}>
+                      <span>{d.title}</span>
+                      <span className="meta">{formatKst(d.createdAt)}</span>
+                    </button>
+                    {confirming ? (
+                      <span className="confirm-inline">
+                        <button
+                          type="button"
+                          className="btn-sm"
+                          disabled={deletingId === d.draftId}
+                          onClick={() => void confirmDelete(d.draftId)}
+                        >
+                          확인
+                        </button>
+                        <button
+                          type="button"
+                          className="btn-sm"
+                          disabled={deletingId === d.draftId}
+                          onClick={() => setConfirmingId(null)}
+                        >
+                          취소
+                        </button>
+                      </span>
+                    ) : (
+                      <button type="button" aria-label="삭제" onClick={() => askDelete(d.draftId)}>
+                        <Trash2 size={16} aria-hidden="true" />
+                      </button>
+                    )}
+                    {deleteError[d.draftId] && (
+                      <div className="callout callout-error" role="alert">
+                        <CircleAlert size={16} aria-hidden="true" />
+                        <p>{deleteError[d.draftId]}</p>
+                      </div>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          )}
         </div>
-      )}
+
+        <div className="history-body">
+          {!selectedId && drafts.length > 0 && (
+            <p className="meta">왼쪽 목록에서 초안을 선택하세요.</p>
+          )}
+
+          {selectedId && bodyLoading && (
+            <div className="callout" role="status">
+              <Info size={16} aria-hidden="true" />
+              <p>초안을 불러오는 중...</p>
+            </div>
+          )}
+
+          {selectedId && bodyError && (
+            <div className="callout callout-error" role="alert">
+              <CircleAlert size={16} aria-hidden="true" />
+              <p>{bodyError}</p>
+            </div>
+          )}
+
+          {selectedId && !bodyLoading && body !== null && (
+            <div>
+              <div className="draft-result-actions">
+                <span className="meta">Markdown</span>
+                <div>
+                  <button type="button" className="btn-sm btn-with-icon" onClick={() => void copy()}>
+                    <Copy size={14} aria-hidden="true" />
+                    복사
+                  </button>
+                  <button type="button" className="btn-sm btn-with-icon" onClick={download}>
+                    <Download size={14} aria-hidden="true" />
+                    다운로드
+                  </button>
+                  {copied && (
+                    <span role="status" className="meta">
+                      복사됨
+                    </span>
+                  )}
+                </div>
+              </div>
+              <pre className="draft-output" aria-label="생성된 마크다운">
+                {body}
+              </pre>
+            </div>
+          )}
+        </div>
+      </div>
     </section>
   );
 }

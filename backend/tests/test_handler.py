@@ -8,36 +8,38 @@ import base64
 import importlib
 import json
 
-import boto3
 import pytest
-from moto import mock_aws
 
-BUCKET = "mablop-test"
-SECRET = "s3cr3t-token"
+UNAUTHENTICATED_MSG = "로그인이 필요합니다. 다시 로그인하세요."
+_state = {}
+_ADMIN = object()
 
 
 @pytest.fixture
-def h(monkeypatch):
-    """Fresh moto S3 + env; reload modules so warm rate-limit state is reset."""
-    monkeypatch.setenv("MABLOP_BUCKET", BUCKET)
-    monkeypatch.setenv("MABLOP_TOKEN", SECRET)
-    with mock_aws():
-        boto3.client("s3", region_name="us-east-1").create_bucket(Bucket=BUCKET)
-        import s3store
+def h(s3_bucket, signing_secret, create_user, make_session_token):
+    """Fresh moto S3/SSM + an admin Session_Token; reload modules so warm rate-limit state is reset.
 
-        importlib.reload(s3store)
-        import access_controller
+    Existing Bedrock actions run as an admin token, which is exempt from Grant verification.
+    """
+    import s3store
 
-        importlib.reload(access_controller)
-        import handler
+    importlib.reload(s3store)
+    import access_controller
 
-        importlib.reload(handler)
-        yield handler
+    importlib.reload(access_controller)
+    import handler
+
+    importlib.reload(handler)
+    admin = create_user("admin1", role="admin")
+    _state["admin"] = make_session_token(admin["userId"])
+    yield handler
 
 
-def _event(body, token=SECRET, base64_encode=False):
-    """Build a minimal Function URL v2 event with optional token / base64 body."""
+def _event(body, token=_ADMIN, base64_encode=False):
+    """Build a minimal Function URL v2 event with optional Session_Token / base64 body."""
     raw = body if isinstance(body, str) else json.dumps(body)
+    if token is _ADMIN:
+        token = _state["admin"]
     headers = {}
     if token is not None:
         headers["X-Mablop-Token"] = token
@@ -48,7 +50,6 @@ def _event(body, token=SECRET, base64_encode=False):
     else:
         evt["body"] = raw
     return evt
-
 
 def _body(resp):
     """Parse the JSON body of a handler response."""
@@ -61,6 +62,7 @@ def test_missing_token_returns_401(h):
     resp = h.handler(_event({"action": "learn-style"}, token=None))
     assert resp["statusCode"] == 401
     assert _body(resp)["error"]["code"] == "unauthorized"
+    assert _body(resp)["error"]["message"] == UNAUTHENTICATED_MSG
 
 
 # --- (b) valid token + known action routes to the right component -> 200 ---
@@ -145,8 +147,25 @@ def test_component_error_becomes_500_without_stacktrace(h, monkeypatch):
     assert set(body["error"].keys()) == {"code", "message"}
 
 
-def test_stub_notimplemented_becomes_500(h):
-    """Un-stubbed component (NotImplementedError stub) surfaces as a clean 500."""
+def test_generate_draft_without_learned_index_is_clean_400(h):
+    """Real component on an empty workspace: bad_request with the Korean message, no S3 error text."""
+    resp = h.handler(_event({"action": "generate-draft", "title": "t"}))
+    assert resp["statusCode"] == 400
+    assert _body(resp)["error"] == {
+        "code": "bad_request",
+        "message": "학습된 글이 없습니다. 먼저 스타일 학습을 진행하세요.",
+    }
+
+
+def test_unexpected_generate_draft_failure_becomes_500(h, monkeypatch):
+    """An unexpected exception in the real component surfaces as a clean 500."""
+    import drafting_engine
+
+    def boom(*a, **k):
+        raise RuntimeError("boom")
+
+    monkeypatch.setattr(drafting_engine, "_retrieve_chunks", boom)
     resp = h.handler(_event({"action": "generate-draft", "title": "t"}))
     assert resp["statusCode"] == 500
     assert _body(resp)["error"]["code"] == "internal_error"
+    assert "Traceback" not in resp["body"]
