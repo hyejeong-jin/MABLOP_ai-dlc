@@ -1,5 +1,6 @@
 # Frontend deploy: Vite build -> GitHub Pages (Req 9.4). No secrets in code.
 name: deploy-frontend
+# Pages deployment retry: keep the build and deploy jobs separate.
 
 on:
   push:
