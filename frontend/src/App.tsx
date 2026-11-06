@@ -29,9 +29,12 @@ function Shell() {
 
   return (
     <main className="shell">
-      <header className="app-header">
-        <h1 className="wordmark">MABLOP</h1>
-        <p className="app-subtitle">내 블로그 문체로 쓰는 초안 도구</p>
+      <header className="app-header brand">
+        <img className="brand-mark" src={`${import.meta.env.BASE_URL}logo-mark.png`} alt="" width="44" height="26" />
+        <div className="brand-text">
+          <h1 className="wordmark">MABLOP</h1>
+          <p className="app-subtitle">내 블로그 문체로 쓰는 초안 도구</p>
+        </div>
       </header>
       <nav className="tabs" aria-label="주요 기능">
         {tabs.map(({ id, label, Icon }) => (
