@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 
 import { ApiRequestError, postJson } from "../api";
 import { formatKst } from "../format";
-import { Modal } from "./Modal";
 
 interface UsageModel {
   modelId: string;
@@ -29,7 +28,7 @@ function usd(value: number, digits = 4): string {
   return `$${value.toFixed(digits)}`;
 }
 
-export function UsageDialog({ onClose }: { onClose: () => void }) {
+export function UsageSection() {
   const [data, setData] = useState<UsageResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -44,7 +43,10 @@ export function UsageDialog({ onClose }: { onClose: () => void }) {
   }, []);
 
   return (
-    <Modal title="내 월 사용량" onClose={onClose}>
+    <section className="card" aria-labelledby="profile-usage-title">
+      <h3 className="section-title" id="profile-usage-title">
+        내 월 사용량
+      </h3>
       {error && (
         <p className="callout callout-error" role="alert">
           {error}
@@ -54,12 +56,12 @@ export function UsageDialog({ onClose }: { onClose: () => void }) {
       {data && (
         <>
           <p className="usage-month">{data.month} 누적 · USD</p>
-          <p className="usage-total">{usd(data.totalUsd)}</p>
+          <p className="usage-total">{usd(data.totalUsd ?? 0)}</p>
           <p className="meta">다음 초기화: {formatKst(data.resetAt)} (한국 시간)</p>
 
           <div className="usage-list">
-            {data.models.length === 0 && <p className="meta">이번 달에는 아직 사용 기록이 없습니다.</p>}
-            {data.models.map((m) => (
+            {(data.models ?? []).length === 0 && <p className="meta">이번 달에는 아직 사용 기록이 없습니다.</p>}
+            {(data.models ?? []).map((m) => (
               <div className="usage-row" key={m.modelId}>
                 <div>
                   <strong>{m.label}</strong>
@@ -88,7 +90,7 @@ export function UsageDialog({ onClose }: { onClose: () => void }) {
                 </tr>
               </thead>
               <tbody>
-                {data.pricing.map((p) => (
+                {(data.pricing ?? []).map((p) => (
                   <tr key={p.label}>
                     <td>{p.label}</td>
                     <td>{p.inputPerMillion}</td>
@@ -100,6 +102,6 @@ export function UsageDialog({ onClose }: { onClose: () => void }) {
           </details>
         </>
       )}
-    </Modal>
+    </section>
   );
 }

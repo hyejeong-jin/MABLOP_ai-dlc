@@ -4,11 +4,11 @@ import { afterEach, expect, test, vi } from "vitest";
 import * as api from "../api";
 import { ManualDialog } from "./ManualDialog";
 import { UpdateNotesDialog } from "./UpdateNotesDialog";
-import { UsageDialog } from "./UsageDialog";
+import { UsageSection } from "./UsageSection";
 
 afterEach(() => vi.restoreAllMocks());
 
-test("UsageDialog shows month total, per-model rows and the reset time", async () => {
+test("UsageSection shows month total, per-model rows and the reset time", async () => {
   vi.spyOn(api, "postJson").mockResolvedValue({
     month: "2026-11",
     totalUsd: 0.0121,
@@ -18,7 +18,7 @@ test("UsageDialog shows month total, per-model rows and the reset time", async (
     ],
     pricing: [{ label: "Claude Sonnet 4.5", inputPerMillion: 3, outputPerMillion: 15 }],
   } as never);
-  render(<UsageDialog onClose={() => {}} />);
+  render(<UsageSection />);
 
   expect(await screen.findByText("$0.0121")).toBeInTheDocument();
   expect(screen.getAllByText("Claude Sonnet 4.5").length).toBeGreaterThan(0);
@@ -27,16 +27,16 @@ test("UsageDialog shows month total, per-model rows and the reset time", async (
   expect(api.postJson).toHaveBeenCalledWith({ action: "get-usage" });
 });
 
-test("UsageDialog shows an empty-month message and the backend error", async () => {
+test("UsageSection shows an empty-month message and the backend error", async () => {
   vi.spyOn(api, "postJson").mockResolvedValueOnce({
     month: "2026-11", totalUsd: 0, resetAt: "2026-11-30T15:00:00.000Z", models: [], pricing: [],
   } as never);
-  const { unmount } = render(<UsageDialog onClose={() => {}} />);
+  const { unmount } = render(<UsageSection />);
   expect(await screen.findByText("이번 달에는 아직 사용 기록이 없습니다.")).toBeInTheDocument();
   unmount();
 
   vi.spyOn(api, "postJson").mockRejectedValueOnce(new api.ApiRequestError(500, "internal_error", "서버 오류"));
-  render(<UsageDialog onClose={() => {}} />);
+  render(<UsageSection />);
   expect(await screen.findByRole("alert")).toHaveTextContent("서버 오류");
 });
 
@@ -52,6 +52,6 @@ test("dialogs close with the close button and with Escape", async () => {
 test("UpdateNotesDialog lists releases newest first", () => {
   render(<UpdateNotesDialog onClose={() => {}} />);
   const versions = screen.getAllByText(/^v\d+\.\d+\.\d+$/).map((el) => el.textContent);
-  expect(versions[0]).toBe("v1.3.0");
+  expect(versions[0]).toBe("v1.4.0");
   expect(versions).toContain("v1.0.0");
 });

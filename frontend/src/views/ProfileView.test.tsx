@@ -295,7 +295,7 @@ test("the 로그아웃 button calls logout", async () => {
   expect(auth.logout).toHaveBeenCalledTimes(1);
 });
 
-test("has no draft list, account deletion or usage statistics", async () => {
+test("has no draft list or account deletion (the monthly usage section is allowed)", async () => {
   wireApi();
   render(<ProfileView />);
   await screen.findByText("앨리스");
@@ -303,7 +303,7 @@ test("has no draft list, account deletion or usage statistics", async () => {
   const text = document.body.textContent ?? "";
   expect(text).not.toMatch(/초안/);
   expect(text).not.toMatch(/계정 삭제|탈퇴/);
-  expect(text).not.toMatch(/사용량|통계/);
+  expect(text).not.toMatch(/통계/);
   expect(screen.queryByRole("button", { name: /삭제/ })).toBeNull();
 });
 

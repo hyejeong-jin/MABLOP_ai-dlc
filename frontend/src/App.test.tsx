@@ -50,7 +50,7 @@ test("hides the 관리 tab from members and shows it to admins", () => {
   seedSession("member");
   mockApi();
   const { unmount } = render(<App />);
-  expect(screen.getByRole("button", { name: "내 정보" })).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "마이페이지" })).toBeInTheDocument();
   expect(screen.queryByRole("button", { name: "관리" })).not.toBeInTheDocument();
   unmount();
 

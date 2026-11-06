@@ -142,7 +142,7 @@ test("a 401 on an authenticated request clears the session and shows the expiry 
       : undefined;
 
   render(<App />);
-  openTab("내 정보");
+  openTab("마이페이지");
 
   expect(await screen.findByText(SESSION_EXPIRED)).toBeInTheDocument();
   expect(localStorage.getItem(SESSION_KEY)).toBeNull();
@@ -151,13 +151,13 @@ test("a 401 on an authenticated request clears the session and shows the expiry 
   expect(callsOf("get-me")[0].headers["X-Mablop-Token"]).toBe("stale");
 });
 
-test("logout from 내 정보 clears the session and returns to the login screen", async () => {
+test("logout from 마이페이지 clears the session and returns to the login screen", async () => {
   seedSession("member");
   render(<App />);
-  openTab("내 정보");
-  expect(await screen.findByRole("heading", { name: "내 정보" })).toBeInTheDocument();
+  openTab("마이페이지");
+  expect(await screen.findByRole("heading", { name: "마이페이지" })).toBeInTheDocument();
 
-  fireEvent.click(screen.getAllByRole("button", { name: "로그아웃" })[0]);
+  fireEvent.click(screen.getByRole("button", { name: "로그아웃" }));
 
   expect(localStorage.getItem(SESSION_KEY)).toBeNull();
   expect(screen.getByRole("button", { name: "로그인" })).toBeInTheDocument();
@@ -198,7 +198,7 @@ test("legacy keys are removed even when there is no session", () => {
 test("the 관리 tab is shown to admins and hidden from members", () => {
   seedSession("member");
   const { unmount } = render(<App />);
-  expect(screen.getByRole("button", { name: "내 정보" })).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "마이페이지" })).toBeInTheDocument();
   expect(screen.queryByRole("button", { name: "관리" })).not.toBeInTheDocument();
   unmount();
 
@@ -234,7 +234,7 @@ test("a draftId from 초안 작성 is handed to 결과 once and then cleared", a
   expect(callsOf("get-result")[0].body).toMatchObject({ kind: "draft", id: "d-new" });
 
   // Leaving and re-entering does not select it again (the hand-off was consumed).
-  openTab("내 정보");
+  openTab("마이페이지");
   openTab("결과");
   expect(await screen.findByText("왼쪽 목록에서 초안을 선택하세요.")).toBeInTheDocument();
   expect(callsOf("list-drafts")).toHaveLength(2);
@@ -251,7 +251,7 @@ test("changing the password replaces only token and expiresAt in the stored sess
       : undefined;
 
   render(<App />);
-  openTab("내 정보");
+  openTab("마이페이지");
   fireEvent.change(await screen.findByLabelText("현재 비밀번호"), { target: { value: "old-pass-1234" } });
   fireEvent.change(screen.getByLabelText("새 비밀번호"), { target: { value: "new-pass-5678" } });
   fireEvent.change(screen.getByLabelText("새 비밀번호 확인"), { target: { value: "new-pass-5678" } });

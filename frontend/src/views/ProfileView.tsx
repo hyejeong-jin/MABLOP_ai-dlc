@@ -8,6 +8,7 @@ import { CircleAlert, Info, KeyRound, LogOut, ShieldCheck, User } from "lucide-r
 import { ApiRequestError, postJson } from "../api";
 import { useAuth } from "../auth/AuthContext";
 import { formatKst, formatKstDate } from "../format";
+import { UsageSection } from "../components/UsageSection";
 
 interface MeResponse {
   userId?: string;
@@ -289,7 +290,7 @@ export function ProfileView() {
   return (
     <div className="stack">
       <header>
-        <h2 className="page-title">내 정보</h2>
+        <h2 className="page-title">마이페이지</h2>
       </header>
 
       <section className="card" aria-labelledby="profile-account-title">
@@ -384,7 +385,8 @@ export function ProfileView() {
         </form>
       </section>
 
-      {user?.role === "member" && <GrantSection />}
+      <UsageSection />
+        {user?.role === "member" && <GrantSection />}
 
       <div>
         <button type="button" className="btn-with-icon" onClick={logout}>
