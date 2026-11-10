@@ -1,73 +1,59 @@
-// "업데이트 노트": release history, newest first.
+// "업데이트 노트": release history, newest first. Opened with the bell button.
 import { Modal } from "./Modal";
 
 interface Release {
   version: string;
   date: string;
   title: string;
+  tag?: string;
   items: string[];
 }
 
 export const RELEASES: Release[] = [
   {
-    version: "v1.4.0",
-    date: "2026.11.07",
-    title: "화면 구성 정리",
-    items: [
-      "기능 메뉴를 다시 상단 가로 탭으로 되돌렸습니다.",
-      "'내 정보'가 '마이페이지'가 되었고, 내 월 사용량을 여기서 볼 수 있습니다.",
-      "내 아이디와 로그아웃은 화면 왼쪽 아래, 사용자 매뉴얼과 업데이트 노트는 오른쪽 위 도움말 아이콘에 있습니다.",
-    ],
-  },
-  {
-    version: "v1.3.0",
-    date: "2026.11.07",
-    title: "학습 없이도 초안 작성",
-    items: [
-      "스타일 학습을 하지 않아도 초안을 작성할 수 있습니다. 이 경우 일반 문체로 작성되며 안내 문구가 표시됩니다.",
-    ],
-  },
-  {
-    version: "v1.2.0",
-    date: "2026.11.07",
-    title: "사이드 메뉴와 사용량 보기",
-    items: [
-      "왼쪽 사이드 메뉴 추가: 내 공간 표시, 사용자 매뉴얼, 업데이트 노트",
-      "내 월 사용량 화면 추가: 모델별 사용량과 예상 비용",
-      "MABLOP 로고 적용과 화면 정리",
-    ],
-  },
-  {
     version: "v1.1.0",
-    date: "2026.11.06",
-    title: "관리자 계정 삭제",
+    date: "2026.11.10",
+    title: "더 쉽고 보기 좋은 MABLOP",
     items: [
-      "관리자가 사용자 계정과 데이터를 완전히 삭제할 수 있습니다. 같은 아이디로 다시 가입할 수 있습니다.",
-      "로그인과 가입 화면의 입력칸 크기를 통일했습니다.",
+      "종 모양 버튼에서 업데이트 노트를 볼 수 있어요.",
+      "사용자 매뉴얼에 화면 예시를 넣었고, 로그인하면 안내가 먼저 열려요. '하루 동안 보지 않기'도 고를 수 있어요.",
+      "학습 완료 목록의 글을 눌러 내용을 보고, 포스트 제목(ID)을 바꿀 수 있어요.",
+      "로그인 화면에 '비밀번호를 잊으셨나요?'와 Caps Lock 켜짐·꺼짐 표시를 추가했어요.",
+      "모바일에서 화면 폭과 상단 버튼 정렬이 어긋나던 문제를 바로잡았어요.",
+      "포스트 작성 활동 표를 초안 작성과 글 학습 기준으로 고치고 한국 시간에 맞췄어요. 누적 토큰은 최근 6개월 합계로 바꿨어요.",
+      "'AI 서비스 토큰 사용 권한' 등 문구를 알기 쉽게 다듬고, 화면 디자인을 정돈했어요.",
+      "하단에 연락처(contact)를 추가했어요.",
     ],
   },
   {
     version: "v1.0.0",
-    date: "2026.11.06",
-    title: "사용자 계정과 관리자 기능",
+    date: "2026.11.07",
+    title: "MABLOP 서비스 오픈",
+    tag: "첫 릴리스",
     items: [
-      "로그인, 가입 신청과 관리자 승인",
-      "사용자별로 분리된 학습 데이터와 초안",
-      "Bedrock 사용 권한 신청과 승인",
-      "결과 탭에서 지난 초안 기록 보기",
+      "내 블로그 문체를 학습해 초안을 써 주는 글쓰기 AI, MABLOP을 처음 공개했어요.",
+      "로그인과 가입 신청, 관리자 승인, 계정 관리(비활성화·비밀번호 초기화·삭제)",
+      "사용자별로 나뉜 학습 데이터와 초안, AI 서비스 토큰 사용 권한 신청과 승인",
+      "스타일 학습: 네이버·티스토리·벨로그의 공개 글 또는 붙여넣기",
+      "초안 작성: 이미지 삽입과 일반 문체 초안, 결과 탭에서 지난 초안 보기",
+      "마이페이지: 월 사용량, 누적 토큰, 포스트 작성 활동",
+      "다크 모드와 일반 모드, 사용자 매뉴얼",
     ],
   },
 ];
 
+export const LATEST_VERSION = RELEASES[0].version;
+
 export function UpdateNotesDialog({ onClose }: { onClose: () => void }) {
   return (
     <Modal title="업데이트 노트" onClose={onClose}>
-      <p className="meta">새로운 기능과 개선사항을 확인하세요. 왼쪽 메뉴에서 언제든 다시 볼 수 있습니다.</p>
+      <p className="meta">새로운 기능과 개선사항을 확인하세요. 오른쪽 위 종 모양 버튼에서 언제든 다시 볼 수 있어요.</p>
       <div className="release-list">
         {RELEASES.map((r) => (
           <article className="release" key={r.version}>
             <div className="release-head">
               <span className="badge badge-active">{r.version}</span>
+              {r.tag && <span className="badge badge-pending">{r.tag}</span>}
               <span className="meta">{r.date}</span>
             </div>
             <h3>{r.title}</h3>

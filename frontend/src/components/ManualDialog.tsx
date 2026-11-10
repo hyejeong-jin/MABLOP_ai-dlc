@@ -1,41 +1,117 @@
-// "사용자 매뉴얼": a short guide for first-time users.
+// "사용자 매뉴얼": step-by-step guide with annotated screen examples.
+// Opened with the "?" button, and once after login unless the user chose "하루 동안 보지 않기".
+import { useState } from "react";
+
+import { asset } from "../config";
 import { Modal } from "./Modal";
 
-const STEPS: { title: string; body: string }[] = [
+interface Step {
+  title: string;
+  image: string;
+  alt: string;
+  body: string;
+  points: string[];
+}
+
+export const MANUAL_STEPS: Step[] = [
   {
-    title: "1. 가입과 승인",
-    body: "로그인 화면의 '가입 신청'에서 아이디, 이름, 비밀번호(10~128자)를 입력합니다. 관리자가 승인하면 로그인할 수 있습니다.",
+    title: "1. 가입하고 로그인하기",
+    image: "manual/01-login.png",
+    alt: "로그인 화면. 가입 신청 탭, 아이디와 비밀번호 입력칸, 로그인 버튼",
+    body: "처음이라면 '가입 신청' 탭에서 신청하세요. 관리자가 승인하면 같은 화면에서 로그인할 수 있어요.",
+    points: ["① 로그인과 가입 신청을 오가는 탭", "② 아이디와 비밀번호 (비밀번호는 10자 이상)", "③ 비밀번호를 잊었다면 '비밀번호를 잊으셨나요?'"],
   },
   {
-    title: "2. Bedrock 사용 권한 받기",
-    body: "'마이페이지' 탭에서 사용 권한을 신청합니다. 관리자가 승인하면 학습과 초안 작성 화면의 '사용 권한' 목록에서 선택할 수 있습니다. 관리자 계정은 신청 없이 쓸 수 있습니다.",
+    title: "2. AI 서비스 토큰 사용 권한 받기",
+    image: "manual/02-grant.png",
+    alt: "마이페이지의 AI 서비스 토큰 사용 권한 신청 영역",
+    body: "글을 학습하거나 초안을 쓰려면 사용 권한이 필요해요. 마이페이지에서 신청하고, 관리자가 승인하면 사용할 수 있어요. 권한이 없을 시 관리자에게 요청하세요.",
+    points: ["① 사용 목적 (선택 입력)", "② 사용 권한 신청 버튼", "③ 승인된 권한과 만료일. 학습·초안 화면의 목록에서 선택해요"],
   },
   {
-    title: "3. 스타일 학습",
-    body: "'스타일 학습' 탭에 내 네이버 블로그 주소를 넣고 학습합니다. 자동 수집이 막히면 글 본문을 붙여넣을 수 있습니다. 글이 쌓일수록 문체가 더 정확해집니다.",
+    title: "3. 내 블로그 글 학습시키기",
+    image: "manual/03-learn.png",
+    alt: "스타일 학습 화면. 블로그 URL 입력, 포스트 수, 미리보기와 학습 시작 버튼",
+    body: "네이버, 티스토리, 벨로그의 공개 글을 읽어 내 문체를 익혀요. 학습이 끝난 글은 목록에서 눌러 내용을 보고 제목도 바꿀 수 있어요.",
+    points: ["① 사용 권한 선택", "② AI에게 학습시킬 나의 블로그 URL", "③ 공개 포스트 미리보기 후 학습 시작", "④ 학습 완료 목록의 글을 누르면 내용 확인과 제목 변경"],
   },
   {
-    title: "4. 초안 작성",
-    body: "'초안 작성' 탭에서 제목, 개요, 메모를 입력하고 필요하면 사진을 첨부합니다. 학습한 글이 없어도 작성할 수 있지만, 이 경우 내 문체가 아닌 일반 문체로 작성됩니다.",
+    title: "4. 초안 쓰기",
+    image: "manual/04-draft.png",
+    alt: "초안 작성 화면. 제목, 개요, 메모 입력칸과 이미지 첨부, 초안 생성 버튼",
+    body: "제목, 개요, 메모를 적고 초안 생성을 누르세요. 포스트에 넣을 이미지는 최대 10장까지 첨부할 수 있어요. 학습한 글이 없어도 쓸 수 있지만 그땐 일반 문체로 작성돼요.",
+    points: ["① 제목", "② 개요: 어떤 내용을 쓸지 개괄적으로", "③ 메모: 방향성, 말투, AI에게 요청할 내용", "④ 초안 생성"],
   },
   {
-    title: "5. 결과 보기",
-    body: "'결과' 탭의 왼쪽 목록에서 지난 초안을 고르면 오른쪽에서 볼 수 있습니다. 필요 없는 초안은 삭제할 수 있습니다.",
+    title: "5. 결과 확인하기",
+    image: "manual/05-result.png",
+    alt: "결과 화면. 왼쪽에 초안 목록, 오른쪽에 선택한 초안 본문",
+    body: "만든 초안은 모두 '결과' 탭에 쌓여요. 왼쪽 목록에서 고르면 오른쪽에서 읽고, 복사하거나 지울 수 있어요.",
+    points: ["① 지난 초안 목록", "② 선택한 초안 본문", "③ 복사·다운로드·삭제"],
   },
   {
-    title: "6. 사용량 확인",
-    body: "'마이페이지'의 '내 월 사용량'에서 이번 달 모델별 사용량과 예상 비용을 볼 수 있습니다.",
+    title: "6. 사용량과 활동 보기",
+    image: "manual/06-usage.png",
+    alt: "마이페이지의 내 월 사용량과 포스트 작성 활동",
+    body: "마이페이지에서 이번 달 비용, 모델별 사용량, 누적 토큰을 볼 수 있어요. 초안을 쓰거나 글을 학습한 날은 활동 표가 진해져요.",
+    points: ["① 이번 달 예상 비용과 누적 토큰", "② 모델별 비용 표", "③ 포스트 작성 활동: 진할수록 활동이 많은 날"],
+  },
+  {
+    title: "7. 화면 위쪽 도구",
+    image: "manual/07-header.png",
+    alt: "화면 오른쪽 위의 종, 달, 물음표 버튼",
+    body: "오른쪽 위 버튼으로 새 소식과 화면 모드, 이 안내를 열 수 있어요. 내 아이디는 왼쪽 아래에 있고, 누르면 마이페이지와 로그아웃이 나와요.",
+    points: ["① 종: 업데이트 노트", "② 달·해: 다크 모드와 일반 모드", "③ 물음표: 사용자 매뉴얼 (지금 보는 안내)"],
   },
 ];
 
-export function ManualDialog({ onClose }: { onClose: () => void }) {
+interface Props {
+  onClose: () => void;
+  /** First-view mode after login: shows the "하루 동안 보지 않기" checkbox. */
+  welcome?: boolean;
+  onHideToday?: () => void;
+}
+
+export function ManualDialog({ onClose, welcome = false, onHideToday }: Props) {
+  const [hideToday, setHideToday] = useState(false);
+
+  function close() {
+    if (welcome && hideToday) onHideToday?.();
+    onClose();
+  }
+
+  const footer = (
+    <>
+      {welcome ? (
+        <label className="check-line">
+          <input type="checkbox" checked={hideToday} onChange={(e) => setHideToday(e.target.checked)} />
+          하루 동안 보지 않기
+        </label>
+      ) : (
+        <span />
+      )}
+      <button type="button" className="btn-primary" onClick={close}>
+        {welcome ? "확인했어요" : "닫기"}
+      </button>
+    </>
+  );
+
   return (
-    <Modal title="사용자 매뉴얼" onClose={onClose}>
+    <Modal title="사용자 매뉴얼" onClose={close} footer={footer} wide>
+      {welcome && <p className="meta manual-lead">처음 오셨나요? 아래 순서대로 따라 하면 첫 초안까지 만들 수 있어요.</p>}
       <ol className="manual-list">
-        {STEPS.map((step) => (
+        {MANUAL_STEPS.map((step) => (
           <li key={step.title}>
             <h3>{step.title}</h3>
             <p>{step.body}</p>
+            <figure className="manual-figure">
+              <img src={asset(step.image)} alt={step.alt} loading="lazy" />
+            </figure>
+            <ul className="manual-points">
+              {step.points.map((point) => (
+                <li key={point}>{point}</li>
+              ))}
+            </ul>
           </li>
         ))}
       </ol>

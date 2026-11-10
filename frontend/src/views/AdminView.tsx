@@ -342,7 +342,7 @@ export function AdminView() {
   return (
     <section>
       <h2 className="page-title">관리</h2>
-      <p className="page-lead">가입 신청과 사용자, Bedrock 사용 권한을 한곳에서 관리합니다.</p>
+      <p className="page-lead">가입 신청과 사용자, AI 서비스 토큰 사용 권한을 한곳에서 관리합니다.</p>
 
       <div className="stack">
         {/* 가입 신청 */}

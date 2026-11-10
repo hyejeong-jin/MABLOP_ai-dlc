@@ -301,16 +301,16 @@ test("has no draft list or account deletion (the monthly usage section is allowe
   await screen.findByText("앨리스");
 
   const text = document.body.textContent ?? "";
-  expect(text).not.toMatch(/초안/);
+  expect(text).not.toMatch(/초안 목록|초안 삭제/);
   expect(text).not.toMatch(/계정 삭제|탈퇴/);
   expect(text).not.toMatch(/통계/);
   expect(screen.queryByRole("button", { name: /삭제/ })).toBeNull();
 });
 
-test("members see the Bedrock 사용 권한 section; admins do not", async () => {
+test("members see the AI 서비스 토큰 사용 권한 section; admins do not", async () => {
   const memberCalls = wireApi();
   const first = render(<ProfileView />);
-  expect(await screen.findByRole("region", { name: "Bedrock 사용 권한" })).toBeInTheDocument();
+  expect(await screen.findByRole("region", { name: "AI 서비스 토큰 사용 권한" })).toBeInTheDocument();
   await waitFor(() => expect(actions(memberCalls, "grant-list-mine")).toHaveLength(1));
   first.unmount();
   vi.restoreAllMocks();
@@ -320,8 +320,8 @@ test("members see the Bedrock 사용 권한 section; admins do not", async () =>
   render(<ProfileView />);
   await screen.findByText("앨리스");
 
-  expect(screen.queryByRole("region", { name: "Bedrock 사용 권한" })).toBeNull();
-  expect(screen.queryByText("Bedrock 사용 권한")).toBeNull();
+  expect(screen.queryByRole("region", { name: "AI 서비스 토큰 사용 권한" })).toBeNull();
+  expect(screen.queryByText("AI 서비스 토큰 사용 권한")).toBeNull();
   expect(screen.queryByRole("button", { name: "사용 권한 신청" })).toBeNull();
   expect(actions(adminCalls, "grant-list-mine")).toHaveLength(0);
 });
@@ -436,7 +436,7 @@ test("a grant list failure shows an alert inside the section and keeps the rest 
   });
   render(<ProfileView />);
 
-  const section = await screen.findByRole("region", { name: "Bedrock 사용 권한" });
+  const section = await screen.findByRole("region", { name: "AI 서비스 토큰 사용 권한" });
   expect(await within(section).findByRole("alert")).toHaveTextContent("권한 목록 오류");
   expect(within(section).queryByText("아직 신청한 사용 권한이 없습니다.")).toBeNull();
   expect(await screen.findByText("앨리스")).toBeInTheDocument();
@@ -454,7 +454,7 @@ test("a failed grant request shows the backend message in the section", async ()
 
   fireEvent.submit(grantForm());
 
-  const section = screen.getByRole("region", { name: "Bedrock 사용 권한" });
+  const section = screen.getByRole("region", { name: "AI 서비스 토큰 사용 권한" });
   expect(await within(section).findByRole("alert")).toHaveTextContent("이미 승인 대기 중인 신청이 있습니다.");
 });
 

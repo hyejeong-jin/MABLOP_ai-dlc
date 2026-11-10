@@ -35,7 +35,7 @@ GRANT_ACTIONS = {
     "admin-grant-reject",
     "admin-grant-revoke",
 }
-HISTORY_ACTIONS = {"list-drafts", "delete-draft", "get-usage"}
+HISTORY_ACTIONS = {"list-drafts", "delete-draft", "get-usage", "get-learning-post", "rename-learning-post"}
 NEW_ACTIONS = ACCOUNT_ACTIONS | GRANT_ACTIONS | HISTORY_ACTIONS
 LEGACY_ACTIONS = {
     "issue-presigned-urls",
@@ -102,14 +102,14 @@ def _body(resp):
 
 
 def test_dispatch_contains_the_eight_legacy_and_twentyone_new_actions(h):
-    assert len(NEW_ACTIONS) == 22
+    assert len(NEW_ACTIONS) == 24
     assert set(h.DISPATCH) == LEGACY_ACTIONS | NEW_ACTIONS
     assert all(callable(fn) for fn in h.DISPATCH.values())
 
 
 def test_auth_scope_actions_are_exactly_the_twentyone_new_actions(h):
     assert h.AUTH_SCOPE_ACTIONS == frozenset(NEW_ACTIONS)
-    assert len(h.AUTH_SCOPE_ACTIONS) == 22
+    assert len(h.AUTH_SCOPE_ACTIONS) == 24
     assert h.AUTH_SCOPE_ACTIONS.isdisjoint(LEGACY_ACTIONS)
 
 

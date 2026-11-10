@@ -31,8 +31,8 @@ const GRANT = {
 };
 
 async function selectGrant() {
-  await screen.findByRole("option", { name: /^Bedrock 사용 권한 · / });
-  fireEvent.change(screen.getByLabelText("Bedrock 사용 권한"), { target: { value: "g1" } });
+  await screen.findByRole("option", { name: /^AI 서비스 토큰 사용 권한 · / });
+  fireEvent.change(screen.getByLabelText("AI 서비스 토큰 사용 권한"), { target: { value: "g1" } });
 }
 
 // resizeImage uses canvas (not functional in jsdom) -> stub to a tiny blob.
@@ -214,7 +214,7 @@ test("disables 초안 생성 until a grant is selected", async () => {
   const { calls } = wireApi();
   render(<DraftingView />);
   const button = screen.getByRole("button", { name: "초안 생성" });
-  await screen.findByRole("option", { name: /^Bedrock 사용 권한 · / });
+  await screen.findByRole("option", { name: /^AI 서비스 토큰 사용 권한 · / });
   expect(button).toBeDisabled();
   await selectGrant();
   expect(button).toBeEnabled();
@@ -226,7 +226,7 @@ test("admin: no grant select, button enabled, generate-draft has no grantId", as
   auth.user = { loginId: "boss", name: "관리자", role: "admin" };
   const { calls } = wireApi();
   render(<DraftingView />);
-  expect(screen.queryByLabelText("Bedrock 사용 권한")).not.toBeInTheDocument();
+  expect(screen.queryByLabelText("AI 서비스 토큰 사용 권한")).not.toBeInTheDocument();
   fireEvent.change(screen.getByLabelText("제목"), { target: { value: "x" } });
   fireEvent.click(screen.getByRole("button", { name: "초안 생성" }));
   await screen.findByLabelText("초안 결과");

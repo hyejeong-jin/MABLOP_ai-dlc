@@ -42,7 +42,7 @@ export interface GrantsState {
 
 export const GRANT_ID_KEY_PREFIX = "mablop-grant-id:";
 
-const LOAD_ERROR_MESSAGE = "Bedrock 사용 권한을 불러오지 못했습니다.";
+const LOAD_ERROR_MESSAGE = "AI 서비스 토큰 사용 권한을 불러오지 못했습니다.";
 
 function grantKey(loginId: string): string {
   return `${GRANT_ID_KEY_PREFIX}${loginId}`;

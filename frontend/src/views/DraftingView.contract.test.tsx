@@ -35,8 +35,8 @@ const GRANT = {
 };
 
 async function selectGrant() {
-  await screen.findByRole("option", { name: /^Bedrock 사용 권한 · / });
-  fireEvent.change(screen.getByLabelText("Bedrock 사용 권한"), { target: { value: "g1" } });
+  await screen.findByRole("option", { name: /^AI 서비스 토큰 사용 권한 · / });
+  fireEvent.change(screen.getByLabelText("AI 서비스 토큰 사용 권한"), { target: { value: "g1" } });
 }
 
 // canvas is dead in jsdom -> resizeImage returns a tiny blob (same stub as the sibling test).

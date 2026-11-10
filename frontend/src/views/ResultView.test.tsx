@@ -313,5 +313,5 @@ test("sends no grantId and renders no grant selector", async () => {
   await waitFor(() => expect(callsOf(wire, "delete-draft")).toHaveLength(1));
 
   for (const call of wire.calls) expect(call).not.toHaveProperty("grantId");
-  expect(screen.queryByLabelText(/Bedrock 사용 권한/)).not.toBeInTheDocument();
+  expect(screen.queryByLabelText(/AI 서비스 토큰 사용 권한/)).not.toBeInTheDocument();
 });

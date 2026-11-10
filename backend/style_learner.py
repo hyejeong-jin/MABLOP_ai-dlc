@@ -283,6 +283,54 @@ def rebuild_from_stored() -> dict:
     return _complete(state, [])
 
 
+
+def get_learning_post(body: dict) -> dict:
+    """Return one stored learned post body for the acting user."""
+    post_id = body.get("postId") if isinstance(body, dict) else None
+    if not isinstance(post_id, str) or not post_id or "/" in post_id or ".." in post_id or "\\" in post_id:
+        raise MablopError("bad_request", "올바르지 않은 포스트 번호입니다.")
+    key = s3store.user_key(f"{_RAW_PREFIX}{post_id}.txt")
+    try:
+        text = s3store.get_bytes(key).decode("utf-8")
+    except Exception as exc:
+        raise MablopError("not_found", "학습 포스트를 찾을 수 없습니다.") from exc
+    return {"postId": post_id, "text": text}
+
+
+def rename_learning_post(body: dict) -> dict:
+    """Rename a learned post id/title and keep the stored raw text and index metadata aligned."""
+    old_id = body.get("postId") if isinstance(body, dict) else None
+    new_id = body.get("newPostId") if isinstance(body, dict) else None
+    valid = lambda value: isinstance(value, str) and value.strip() and "/" not in value and ".." not in value and "\\" not in value
+    if not valid(old_id) or not valid(new_id):
+        raise MablopError("bad_request", "포스트 제목은 안전한 문자로 입력해주세요.")
+    old_key = s3store.user_key(f"{_RAW_PREFIX}{old_id}.txt")
+    new_key = s3store.user_key(f"{_RAW_PREFIX}{new_id}.txt")
+    if old_id != new_id and s3store.key_exists(new_key):
+        raise MablopError("bad_request", "이미 같은 제목의 포스트가 있습니다.")
+    try:
+        text = s3store.get_bytes(old_key)
+    except Exception as exc:
+        raise MablopError("not_found", "학습 포스트를 찾을 수 없습니다.") from exc
+    s3store.put_bytes(new_key, text, content_type="text/plain; charset=utf-8")
+    if old_key != new_key:
+        s3store.delete(old_key)
+    found = s3store.read_json_optional(s3store.user_key(_STATUS_KEY))
+    if found is not None:
+        status = dict(found[0])
+        status["posts"] = [{**p, "postId": new_id if p.get("postId") == old_id else p.get("postId"), "title": new_id if p.get("postId") == old_id else p.get("title", p.get("postId"))} for p in status.get("posts", [])]
+        s3store.put_json(s3store.user_key(_STATUS_KEY), status)
+    index = s3store.read_json_optional(s3store.user_key("embeddings/index-map.json"))
+    if index is not None:
+        mapping = {}
+        for row, value in index[0].items():
+            entry = dict(value)
+            if entry.get("postId") == old_id:
+                entry["postId"] = new_id
+                entry["chunkId"] = entry.get("chunkId", "").replace(f"{old_id}-", f"{new_id}-", 1)
+            mapping[row] = entry
+        s3store.put_json(s3store.user_key("embeddings/index-map.json"), mapping)
+    return {"postId": new_id, "renamed": True}
 def preview_learning_sources(payload: dict) -> dict:
     """Preview public RSS-discovered posts without writing data or calling Bedrock."""
     payload = payload or {}

@@ -52,19 +52,19 @@ describe("GrantSelect", () => {
     expect(container).toBeEmptyDOMElement();
   });
 
-  it("ties the visible label 'Bedrock 사용 권한' to the select and offers '선택하세요' first", () => {
+  it("ties the visible label 'AI 서비스 토큰 사용 권한' to the select and offers '선택하세요' first", () => {
     render(<GrantSelect grants={state({ options: [grant("g1")] })} />);
     const select = screen.getByLabelText(GRANT_SELECT_LABEL);
-    expect(GRANT_SELECT_LABEL).toBe("Bedrock 사용 권한");
+    expect(GRANT_SELECT_LABEL).toBe("AI 서비스 토큰 사용 권한");
     expect(select.tagName).toBe("SELECT");
-    expect(screen.getByRole("combobox", { name: "Bedrock 사용 권한" })).toBe(select);
+    expect(screen.getByRole("combobox", { name: "AI 서비스 토큰 사용 권한" })).toBe(select);
     const options = (select as HTMLSelectElement).options;
     expect(options[0].textContent).toBe("선택하세요");
     expect(GRANT_SELECT_PLACEHOLDER).toBe("선택하세요");
     expect(options[0].value).toBe("");
   });
 
-  it("labels each option 'Bedrock 사용 권한 · 승인일 · 만료일' with KST YYYY-MM-DD dates", () => {
+  it("labels each option 'AI 서비스 토큰 사용 권한 · 승인일 · 만료일' with KST YYYY-MM-DD dates", () => {
     render(
       <GrantSelect
         grants={state({
@@ -81,9 +81,9 @@ describe("GrantSelect", () => {
     const select = screen.getByLabelText(GRANT_SELECT_LABEL) as HTMLSelectElement;
     expect(select.options).toHaveLength(3);
     expect(select.options[1].value).toBe("g1");
-    expect(select.options[1].textContent).toBe("Bedrock 사용 권한 · 2025-01-03 · 2026-01-01");
+    expect(select.options[1].textContent).toBe("AI 서비스 토큰 사용 권한 · 2025-01-03 · 2026-01-01");
     expect(select.options[2].value).toBe("g2");
-    expect(select.options[2].textContent).toBe("Bedrock 사용 권한 · 2025-03-10 · 2025-06-30");
+    expect(select.options[2].textContent).toBe("AI 서비스 토큰 사용 권한 · 2025-03-10 · 2025-06-30");
   });
 
   it("reflects selectedId as the select value", () => {
@@ -128,10 +128,10 @@ describe("GrantSelect", () => {
     render(<GrantSelect grants={state({ options: [], loading: false })} />);
     const status = screen.getByRole("status");
     expect(status).toHaveTextContent(
-      "사용 가능한 Bedrock 사용 권한이 없습니다. 마이페이지에서 신청하세요.",
+      "사용 가능한 AI 서비스 토큰 사용 권한이 없습니다. 마이페이지에서 신청하세요.",
     );
     expect(GRANT_SELECT_EMPTY_MESSAGE).toBe(
-      "사용 가능한 Bedrock 사용 권한이 없습니다. 마이페이지에서 신청하세요.",
+      "사용 가능한 AI 서비스 토큰 사용 권한이 없습니다. 마이페이지에서 신청하세요.",
     );
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
@@ -152,11 +152,11 @@ describe("GrantSelect", () => {
   it("shows an error as role=alert", () => {
     render(
       <GrantSelect
-        grants={state({ options: [], error: "Bedrock 사용 권한을 불러오지 못했습니다." })}
+        grants={state({ options: [], error: "AI 서비스 토큰 사용 권한을 불러오지 못했습니다." })}
       />,
     );
     expect(screen.getByRole("alert")).toHaveTextContent(
-      "Bedrock 사용 권한을 불러오지 못했습니다.",
+      "AI 서비스 토큰 사용 권한을 불러오지 못했습니다.",
     );
   });
 

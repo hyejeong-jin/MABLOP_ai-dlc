@@ -1,5 +1,5 @@
 // User page "내 정보" (Req 14, 19). Account, learning summary, password change,
-// logout, and, for members only, the "Bedrock 사용 권한" section.
+// logout, and, for members only, the "AI 서비스 토큰 사용 권한" section.
 // Loads get-me and get-learning-status in parallel. A failure in one section
 // never hides the others. Browser -> Lambda only; no form lib, no state manager.
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
@@ -9,6 +9,8 @@ import { ApiRequestError, postJson } from "../api";
 import { useAuth } from "../auth/AuthContext";
 import { formatKst, formatKstDate } from "../format";
 import { UsageSection } from "../components/UsageSection";
+import { CapsLockHint, useCapsLock } from "../components/CapsLock";
+import { GRANT_REQUEST_HINT } from "../grants/GrantSelect";
 
 interface MeResponse {
   userId?: string;
@@ -52,7 +54,7 @@ const NO_GRANTS_MESSAGE = "아직 신청한 사용 권한이 없습니다.";
 const ME_ERROR_MESSAGE = "내 정보를 불러오지 못했습니다.";
 const LEARNING_ERROR_MESSAGE = "학습 현황을 불러오지 못했습니다.";
 const PASSWORD_ERROR_MESSAGE = "비밀번호를 변경하지 못했습니다. 잠시 후 다시 시도하세요.";
-const GRANT_LIST_ERROR_MESSAGE = "Bedrock 사용 권한 목록을 불러오지 못했습니다.";
+const GRANT_LIST_ERROR_MESSAGE = "AI 서비스 토큰 사용 권한 목록을 불러오지 못했습니다.";
 const GRANT_REQUEST_ERROR_MESSAGE = "사용 권한을 신청하지 못했습니다. 잠시 후 다시 시도하세요.";
 const PURPOSE_MAX_LENGTH = 100;
 
@@ -147,8 +149,9 @@ function GrantSection() {
   return (
     <section className="card" aria-labelledby="profile-grants-title">
       <h2 className="section-title" id="profile-grants-title">
-        Bedrock 사용 권한
+        AI 서비스 토큰 사용 권한
       </h2>
+      <p className="field-hint">{GRANT_REQUEST_HINT}</p>
 
       <form onSubmit={onSubmit} className="stack" noValidate>
         <div className="field-group">
@@ -222,6 +225,7 @@ function GrantSection() {
 
 export function ProfileView() {
   const { user, logout, replaceToken } = useAuth();
+  const { caps, bind } = useCapsLock();
 
   const [me, setMe] = useState<MeResponse | null>(null);
   const [meError, setMeError] = useState<string | null>(null);
@@ -337,6 +341,7 @@ export function ProfileView() {
             <input
               type="password"
               name="currentPassword"
+              {...bind}
               autoComplete="current-password"
               value={currentPassword}
               maxLength={128}
@@ -349,6 +354,7 @@ export function ProfileView() {
             <input
               type="password"
               name="newPassword"
+              {...bind}
               autoComplete="new-password"
               value={newPassword}
               maxLength={128}
@@ -361,6 +367,7 @@ export function ProfileView() {
             <input
               type="password"
               name="newPasswordConfirm"
+              {...bind}
               autoComplete="new-password"
               value={newPasswordConfirm}
               maxLength={128}
@@ -368,6 +375,8 @@ export function ProfileView() {
               onChange={(e) => setNewPasswordConfirm(e.target.value)}
             />
           </label>
+
+          <CapsLockHint state={caps} />
 
           {passwordSuccess && (
             <div className="callout" role="status">

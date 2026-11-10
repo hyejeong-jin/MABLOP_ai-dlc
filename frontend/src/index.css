@@ -266,3 +266,148 @@ select:focus-visible { outline: 2px solid var(--accent); outline-offset: 0; bord
 :root[data-theme="dark"] body { background: var(--bg); }
 :root[data-theme="dark"] button:hover:not(:disabled) { background: #2a302b; }
 @media (max-width: 640px) { .usage-summary-grid { grid-template-columns: 1fr; } .usage-summary-grid > div { border-right: 0; border-bottom: 1px solid var(--line); } .usage-summary-grid > div:last-child { border-bottom: 0; } }
+/* ===== v1.1 design polish =====
+   Principles: one clear hierarchy per screen, warm paper canvas with a faint mint wash,
+   soft layered surfaces instead of hard outlines, one accent colour, generous but even spacing.
+   Responsive rule: nothing may be wider than the viewport, so the page never zooms out on phones. */
+:root {
+  --bg: #f6f4ef;
+  --on-accent: #ffffff;
+  --radius: 12px;
+  --shadow-sm: 0 1px 2px rgba(31, 29, 26, .05);
+  --shadow-md: 0 1px 2px rgba(31, 29, 26, .04), 0 10px 28px -14px rgba(31, 29, 26, .16);
+  --wash: radial-gradient(900px 380px at 50% -140px, #dcebe3 0%, rgba(220, 235, 227, 0) 70%);
+}
+:root[data-theme="dark"] {
+  --on-accent: #0f1f17;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, .3);
+  --shadow-md: 0 1px 2px rgba(0, 0, 0, .3), 0 12px 30px -14px rgba(0, 0, 0, .6);
+  --wash: radial-gradient(900px 380px at 50% -140px, #1f3328 0%, rgba(31, 51, 40, 0) 70%);
+}
+html { -webkit-text-size-adjust: 100%; }
+html, body { max-width: 100%; overflow-x: hidden; }
+body { background: var(--wash) no-repeat top center, var(--bg); background-attachment: scroll; }
+:root[data-theme="dark"] body { background: var(--wash) no-repeat top center, var(--bg); }
+
+/* layout: every grid child may shrink, so long text or tables never push the page wider */
+.shell { width: min(880px, calc(100% - 32px)); padding: 20px 0 112px; }
+.view { min-width: 0; }
+.view > *, .stack, .stack > *, .card, fieldset, form { min-width: 0; max-width: 100%; }
+.stack { grid-template-columns: minmax(0, 1fr); }
+input:not([type="checkbox"]):not([type="file"]), select, textarea { max-width: 100%; }
+select { width: 100%; padding: 10px 12px; border: 1px solid var(--line-strong); border-radius: 10px; background: var(--surface); color: var(--ink); font-size: 15px; font-weight: 500; }
+
+/* header: logo + name on the left, three identical icon buttons on the right */
+.top-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0 0 20px; padding: 10px 0; }
+.top-bar .brand { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.top-bar .brand-mark { height: 32px; }
+.brand-text { min-width: 0; }
+.brand-line { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
+.wordmark { white-space: nowrap; }
+.app-subtitle { margin: 2px 0 0; line-height: 1.4; }
+.top-actions { display: flex; flex: none; align-items: center; gap: 8px; margin: 0; }
+.icon-button { position: relative; display: inline-grid; place-items: center; width: 40px; height: 40px; min-height: 40px; margin: 0; padding: 0; border: 1px solid var(--line-strong); border-radius: 12px; background: var(--surface); color: var(--ink-2); box-shadow: var(--shadow-sm); }
+.icon-button:hover:not(:disabled) { color: var(--accent); border-color: var(--accent); }
+.notify-dot { position: absolute; top: 7px; right: 8px; width: 8px; height: 8px; border-radius: 50%; background: var(--danger); box-shadow: 0 0 0 2px var(--surface); }
+
+/* tabs: one segmented control, equal widths, never wider than the screen */
+.tabs { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 4px; margin: 0 0 28px; padding: 4px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); box-shadow: var(--shadow-sm); }
+.tabs .tab { display: flex; align-items: center; justify-content: center; gap: 7px; min-width: 0; margin: 0; padding: 9px 8px; border: 0; border-radius: 10px; background: transparent; color: var(--ink-3); font-size: 14px; font-weight: 650; line-height: 1.3; text-align: center; white-space: normal; }
+.tabs .tab:hover:not(:disabled) { background: var(--bg); color: var(--ink); }
+.tabs .tab.active { background: var(--accent-soft); color: var(--accent); box-shadow: inset 0 0 0 1px rgba(47, 107, 87, .14); }
+.tabs .tab svg { flex: none; }
+
+/* surfaces */
+.card { border-radius: 16px; border-color: var(--line); box-shadow: var(--shadow-md); }
+.page-title { font-size: 26px; letter-spacing: -.01em; }
+.page-lead { color: var(--ink-2); }
+.section-title { letter-spacing: -.005em; }
+button { border-radius: 10px; }
+.btn-primary { background-image: linear-gradient(180deg, rgba(255, 255, 255, .12), rgba(255, 255, 255, 0)); color: var(--on-accent); box-shadow: 0 1px 2px rgba(31, 29, 26, .18), inset 0 1px 0 rgba(255, 255, 255, .16); }
+input:not([type="file"]):not([type="checkbox"]):focus-visible, textarea:focus-visible, select:focus-visible { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent); }
+
+/* login: card on the mint wash */
+.auth-shell { gap: 18px; }
+#auth-panel { padding: 22px; border: 1px solid var(--line); border-radius: 18px; background: var(--surface); box-shadow: var(--shadow-md); }
+.auth-shell .site-footer { margin-top: 8px; border-top: 0; padding: 0; }
+.btn-link-quiet { justify-self: center; border: 0; background: transparent; color: var(--accent); padding: 6px 8px; font-size: 13px; font-weight: 650; text-decoration: underline; text-underline-offset: 3px; }
+.btn-link-quiet:hover:not(:disabled) { background: transparent; color: var(--accent-hover); }
+.btn-link { display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; border-radius: 10px; font-weight: 650; text-decoration: none; }
+.btn-link-primary { background: var(--accent); color: var(--on-accent); }
+.caps-hint { display: flex; align-items: center; gap: 6px; margin: -4px 0 0; color: var(--ink-3); font-size: 12.5px; }
+.caps-hint.caps-on { color: var(--danger); font-weight: 650; }
+.help-steps { margin: 10px 0 16px; padding-left: 20px; color: var(--ink-2); font-size: 14px; }
+.help-actions { margin: 16px 0 6px; }
+
+/* footer, account dock */
+.site-footer { display: flex; flex-wrap: wrap; justify-content: center; gap: 2px 8px; margin-top: 56px; padding: 18px 0 8px; border-top: 1px solid var(--line); color: var(--ink-3); font-size: 12.5px; text-align: center; }
+.site-footer a { color: var(--accent); text-decoration: none; font-weight: 600; }
+.site-footer a:hover { text-decoration: underline; }
+.account-dock { left: 12px; bottom: 12px; }
+.account-chip { max-width: 190px; border-color: var(--line-strong); background: var(--surface); box-shadow: var(--shadow-md); }
+.avatar { color: var(--on-accent); }
+
+/* dialogs */
+.modal-backdrop { background: rgba(24, 22, 19, .5); backdrop-filter: blur(3px); }
+.modal { border-radius: 18px; box-shadow: 0 24px 60px rgba(0, 0, 0, .28); }
+.modal-wide { width: min(720px, 100%); }
+.modal-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 22px; border-top: 1px solid var(--line); }
+.check-line { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; color: var(--ink-2); cursor: pointer; }
+.manual-lead { margin: 0 0 14px; }
+.manual-list { gap: 28px; }
+.manual-list > li { display: grid; gap: 10px; }
+.manual-list h3 { font-size: 16px; }
+.manual-figure { margin: 4px 0 0; }
+.manual-figure img { display: block; width: 100%; height: auto; border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow-md); background: var(--surface); }
+.manual-points { display: grid; gap: 4px; margin: 0; padding: 0; list-style: none; color: var(--ink-2); font-size: 13.5px; }
+
+/* learned posts */
+.post-link { display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100%; padding: 10px 12px; border: 1px solid transparent; border-radius: 10px; background: transparent; text-align: left; }
+.post-link:hover:not(:disabled) { border-color: var(--line-strong); background: var(--bg); }
+.post-link .id { min-width: 0; overflow-wrap: anywhere; }
+.rename-form { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; align-items: end; margin-bottom: 14px; }
+.learned-text { max-height: 46vh; margin: 12px 0 0; padding: 14px; overflow: auto; border: 1px solid var(--line); border-radius: 12px; background: var(--bg); font-family: inherit; font-size: 14px; line-height: 1.85; white-space: pre-wrap; word-break: keep-all; overflow-wrap: anywhere; }
+
+/* usage + activity */
+.usage-summary-grid > div { min-width: 0; }
+.usage-summary-grid strong { overflow-wrap: anywhere; }
+.usage-table-wrap { max-width: 100%; -webkit-overflow-scrolling: touch; }
+.activity-summary { margin: 14px 0 6px; color: var(--ink-2); font-size: 14px; }
+.activity-summary strong { color: var(--ink); }
+.activity-grid { padding: 6px 0 2px; overflow: hidden; }
+.heatmap { display: grid; grid-auto-flow: column; grid-template-columns: repeat(var(--cols, 27), minmax(0, 1fr)); grid-template-rows: repeat(7, auto); gap: 3px; margin: 8px 0; }
+.heatmap .heat-cell { aspect-ratio: 1 / 1; width: auto; height: auto; min-width: 0; min-height: 0; border-radius: 3px; }
+.heat-pad { background: transparent !important; }
+.heat-legend .heat-cell { display: inline-block; width: 11px; height: 11px; aspect-ratio: auto; border-radius: 3px; }
+
+@media (max-width: 640px) {
+  .shell { width: calc(100% - 24px); padding: 12px 0 112px; }
+  .top-bar { gap: 8px; }
+  .top-actions { gap: 6px; }
+  .icon-button { width: 36px; height: 36px; min-height: 36px; border-radius: 10px; }
+  .notify-dot { top: 5px; right: 6px; }
+  .wordmark { font-size: 19px; }
+  .app-subtitle { font-size: 12px; }
+  .tabs { gap: 2px; padding: 3px; }
+  .tabs .tab { flex-direction: column; gap: 3px; padding: 8px 2px; font-size: 11.5px; }
+  .page-title { font-size: 22px; }
+  .card { padding: 16px; }
+  .rename-form { grid-template-columns: minmax(0, 1fr); }
+  .modal-foot { padding: 12px 16px; }
+  .modal-head { padding: 16px 16px 6px; }
+  .modal-body { padding: 8px 16px 18px; }
+  .account-chip { max-width: 150px; }
+  .site-footer { margin-top: 40px; }
+}
+@media (pointer: coarse) {
+  .icon-button { min-height: 36px; }
+  .tabs .tab { min-height: 0; }
+  input[type="checkbox"] { min-height: 0; }
+}.usage-period { white-space: nowrap; }
+@media (max-width: 640px) {
+  /* on phones the account chip sits at the end of the page instead of floating over inputs */
+  .account-dock { position: static; display: flex; margin: 16px 0 0; }
+  .account-dock .popover-up { bottom: calc(100% + 8px); }
+  .shell { padding-bottom: 28px; }
+}

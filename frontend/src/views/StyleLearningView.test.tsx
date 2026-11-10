@@ -46,8 +46,8 @@ function callsFor(spy: ReturnType<typeof mockApi>, action: string) {
 }
 
 async function selectGrant() {
-  await screen.findByRole("option", { name: /^Bedrock 사용 권한 · / });
-  fireEvent.change(screen.getByLabelText("Bedrock 사용 권한"), { target: { value: "g1" } });
+  await screen.findByRole("option", { name: /^AI 서비스 토큰 사용 권한 · / });
+  fireEvent.change(screen.getByLabelText("AI 서비스 토큰 사용 권한"), { target: { value: "g1" } });
 }
 
 beforeEach(() => {
@@ -63,10 +63,10 @@ afterEach(() => {
 test("renders url, maxPosts and grant select without a token field", async () => {
   mockApi();
   render(<StyleLearningView />);
-  expect(screen.getByLabelText("블로그 URL")).toBeInTheDocument();
-  expect(screen.getByLabelText("최대 포스트 수")).toBeInTheDocument();
+  expect(screen.getByLabelText("AI에게 학습시킬 나의 블로그 URL")).toBeInTheDocument();
+  expect(screen.getByLabelText("AI에게 학습시킬 포스트 수")).toBeInTheDocument();
   expect(screen.queryByLabelText("토큰")).not.toBeInTheDocument();
-  expect(await screen.findByLabelText("Bedrock 사용 권한")).toBeInTheDocument();
+  expect(await screen.findByLabelText("AI 서비스 토큰 사용 권한")).toBeInTheDocument();
 });
 
 // typing + submit -> postJson called with learn-style payload + grantId; status + failedPosts rendered
@@ -84,7 +84,7 @@ test("submits learn-style payload with grantId and renders status and failedPost
   render(<StyleLearningView />);
 
   await selectGrant();
-  fireEvent.change(screen.getByLabelText("블로그 URL"), {
+  fireEvent.change(screen.getByLabelText("AI에게 학습시킬 나의 블로그 URL"), {
     target: { value: "https://blog.naver.com/me" },
   });
 
@@ -126,14 +126,14 @@ test("surfaces runId and allows resume on in-progress", async () => {
 test("disables the learn button until a Grant is selected", async () => {
   const postJson = mockApi();
   render(<StyleLearningView />);
-  await screen.findByRole("option", { name: /^Bedrock 사용 권한 · / });
+  await screen.findByRole("option", { name: /^AI 서비스 토큰 사용 권한 · / });
 
   const button = screen.getByRole("button", { name: "학습 시작" });
   expect(button).toBeDisabled();
   fireEvent.click(button);
   expect(callsFor(postJson, "learn-style")).toHaveLength(0);
 
-  fireEvent.change(screen.getByLabelText("Bedrock 사용 권한"), { target: { value: "g1" } });
+  fireEvent.change(screen.getByLabelText("AI 서비스 토큰 사용 권한"), { target: { value: "g1" } });
   expect(screen.getByRole("button", { name: "학습 시작" })).toBeEnabled();
 });
 
@@ -141,7 +141,7 @@ test("disables the learn button until a Grant is selected", async () => {
 test("disables the learn button when there are no Grant options", async () => {
   mockApi({ "grant-list-mine": () => ({ grants: [] }) });
   render(<StyleLearningView />);
-  expect(await screen.findByText(/사용 가능한 Bedrock 사용 권한이 없습니다/)).toBeInTheDocument();
+  expect(await screen.findByText(/사용 가능한 AI 서비스 토큰 사용 권한이 없습니다/)).toBeInTheDocument();
   expect(screen.getByRole("button", { name: "학습 시작" })).toBeDisabled();
 });
 
@@ -153,7 +153,7 @@ test("admin sees no grant select and learn-style carries no grantId", async () =
   });
   render(<StyleLearningView />);
 
-  expect(screen.queryByLabelText("Bedrock 사용 권한")).not.toBeInTheDocument();
+  expect(screen.queryByLabelText("AI 서비스 토큰 사용 권한")).not.toBeInTheDocument();
   const button = screen.getByRole("button", { name: "학습 시작" });
   expect(button).toBeEnabled();
   fireEvent.click(button);
@@ -186,9 +186,9 @@ test("preview needs only the URL and sends no grantId", async () => {
     "preview-learning-sources": () => ({ count: 1, posts: [{ postId: "p1", title: "첫 글" }] }),
   });
   render(<StyleLearningView />);
-  await screen.findByRole("option", { name: /^Bedrock 사용 권한 · / });
+  await screen.findByRole("option", { name: /^AI 서비스 토큰 사용 권한 · / });
 
-  fireEvent.change(screen.getByLabelText("블로그 URL"), {
+  fireEvent.change(screen.getByLabelText("AI에게 학습시킬 나의 블로그 URL"), {
     target: { value: "https://blog.naver.com/me" },
   });
   fireEvent.click(screen.getByRole("button", { name: "공개 포스트 미리보기" }));
@@ -197,4 +197,30 @@ test("preview needs only the URL and sends no grantId", async () => {
   const call = callsFor(postJson, "preview-learning-sources")[0];
   expect(call).toHaveLength(1);
   expect(call[0]).not.toHaveProperty("grantId");
+});
+
+test("a learned post opens its text and its title (ID) can be renamed", async () => {
+  let posts = [{ postId: "첫 글", chunkCount: 2 }];
+  const spy = mockApi({
+    "get-learning-status": () => ({ processedPosts: posts.length, chunks: 2, posts }),
+    "get-learning-post": (body) => ({ postId: body.postId, text: "학습한 첫 글의 본문입니다." }),
+    "rename-learning-post": (body) => {
+      posts = [{ postId: String(body.newPostId), chunkCount: 2 }];
+      return { postId: body.newPostId, renamed: true };
+    },
+  });
+  render(<StyleLearningView />);
+
+  fireEvent.click(await screen.findByRole("button", { name: /첫 글/ }));
+  expect(await screen.findByLabelText("학습한 글 내용")).toHaveTextContent("학습한 첫 글의 본문입니다.");
+  expect(callsFor(spy, "get-learning-post")[0][0]).toEqual({ action: "get-learning-post", postId: "첫 글" });
+
+  fireEvent.change(screen.getByLabelText("포스트 제목 (ID)"), { target: { value: "새 제목" } });
+  fireEvent.click(screen.getByRole("button", { name: "제목 변경" }));
+
+  await waitFor(() => expect(callsFor(spy, "rename-learning-post")).toHaveLength(1));
+  expect(callsFor(spy, "rename-learning-post")[0][0]).toEqual({ action: "rename-learning-post", postId: "첫 글", newPostId: "새 제목" });
+  expect(await screen.findByText("제목을 바꿨어요.")).toBeInTheDocument();
+  // the list behind the dialog is reloaded with the new title
+  await waitFor(() => expect(callsFor(spy, "get-learning-status").length).toBeGreaterThanOrEqual(2));
 });

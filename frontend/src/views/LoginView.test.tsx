@@ -219,3 +219,38 @@ test("shows the session-expiry notice as a status message", () => {
 
   expect(screen.getByRole("status")).toHaveTextContent("로그인이 만료되었습니다. 다시 로그인하세요.");
 });
+
+test("shows whether Caps Lock is on or off once a key is pressed in the password field", () => {
+  render(<LoginView />);
+  expect(screen.getByText(/Caps Lock 상태는 입력을 시작하면 표시돼요/)).toBeInTheDocument();
+  const password = field("비밀번호");
+  fireEvent.keyDown(password, { key: "A", modifierCapsLock: true });
+  expect(screen.getByText(/Caps Lock 켜짐/)).toBeInTheDocument();
+  fireEvent.keyUp(password, { key: "a", modifierCapsLock: false });
+  expect(screen.getByText("Caps Lock 꺼짐")).toBeInTheDocument();
+});
+
+test("비밀번호를 잊으셨나요? opens a request mail for the administrator", () => {
+  render(<LoginView />);
+  type("아이디", "alice01");
+  fireEvent.click(screen.getByRole("button", { name: "비밀번호를 잊으셨나요?" }));
+  const dialog = screen.getByRole("dialog", { name: "비밀번호 찾기" });
+  const mail = screen.getByRole("link", { name: /관리자에게 메일 보내기/ }) as HTMLAnchorElement;
+  expect(dialog).toContainElement(mail);
+  expect(mail.href.startsWith("mailto:hyejeong.data@gmail.com")).toBe(true);
+  expect(decodeURIComponent(mail.href)).toContain("아이디: alice01");
+  fireEvent.click(screen.getAllByRole("button", { name: "닫기" })[0]);
+  expect(screen.queryByRole("dialog")).toBeNull();
+});
+
+test("the footer shows the copyright, the signature and the contact address", () => {
+  render(<LoginView />);
+  expect(screen.getByText(/Made with care by/)).toHaveTextContent("hyejeong.jin");
+  expect(screen.getByRole("link", { name: "hyejeong.data@gmail.com" })).toHaveAttribute("href", "mailto:hyejeong.data@gmail.com");
+});
+
+test("the forgot-password link is only offered in login mode", () => {
+  render(<LoginView />);
+  openRegister();
+  expect(screen.queryByRole("button", { name: "비밀번호를 잊으셨나요?" })).toBeNull();
+});

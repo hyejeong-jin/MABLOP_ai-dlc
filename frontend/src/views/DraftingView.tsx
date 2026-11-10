@@ -217,7 +217,7 @@ export function DraftingView({ onDraftCreated }: DraftingViewProps = {}) {
         </div>
 
         <fieldset>
-          <legend>이미지 첨부 (최대 {MAX_IMAGES}장)</legend>
+          <legend>포스트에 삽입할 대표 이미지 첨부 (최대 {MAX_IMAGES}장)</legend>
           <p className="field-hint mono" aria-live="polite">선택된 이미지: {images.length}/{MAX_IMAGES}</p>
           <div
             className="dropzone"

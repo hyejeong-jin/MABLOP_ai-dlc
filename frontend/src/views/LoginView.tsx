@@ -5,6 +5,9 @@ import { CircleAlert, Info } from "lucide-react";
 
 import { ApiRequestError } from "../api";
 import { useAuth } from "../auth/AuthContext";
+import { CapsLockHint, useCapsLock } from "../components/CapsLock";
+import { PasswordHelpDialog } from "../components/PasswordHelpDialog";
+import { SiteFooter } from "../components/SiteFooter";
 
 type Mode = "login" | "register";
 
@@ -27,6 +30,8 @@ export function LoginView() {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [helpOpen, setHelpOpen] = useState(false);
+  const { caps, bind } = useCapsLock();
 
   const isRegister = mode === "register";
 
@@ -157,6 +162,7 @@ export function LoginView() {
               <input
                 type="password"
                 name="password"
+                {...bind}
                 autoComplete={isRegister ? "new-password" : "current-password"}
                 value={password}
                 maxLength={128}
@@ -172,12 +178,15 @@ export function LoginView() {
             )}
           </div>
 
+          <CapsLockHint state={caps} />
+
           {isRegister && (
             <label className="field">
               비밀번호 확인
               <input
                 type="password"
                 name="passwordConfirm"
+                {...bind}
                 autoComplete="new-password"
                 value={passwordConfirm}
                 maxLength={128}
@@ -209,8 +218,15 @@ export function LoginView() {
           <button type="submit" className="btn-primary btn-block" disabled={pending}>
             {pending ? "처리 중..." : isRegister ? "가입 신청" : "로그인"}
           </button>
+          {!isRegister && (
+            <button type="button" className="btn-link-quiet" onClick={() => setHelpOpen(true)}>
+              비밀번호를 잊으셨나요?
+            </button>
+          )}
         </form>
       </div>
+      {helpOpen && <PasswordHelpDialog initialLoginId={loginId} onClose={() => setHelpOpen(false)} />}
+      <SiteFooter />
     </main>
   );
 }

@@ -6,6 +6,7 @@ import { postJson, ApiRequestError } from "../api";
 import { formatKst } from "../format";
 import { GrantSelect } from "../grants/GrantSelect";
 import { useGrants } from "../grants/useGrants";
+import { LearnedPostDialog } from "../components/LearnedPostDialog";
 
 // learn-style response (design: Interfaces / learn-style).
 interface LearnStyleResponse {
@@ -66,6 +67,7 @@ export function StyleLearningView() {
   const [preview, setPreview] = useState<PreviewResponse | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
   const [previewError, setPreviewError] = useState<string | null>(null);
+  const [openPostId, setOpenPostId] = useState<string | null>(null);
 
   function loadLearningStatus() {
     postJson<LearningStatus>({ action: "get-learning-status" })
@@ -147,11 +149,14 @@ export function StyleLearningView() {
         <section className="card" aria-label="학습 완료된 포스트">
           <h3 className="section-title">현재 작업공간 학습 완료 목록</h3>
           <p className="meta mono">포스트 {learningStatus.processedPosts}개 · 청크 {learningStatus.chunks}개</p>
+          <p className="field-hint">포스트를 누르면 학습한 내용을 보고 제목(ID)을 바꿀 수 있어요.</p>
           <ul className="plain-list">
             {learningStatus.posts.map((post) => (
               <li key={post.postId}>
-                <strong className="id">{post.postId}</strong>
-                <span className="sub mono">({post.chunkCount} chunks)</span>
+                <button type="button" className="post-link" title="눌러서 내용 보기" onClick={() => setOpenPostId(post.postId)}>
+                  <strong className="id">{post.postId}</strong>
+                  <span className="sub mono">({post.chunkCount} chunks)</span>
+                </button>
               </li>
             ))}
           </ul>
@@ -165,7 +170,7 @@ export function StyleLearningView() {
       <form className="stack page-section" onSubmit={submit}>
         <GrantSelect grants={grants} />
         <label className="field">
-          블로그 URL
+          AI에게 학습시킬 나의 블로그 URL
           <input
             type="url"
             value={blogUrl}
@@ -174,7 +179,7 @@ export function StyleLearningView() {
           />
         </label>
         <label className="field">
-          최대 포스트 수
+          AI에게 학습시킬 포스트 수
           <input
             type="number"
             min={1}
@@ -284,6 +289,9 @@ export function StyleLearningView() {
             </div>
           )}
         </div>
+      )}
+      {openPostId && (
+        <LearnedPostDialog postId={openPostId} onClose={() => setOpenPostId(null)} onRenamed={loadLearningStatus} />
       )}
     </section>
   );

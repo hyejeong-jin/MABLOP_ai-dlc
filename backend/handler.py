@@ -58,6 +58,8 @@ DISPATCH = {
     "list-drafts": draft_history.list_drafts,
     "delete-draft": draft_history.delete_draft,
     "get-usage": usage_meter.get_usage,
+    "get-learning-post": lambda body, ctx: style_learner.get_learning_post(body),
+    "rename-learning-post": lambda body, ctx: style_learner.rename_learning_post(body),
 }
 
 # The twenty actions added by user-auth-admin: an unexpected exception there is
@@ -86,6 +88,8 @@ AUTH_SCOPE_ACTIONS = frozenset(
         "list-drafts",
         "delete-draft",
         "get-usage",
+        "get-learning-post",
+        "rename-learning-post",
     }
 )
 

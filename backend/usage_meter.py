@@ -68,7 +68,8 @@ def record(model_id: str, out, now=None) -> None:
             return doc
 
         s3store.update_json(_key(month), mutate, default={"v": 1, "month": month, "models": {}})
-    except Exception:  # noqa: BLE001 - metering must never fail a model call
+    except Exception as err:  # noqa: BLE001 - metering must never fail a model call
+        print(f'{{"event": "usage-record", "outcome": "error:{type(err).__name__}"}}')
         return
 
 
@@ -79,12 +80,63 @@ def _reset_at(now_s: float) -> str:
     return auth_crypto.to_iso_ms(int(nxt.timestamp() * 1000))
 
 
+def _kst_date(value) -> str | None:
+    """'YYYY-MM-DD' (KST) for an ISO timestamp string or datetime; None when unreadable."""
+    try:
+        if isinstance(value, datetime.datetime):
+            moment = value
+        else:
+            moment = datetime.datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+        if moment.tzinfo is None:
+            moment = moment.replace(tzinfo=datetime.timezone.utc)
+        return moment.astimezone(KST).strftime("%Y-%m-%d")
+    except (ValueError, TypeError):
+        return None
+
+
+def _recent_months(now_s: float, count: int = 6) -> list[str]:
+    """The current KST month and the previous count-1 months, newest first."""
+    local = datetime.datetime.fromtimestamp(now_s, KST).replace(day=1)
+    months = []
+    for _ in range(count):
+        months.append(local.strftime("%Y-%m"))
+        local = (local - datetime.timedelta(days=1)).replace(day=1)
+    return months
+
+
+def _activity(now_s: float) -> dict:
+    """Writing activity per KST day: drafts created plus blog posts learned (counts, not tokens)."""
+    counts: dict[str, int] = {}
+
+    def bump(day):
+        if day:
+            counts[day] = counts.get(day, 0) + 1
+
+    found = s3store.read_json_optional(s3store.user_key("metadata/drafts.json"))
+    if found is not None and isinstance(found[0], dict):
+        for entry in found[0].get("drafts") or []:
+            if isinstance(entry, dict):
+                bump(_kst_date(entry.get("createdAt")))
+    for obj in s3store.list_keys(s3store.user_key("raw-posts/")):
+        bump(_kst_date(obj.get("lastModified")))
+    return counts
+
+
 def get_usage(body, ctx, now=None) -> dict:
-    """The acting user's usage this month (KST), per model, with an estimated USD cost."""
+    """The acting user's usage this month (KST) per model with an estimated USD cost, the token
+    total of the last six months, and the daily writing activity."""
     now_s = time.time() if now is None else now
     month = _month(now_s)
-    found = s3store.read_json_optional(_key(month))
-    stored = found[0] if found is not None and isinstance(found[0], dict) else {}
+    stored = {}
+    total_tokens = 0
+    for m in _recent_months(now_s):
+        found = s3store.read_json_optional(_key(m))
+        doc = found[0] if found is not None and isinstance(found[0], dict) else {}
+        if m == month:
+            stored = doc
+        for entry in (doc.get("models") or {}).values():
+            if isinstance(entry, dict):
+                total_tokens += int(entry.get("inputTokens", 0)) + int(entry.get("outputTokens", 0))
     rows = []
     total = 0.0
     for model_id, entry in sorted((stored.get("models") or {}).items()):
@@ -108,10 +160,10 @@ def get_usage(body, ctx, now=None) -> dict:
     return {
         "month": month,
         "totalUsd": round(total, 6),
+        "totalTokens": total_tokens,
         "resetAt": _reset_at(now_s),
         "models": rows,
-        "activity": stored.get("activity") or {},
-        "totalTokens": sum(int((e or {}).get("inputTokens", 0)) + int((e or {}).get("outputTokens", 0)) for e in (stored.get("models") or {}).values() if isinstance(e, dict)),
+        "activity": _activity(now_s),
         "pricing": [
             {"label": p["label"], "inputPerMillion": p["input"], "outputPerMillion": p["output"]}
             for p in PRICES
