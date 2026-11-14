@@ -21,6 +21,7 @@ import prompt_builder
 import retrieval
 import s3store
 import style_profile
+import usage_meter
 import user_scope
 from errors import MablopError
 
@@ -34,10 +35,24 @@ _TEXT_MODEL_ENV = "MABLOP_TEXT_MODEL"  # quality Korean text-gen (Design tiering
 # Locked in decisions.md: Claude Sonnet 4.5 (quality Korean text-gen, us-east-1).
 _DEFAULT_TEXT_MODEL = "us.anthropic.claude-sonnet-4-5-20250929-v1:0"
 
+# Draft tiers (Req 15.1). Passed in by the handler from the server-side authorize() result only.
+TIER_QUALITY = "quality"
+TIER_LITE = "lite"
+TIERS = (TIER_QUALITY, TIER_LITE)
+_LITE_MODEL_ENV = "MABLOP_LITE_MODEL"  # low-cost model for members without a Grant
+# Claude Haiku 4.5, US inference profile. infra/template.yaml does not allow it yet (IAM change needed).
+_DEFAULT_LITE_MODEL = "us.anthropic.claude-haiku-4-5-20251001-v1:0"
+
 _TOP_K_ENV = "MABLOP_TOP_K"  # Top_K retrieval cap (Req 2.4, 7.2)
 _DEFAULT_TOP_K = 8
 
 # Matches a single ![img-N] placeholder (N = 1+ digits).
+_MAX_RESEARCH_IDS = 20  # cap on infoSourceIds / vocIds per request
+_MAX_EXCERPT_CHARS = 2000  # per source / VOC excerpt in the research area
+_MAX_RESEARCH_CHARS = 12000  # total research area input
+
+_PROVENANCE_SUFFIX = ".provenance.json"  # sidecar next to generated-posts/<draftId>.md
+
 _PLACEHOLDER_RE = re.compile(r"!\[img-(\d+)\]")
 
 
@@ -57,12 +72,23 @@ def build_prompt(profile: dict, chunks: list, inputs: dict) -> str:
         inputs.get("notes"),
         inputs.get("captions"),
         inputs.get("token_cap"),
+        research_context=inputs.get("research_context"),
     )
 
 
 def _text_model() -> str:
     """Quality Korean text-gen model id from env; locked default in decisions.md D14."""
     return os.environ.get(_TEXT_MODEL_ENV, _DEFAULT_TEXT_MODEL)
+
+
+def _lite_model() -> str:
+    """Lite-tier model id from env MABLOP_LITE_MODEL, else the Haiku default."""
+    return os.environ.get(_LITE_MODEL_ENV) or _DEFAULT_LITE_MODEL
+
+
+def _model_for_tier(tier: str) -> str:
+    """The text model for a tier: lite -> MABLOP_LITE_MODEL, anything else -> the quality model."""
+    return _lite_model() if tier == TIER_LITE else _text_model()
 
 
 def _extract_text(resp) -> str:
@@ -167,6 +193,7 @@ def generate_from_prompt(
     captions=None,
     image_names: dict | None = None,
     title: str | None = None,
+    tier: str = TIER_QUALITY,
 ) -> dict:
     """Generate+normalize+store a Draft from an assembled prompt (2.7,2.8,2.9,3.6,3.7,4.1,4.2).
 
@@ -176,7 +203,7 @@ def generate_from_prompt(
     returned as `draftKey`), then records it in the Draft_Index. A failed index
     update never fails the generation (Req 22.4; design D20).
     """
-    raw = bedrock.text_generate(prompt, _text_model())
+    raw = bedrock.text_generate(prompt, _model_for_tier(tier))
     markdown = normalize_placeholders(
         raw, image_count, captions=captions, image_names=image_names
     )
@@ -259,6 +286,13 @@ def _load_profile() -> dict:
     return prof if isinstance(prof, dict) else {}
 
 
+def _valid_profile(profile) -> bool:
+    """A usable Style_Profile is a dict with at least one non-empty value."""
+    return isinstance(profile, dict) and any(
+        v not in (None, "", [], {}) for v in profile.values()
+    )
+
+
 def _retrieve_chunks(query_text: str) -> list:
     """Embed query, cosine Top_K over the stored index, map rows -> chunk texts (2.2-2.4)."""
     try:
@@ -284,33 +318,190 @@ def _input_text(title, outline, notes) -> str:
     return "\n".join(p for p in (title, outline, notes) if p)
 
 
-def generate_draft(payload: dict) -> dict:
+def _id_list(value, field: str) -> list:
+    """Validate an optional list of identifier strings (deduped, order kept)."""
+    if value is None:
+        return []
+    if not isinstance(value, list) or len(value) > _MAX_RESEARCH_IDS:
+        raise MablopError("bad_request", f"{field} must be a list of at most {_MAX_RESEARCH_IDS} ids")
+    out = []
+    for item in value:
+        if not isinstance(item, str) or not item:
+            raise MablopError("bad_request", f"{field} must contain non-empty strings")
+        if item not in out:
+            out.append(item)
+    return out
+
+
+def load_research_context(run_id=None, info_source_ids=None, voc_ids=None):
+    """Load the acting user's research/VOC material for the information area only.
+
+    Returns None when nothing was requested (legacy behavior). Reads go through
+    the user-scoped stores, so another user's ids behave like missing records
+    (not_found). Nothing here is written to Style_Profile, Vector_Index,
+    Post_Chunk or raw-posts (Req 6.2).
+    """
+    if run_id is not None and (not isinstance(run_id, str) or not run_id):
+        raise MablopError("bad_request", "researchRunId must be a non-empty string")
+    source_ids = _id_list(info_source_ids, "infoSourceIds")
+    vocs = _id_list(voc_ids, "vocIds")
+    if not run_id and not source_ids and not vocs:
+        return None
+
+    import research_store
+    import voc_store
+
+    summary = None
+    sources = []
+    run_status = None
+    if run_id:
+        run = research_store.get_research_run(run_id)
+        run_status = run.get("status")
+        if run.get("summaryId"):
+            summary = research_store.get_research_summary(run["summaryId"])
+        if not source_ids:
+            sources = research_store.list_info_sources(run_id)
+    for sid in source_ids:
+        sources.append(research_store.get_info_source(sid))
+
+    seen, picked, total = set(), [], 0
+    for src in sources:
+        sid = src.get("sourceId")
+        if sid in seen or src.get("status") in ("failed", "skipped"):
+            continue
+        seen.add(sid)
+        excerpt = str(src.get("excerpt") or "")[:_MAX_EXCERPT_CHARS]
+        excerpt = excerpt[: max(0, _MAX_RESEARCH_CHARS - total)]
+        total += len(excerpt)
+        picked.append({
+            "sourceId": sid, "title": src.get("title"), "domain": src.get("domain"),
+            "url": src.get("url"),
+            "sourceLabel": src.get("sourceLabel") or "fact", "excerpt": excerpt,
+        })
+
+    voc_items = []
+    for vid in vocs:
+        record = voc_store.get_voc(vid)
+        body = str(record.get("body") or "")[:_MAX_EXCERPT_CHARS]
+        body = body[: max(0, _MAX_RESEARCH_CHARS - total)]
+        total += len(body)
+        voc_items.append({"vocId": vid, "body": body, "sourceLabel": "user-input"})
+
+    return {"summary": summary, "sources": picked, "voc": voc_items,
+            "runId": run_id or None, "runStatus": run_status}
+
+
+def build_provenance(draft_id, markdown, research_context, general_style, created_at=None) -> dict:
+    """Provenance record for a draft that used research/VOC input (Req 6.3, 9.4, 13.4).
+
+    A fact segment needs a sourceId that is among the loaded sources; otherwise
+    the statement is downgraded to unverified. The draft body is always generated.
+    """
+    import datetime
+
+    ctx = research_context or {}
+    sources = ctx.get("sources") or []
+    valid = {s["sourceId"] for s in sources}
+    summary = ctx.get("summary") or {}
+    segments = []
+
+    def _text(item):
+        return str((item.get("text") if isinstance(item, dict) else item) or "").strip()
+
+    for item in summary.get("facts") or []:
+        text = _text(item)
+        raw_ids = (item.get("sourceIds") if isinstance(item, dict) else None) or []
+        ids = [i for i in raw_ids if i in valid]
+        if text:
+            segments.append({"label": "fact" if ids else "unverified", "text": text, "sourceIds": ids})
+    for item in summary.get("generatedInterpretation") or []:
+        if _text(item):
+            segments.append({"label": "generated", "text": _text(item), "sourceIds": []})
+    for item in summary.get("unverified") or []:
+        if _text(item):
+            segments.append({"label": "unverified", "text": _text(item), "sourceIds": []})
+    for voc in ctx.get("voc") or []:
+        if voc.get("body"):
+            segments.append({"label": "user-input", "text": voc["body"], "sourceIds": []})
+    segments.append({"label": "generated", "text": markdown, "sourceIds": []})
+
+    return {
+        "draftId": draft_id,
+        "researchRunId": ctx.get("runId"),
+        "researchStatus": ctx.get("runStatus"),
+        "sources": [
+            {k: s.get(k) for k in ("sourceId", "title", "domain", "url", "sourceLabel")} for s in sources
+        ],
+        "vocIds": [v["vocId"] for v in ctx.get("voc") or []],
+        "segments": segments,
+        "generalStyle": bool(general_style),
+        "createdAt": created_at or datetime.datetime.now(datetime.timezone.utc).isoformat(),
+    }
+
+
+def _provenance_key(draft_id) -> str:
+    return s3store.user_key(_DRAFT_PREFIX + str(draft_id) + _PROVENANCE_SUFFIX)
+
+
+def generate_draft(payload: dict, tier: str = TIER_QUALITY) -> dict:
     """Full generate-draft flow (2.1-2.9, 3.6-3.7, 4.1-4.2; Design Drafting Flow).
 
     embed input -> cosine Top_K -> load profile -> build prompt -> generate ->
     placeholder-validate -> store -> synchronous return. Composes existing
     modules; adds no retrieval/prompt logic of its own.
+
+    `tier` comes from the server-side authorize() result. lite uses the lite model and one slot of
+    the monthly lite quota (Req 15.1, 15.2); quality is unchanged and never touches the quota.
     """
+    if tier not in TIERS:
+        raise MablopError("internal_error")
     payload = payload or {}
-    title = payload.get("title")
-    outline = payload.get("outline")
-    notes = payload.get("notes")
     raw_keys = payload.get("imageKeys") or []
     # Only the acting user's own image keys are accepted; nothing is read before this check (Req 8.7).
     s3store.assert_own_image_keys(raw_keys)
     image_keys = raw_keys[:_MAX_IMAGES]
 
+    # Optional research material: validated/owned before any Bedrock call; None => legacy flow.
+    research_context = load_research_context(
+        payload.get("researchRunId"), payload.get("infoSourceIds"), payload.get("vocIds")
+    )
+
+    # A lite draft takes its quota slot before any Bedrock call; a failed generation gives it back.
+    remaining = usage_meter.reserve_lite_draft() if tier == TIER_LITE else None
+    try:
+        result = _generate_for_request(payload, image_keys, research_context, tier)
+    except Exception:
+        if tier == TIER_LITE:
+            usage_meter.release_lite_draft()
+        raise
+    result["tier"] = tier
+    if remaining is not None:
+        result["liteRemaining"] = remaining
+    return result
+
+
+def _generate_for_request(payload: dict, image_keys: list, research_context, tier: str) -> dict:
+    """Retrieve, build the prompt, generate and store one validated draft request (see generate_draft)."""
+    title = payload.get("title")
+    outline = payload.get("outline")
+    notes = payload.get("notes")
     metas = _load_image_meta(image_keys)
     captions = _captions_from_meta(metas)
     image_names = _image_names(image_keys, metas)
     retrieved = _retrieve_chunks(_input_text(title, outline, notes))
-    general_style = retrieved is None  # no learned posts: general style, no style references
-    chunks = retrieved or []
     profile = _load_profile()
+    # General style when no valid profile or no retrieval result (Req 8.1); research/VOC
+    # still go to the information area only (Req 8.3).
+    general_style = not retrieved or not _valid_profile(profile)
+    chunks = [] if general_style else retrieved
+    if general_style:
+        profile = {}
 
     prompt = prompt_builder.build_prompt(
         profile, chunks, title, outline, notes, captions,
         prompt_builder.token_cap_from_env(),
+        research_context=research_context,
+        general_style=general_style,
     )
 
     result = generate_from_prompt(
@@ -319,9 +510,17 @@ def generate_draft(payload: dict) -> dict:
         captions=captions,
         image_names=image_names,
         title=title,
+        tier=tier,
     )
     result["topK"] = len(chunks)
     result["generalStyle"] = general_style
+    if research_context is not None:  # additive only; absent for legacy requests
+        result["researchSourceIds"] = [s["sourceId"] for s in research_context["sources"]]
+        result["vocIds"] = [v["vocId"] for v in research_context["voc"]]
+        provenance = build_provenance(result["draftId"], result["markdown"], research_context, general_style)
+        s3store.put_json(_provenance_key(result["draftId"]), provenance)
+        result["researchRunId"] = research_context.get("runId")
+        result["provenance"] = provenance
     return result
 
 
@@ -338,4 +537,8 @@ def get_result(payload: dict) -> dict:
         if err.response.get("Error", {}).get("Code") in ("NoSuchKey", "404", "NotFound"):
             raise MablopError("not_found", auth_messages.DRAFT_NOT_FOUND) from None
         raise
-    return {"status": "ready", "markdown": markdown}
+    out = {"status": "ready", "markdown": markdown}
+    found = s3store.read_json_optional(_provenance_key(draft_id))
+    if found is not None and isinstance(found[0], dict):
+        out["provenance"] = found[0]
+    return out

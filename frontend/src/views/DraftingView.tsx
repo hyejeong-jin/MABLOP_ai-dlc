@@ -5,6 +5,14 @@
 import { useEffect, useState } from "react";
 import { CircleAlert, Check, Copy, Download, Info } from "lucide-react";
 import { postJson, ApiRequestError } from "../api";
+import type {
+  DraftResponse,
+  DraftTier,
+  GetUsageResponse,
+  ResearchRunSummary,
+  VocSummary,
+} from "../api";
+import { formatKst } from "../format";
 import { GrantSelect } from "../grants/GrantSelect";
 import { useGrants } from "../grants/useGrants";
 import { capImages, resizeImage, MAX_IMAGES } from "../images";
@@ -25,21 +33,21 @@ interface PresignResponse {
   uploads: PresignUpload[];
 }
 
-// generate-draft response (design: Interfaces).
-interface DraftResponse {
-  draftId: string;
-  markdown: string;
-  draftKey?: string;
-  topK?: number;
-  generalStyle?: boolean;
-}
+const MAX_VOC_PICKS = 5;
+
+// Tier labels are text, so the tier is never shown by color alone.
+const TIER_LABEL: Record<DraftTier, string> = {
+  quality: "고품질 초안",
+  lite: "저품질 초안",
+};
 
 // onDraftCreated hands the new draftId to App so the Results tab can focus it (Req 23.5).
 export interface DraftingViewProps {
   onDraftCreated?: (draftId: string) => void;
+  initialResearchRunId?: string | null; // preselects a research run (글 재료)
 }
 
-export function DraftingView({ onDraftCreated }: DraftingViewProps = {}) {
+export function DraftingView({ onDraftCreated, initialResearchRunId = null }: DraftingViewProps = {}) {
   const grants = useGrants();
   const [title, setTitle] = useState("");
   const [outline, setOutline] = useState("");
@@ -52,6 +60,73 @@ export function DraftingView({ onDraftCreated }: DraftingViewProps = {}) {
   const [generalStyle, setGeneralStyle] = useState(false);
   const [error, setError] = useState<string | undefined>(undefined);
   const [copied, setCopied] = useState(false);
+  const [researchRuns, setResearchRuns] = useState<ResearchRunSummary[]>([]);
+  const [researchRunId, setResearchRunId] = useState<string>(initialResearchRunId ?? "");
+  const [vocs, setVocs] = useState<VocSummary[]>([]);
+  const [vocIds, setVocIds] = useState<string[]>([]);
+  const [provenanceCount, setProvenanceCount] = useState(0);
+  const [draftTier, setDraftTier] = useState<DraftTier | undefined>(undefined);
+  // Lite drafts left this month; null until get-usage answers (or when it fails).
+  const [liteRemaining, setLiteRemaining] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (initialResearchRunId) setResearchRunId(initialResearchRunId);
+  }, [initialResearchRunId]);
+
+  // A member with at least one usable Grant sends it by default: the first owned Grant is
+  // selected once the list loads. A manual choice (already set) is never overwritten.
+  useEffect(() => {
+    if (grants.enabled && !grants.loading && grants.selectedId === null && grants.options.length > 0) {
+      grants.select(grants.options[0].id);
+    }
+  }, [grants.enabled, grants.loading, grants.selectedId, grants.options, grants.select]);
+
+  // A member with no Grant writes lite drafts; ask for this month's remaining count.
+  const memberWithoutGrant = grants.enabled && !grants.loading && grants.options.length === 0;
+  useEffect(() => {
+    if (!memberWithoutGrant) return undefined;
+    let alive = true;
+    postJson<GetUsageResponse>({ action: "get-usage" })
+      .then((res) => {
+        if (alive && res?.liteDrafts) {
+          setLiteRemaining(Math.max(0, res.liteDrafts.limit - res.liteDrafts.used));
+        }
+      })
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, [memberWithoutGrant]);
+
+  // 글 재료 candidates: loaded only once the section is opened (or a run is preselected),
+  // best-effort; failures only leave the optional section empty.
+  const [materialOpen, setMaterialOpen] = useState(false);
+  const loadMaterial = materialOpen || !!initialResearchRunId;
+  useEffect(() => {
+    if (!loadMaterial) return;
+    let alive = true;
+    // postJson called directly (same payloads as listResearchRuns/listVoc in api.ts)
+    postJson<{ runs?: ResearchRunSummary[] }>({ action: "list-research-runs", limit: 20 })
+      .then((res) => {
+        if (alive && Array.isArray(res?.runs)) setResearchRuns(res.runs);
+      })
+      .catch(() => {});
+    postJson<{ records?: VocSummary[] }>({ action: "list-voc", limit: 20 })
+      .then((res) => {
+        if (alive && Array.isArray(res?.records))
+          setVocs(res.records.filter((v) => v.status !== "archived"));
+      })
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, [loadMaterial]);
+
+  function toggleVoc(id: string) {
+    setVocIds((cur) =>
+      cur.includes(id) ? cur.filter((v) => v !== id) : cur.length >= MAX_VOC_PICKS ? cur : [...cur, id],
+    );
+  }
 
   useEffect(() => {
     if (!loading) {
@@ -117,6 +192,8 @@ export function DraftingView({ onDraftCreated }: DraftingViewProps = {}) {
     setError(undefined);
     setMarkdown(undefined);
     setGeneralStyle(false);
+    setProvenanceCount(0);
+    setDraftTier(undefined);
     try {
       const capped = capImages(images); // defensive re-cap (Req 7.4)
       let imageKeys: string[] = [];
@@ -167,15 +244,33 @@ export function DraftingView({ onDraftCreated }: DraftingViewProps = {}) {
       setStage("내 문체로 초안을 쓰는 중... (자료 검색, 문체 분석, 본문 생성 순서로 진행합니다)");
       // 5. generate-draft: keys only, synchronous return.
       const draft = await postJson<DraftResponse>(
-        grants.withGrant({ action: "generate-draft", title, outline, notes, imageKeys }),
+        grants.withGrant({
+          action: "generate-draft",
+          title,
+          outline,
+          notes,
+          imageKeys,
+          // research inputs are added only when selected (request is unchanged otherwise)
+          ...(researchRunId ? { researchRunId } : {}),
+          ...(vocIds.length ? { vocIds } : {}),
+        }),
       );
+      setProvenanceCount(draft.provenance?.sources?.length ?? 0);
       setMarkdown(draft.markdown);
       setGeneralStyle(draft.generalStyle === true);
+      setDraftTier(draft.tier);
+      if (typeof draft.liteRemaining === "number") setLiteRemaining(draft.liteRemaining);
       onDraftCreated?.(draft.draftId);
     } catch (err) {
       // 403 forbidden: grant options are reloaded; show the backend message.
       if (grants.handleGrantError(err)) {
         setError(err instanceof ApiRequestError ? err.message : String(err));
+        return;
+      }
+      // 429 quota_exceeded: this month's lite drafts are used up. Show the server text as is.
+      if (err instanceof ApiRequestError && err.code === "quota_exceeded") {
+        setLiteRemaining(0);
+        setError(err.message);
         return;
       }
       const msg =
@@ -217,6 +312,46 @@ export function DraftingView({ onDraftCreated }: DraftingViewProps = {}) {
         </div>
 
         <fieldset>
+          <legend>글 재료 (선택)</legend>
+          <p className="field-hint">말투는 학습한 내 글에서, 정보는 글 재료에서 가져와요. 재료를 고르지 않아도 초안은 만들어져요.</p>
+          {!loadMaterial && (
+            <button type="button" className="btn-sm" onClick={() => setMaterialOpen(true)}>
+              글 재료 선택하기
+            </button>
+          )}
+          <label className="field">
+            수집한 정보
+            <select value={researchRunId} onChange={(e) => setResearchRunId(e.target.value)}>
+              <option value="">선택 안 함</option>
+              {researchRuns.map((r) => (
+                <option key={r.runId} value={r.runId}>
+                  {r.requestedAt ? formatKst(r.requestedAt) : r.runId} · {r.status}
+                </option>
+              ))}
+              {researchRunId && !researchRuns.some((r) => r.runId === researchRunId) && (
+                <option value={researchRunId}>선택한 글 재료 ({researchRunId})</option>
+              )}
+            </select>
+          </label>
+          {vocs.length > 0 && (
+            <div role="group" aria-label="목소리함 의견 선택">
+              <p className="field-hint">목소리함 의견도 함께 쓸 수 있어요 (최대 {MAX_VOC_PICKS}개)</p>
+              {vocs.map((v) => (
+                <label key={v.vocId} className="field">
+                  <input
+                    type="checkbox"
+                    checked={vocIds.includes(v.vocId)}
+                    disabled={!vocIds.includes(v.vocId) && vocIds.length >= MAX_VOC_PICKS}
+                    onChange={() => toggleVoc(v.vocId)}
+                  />{" "}
+                  {v.preview}
+                </label>
+              ))}
+            </div>
+          )}
+        </fieldset>
+
+        <fieldset>
           <legend>포스트에 삽입할 대표 이미지 첨부 (최대 {MAX_IMAGES}장)</legend>
           <p className="field-hint mono" aria-live="polite">선택된 이미지: {images.length}/{MAX_IMAGES}</p>
           <div
@@ -255,7 +390,18 @@ export function DraftingView({ onDraftCreated }: DraftingViewProps = {}) {
           ))}
         </fieldset>
 
-        <button type="submit" className="btn-primary btn-block" disabled={loading || !grants.canCallBedrock}>
+        {memberWithoutGrant && (
+          <div className="callout">
+            <Info size={16} aria-hidden="true" />
+            <p>
+              AI 서비스 토큰이 없어 저품질 초안으로 작성돼요.
+              {liteRemaining !== null && ` 이번 달 남은 횟수: ${liteRemaining}회`}
+            </p>
+          </div>
+        )}
+
+        {/* Grant list still loading: wait, so the default Grant is in place before sending. */}
+        <button type="submit" className="btn-primary btn-block" disabled={loading || grants.loading}>
           초안 생성
         </button>
       </form>
@@ -266,6 +412,8 @@ export function DraftingView({ onDraftCreated }: DraftingViewProps = {}) {
         elapsedSeconds={elapsedSeconds}
         markdown={markdown}
         generalStyle={generalStyle}
+        tier={draftTier}
+        provenanceCount={provenanceCount}
         error={error}
         copied={copied}
         onCopy={copyDraft}
@@ -295,12 +443,14 @@ function DraftResult(props: {
   elapsedSeconds: number;
   markdown?: string;
   generalStyle?: boolean;
+  tier?: DraftTier;
+  provenanceCount: number;
   error?: string;
   copied: boolean;
   onCopy: (text: string) => void;
   onDownload: (text: string) => void;
 }) {
-  const { loading, stage, elapsedSeconds, markdown, generalStyle, error, copied, onCopy, onDownload } = props;
+  const { loading, stage, elapsedSeconds, markdown, generalStyle, tier, provenanceCount, error, copied, onCopy, onDownload } = props;
   if (loading) {
     return (
       <div className="callout page-section" role="status">
@@ -325,7 +475,14 @@ function DraftResult(props: {
     return (
       <div className="draft-result-inline">
         <div className="draft-result-actions">
-          <h3 className="section-title">생성된 초안</h3>
+          <div className="draft-result-heading">
+            <h3 className="section-title">생성된 초안</h3>
+            {tier && (
+              <span className={tier === "lite" ? "badge badge-pending" : "badge badge-active"}>
+                {TIER_LABEL[tier]}
+              </span>
+            )}
+          </div>
           <div>
             <button type="button" className="btn-sm btn-with-icon" onClick={() => onCopy(markdown)}>
               {copied ? <Check size={14} aria-hidden="true" /> : <Copy size={14} aria-hidden="true" />}
@@ -337,6 +494,9 @@ function DraftResult(props: {
             </button>
           </div>
         </div>
+        {provenanceCount > 0 && (
+          <p className="meta" role="status">글 재료 출처 {provenanceCount}건을 사용했어요. 자세한 내용은 결과 탭에서 확인하세요.</p>
+        )}
         {generalStyle && (
           <p className="callout" role="status">
             아직 학습한 글이 없어 일반 문체로 작성되었습니다. 스타일 학습을 마치면 내 문체가 반영됩니다.

@@ -65,6 +65,9 @@ GRANT_NEED_REQUESTED_REJECT = "승인 대기 상태의 권한만 거절할 수 �
 GRANT_NEED_APPROVED_REVOKE = "승인된 권한만 폐기할 수 있습니다."
 GRANT_REQUIRED = "Bedrock 사용 권한이 필요합니다. 마이페이지에서 신청하세요."
 
+# --- Lite-tier draft quota (Req 15.2) ---
+LITE_QUOTA_EXCEEDED = "이번 달 저품질 초안 한도를 모두 사용했습니다. 다음 달에 다시 이용하거나 Bedrock 사용 권한을 신청하세요."
+
 # --- Draft history (Req 22) ---
 DEFAULT_DRAFT_TITLE = "제목 없음"
 BAD_DRAFT_ID = "올바르지 않은 초안 번호입니다."

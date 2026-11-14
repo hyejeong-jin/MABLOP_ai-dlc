@@ -167,5 +167,8 @@ def delete_draft(body, ctx, now=None) -> dict:
         return _with_drafts(index, [e for e in _drafts_of(index) if e["draftId"] != draft_id])
 
     s3store.update_json(index_key, mutate, default=_empty_index())
+    provenance_key = s3store.user_key(f"{DRAFT_PREFIX}{draft_id}.provenance.json")
+    if s3store.key_exists(provenance_key):  # research drafts only; legacy delete writes are unchanged
+        s3store.delete(provenance_key)
     s3store.delete(object_key)  # a failure propagates; the handler maps it to internal_error
     return {"draftId": draft_id, "deleted": True}

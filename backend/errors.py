@@ -5,9 +5,13 @@ import json
 STATUS = {
     "unauthorized": 401,  # token (5.1)
     "bad_request": 400,  # unknown/malformed action (8.1 dispatch)
+    "validation_error": 400,  # common action input validation
     "forbidden": 403,  # role/grant denied (user-auth-admin 16.7)
     "not_found": 404,  # unknown target (user-auth-admin 16.7)
     "rate_limited": 429,  # rate (5.3)
+    "budget_exhausted": 429,  # research budget stopped additional work
+    "quota_exceeded": 429,  # monthly lite-tier draft quota reached (Req 15.2)
+    "partial_result": 206,  # reserved for callers that expose partial results as an error
     "body_too_large": 413,  # body length (5.4)
     "bedrock_error": 502,  # Bedrock upstream
     "internal_error": 500,  # other

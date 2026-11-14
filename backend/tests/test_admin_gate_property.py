@@ -38,6 +38,8 @@ EXPECTED_ADMIN_ONLY = frozenset(
         "admin-grant-approve",
         "admin-grant-reject",
         "admin-grant-revoke",
+        "admin-list-voc",
+        "admin-update-voc-status",
     }
 )
 
@@ -70,7 +72,7 @@ def _gate_environment(monkeypatch):
 def test_admin_only_action_set_is_the_eleven_documented_actions():
     """Req 4.8, 19.16: the gate covers exactly the twelve administrator actions."""
     assert access_controller.ADMIN_ONLY_ACTIONS == EXPECTED_ADMIN_ONLY
-    assert len(access_controller.ADMIN_ONLY_ACTIONS) == 12
+    assert len(access_controller.ADMIN_ONLY_ACTIONS) == 14
 
 
 @PBT_SETTINGS

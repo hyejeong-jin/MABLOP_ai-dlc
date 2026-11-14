@@ -1,5 +1,4 @@
-// "내 월 사용량" and "포스트 작성 활동" on the 마이페이지: Bedrock cost per model, cumulative
-// tokens, and a six-month writing-activity heat map (drafts written + blog posts learned).
+// "내 월 사용량" on the 마이페이지: Bedrock cost per model and cumulative tokens.
 import { useEffect, useState } from "react";
 
 import { ApiRequestError, postJson } from "../api";
@@ -21,49 +20,12 @@ interface UsageResponse {
   totalTokens?: number;
   resetAt: string;
   models: UsageModel[];
-  activity?: Record<string, number>;
   pricing: { label: string; inputPerMillion: number; outputPerMillion: number }[];
 }
 
 const FALLBACK = "사용량을 불러오지 못했습니다. 잠시 후 다시 시도하세요.";
-const HEAT_DAYS = 182; // about six months
-const DAY_MS = 24 * 60 * 60 * 1000;
-const KST_DATE = new Intl.DateTimeFormat("en-CA", {
-  timeZone: "Asia/Seoul",
-  year: "numeric",
-  month: "2-digit",
-  day: "2-digit",
-});
-
 const usd = (value: number, digits = 4) => `$${value.toFixed(digits)}`;
 const count = (value: number) => value.toLocaleString("ko-KR");
-
-export interface HeatCell {
-  date: string;
-  count: number;
-}
-
-/** Cells for the last HEAT_DAYS days in Korea time, padded so each column starts on a Sunday. */
-export function heatCells(activity: Record<string, number> | undefined, now: Date = new Date()): (HeatCell | null)[] {
-  const today = KST_DATE.format(now);
-  const base = new Date(`${today}T12:00:00+09:00`).getTime();
-  const cells: HeatCell[] = [];
-  for (let i = HEAT_DAYS - 1; i >= 0; i -= 1) {
-    const date = KST_DATE.format(new Date(base - i * DAY_MS));
-    cells.push({ date, count: activity?.[date] ?? 0 });
-  }
-  // 12:00 KST is 03:00 UTC on the same date, so the UTC weekday is the Korea weekday.
-  const lead = new Date(`${cells[0].date}T12:00:00+09:00`).getUTCDay();
-  return [...Array<null>(lead).fill(null), ...cells];
-}
-
-export function heatLevel(n: number): 0 | 1 | 2 | 3 | 4 {
-  if (n <= 0) return 0;
-  if (n === 1) return 1;
-  if (n === 2) return 2;
-  if (n <= 4) return 3;
-  return 4;
-}
 
 export function UsageSection() {
   const [data, setData] = useState<UsageResponse | null>(null);
@@ -79,10 +41,6 @@ export function UsageSection() {
     };
   }, []);
 
-  const cells = heatCells(data?.activity);
-  const columns = Math.ceil(cells.length / 7);
-  const activeDays = cells.filter((c) => c && c.count > 0).length;
-  const totalActions = cells.reduce((n, c) => n + (c?.count ?? 0), 0);
   const totalTokens =
     data?.totalTokens ?? data?.models?.reduce((n, m) => n + m.inputTokens + m.outputTokens, 0) ?? 0;
   const models = data?.models ?? [];
@@ -92,7 +50,7 @@ export function UsageSection() {
       <section className="card usage-card" aria-labelledby="profile-usage-title">
         <div className="usage-header">
           <div>
-            <h3 className="section-title" id="profile-usage-title">
+            <h3 className="section-title section-accent" id="profile-usage-title">
               내 월 사용량
             </h3>
             <p className="meta">AWS Bedrock 사용 비용과 모델별 상세 내역</p>
@@ -136,7 +94,7 @@ export function UsageSection() {
                 <tbody>
                   {models.length === 0 ? (
                     <tr>
-                      <td colSpan={5} className="table-empty">
+                      <td colSpan={5} className="table-empty empty-state">
                         이번 달에는 아직 사용 기록이 없습니다.
                       </td>
                     </tr>
@@ -164,44 +122,6 @@ export function UsageSection() {
         )}
       </section>
 
-      <section className="card" aria-labelledby="profile-activity-title">
-        <div className="usage-header">
-          <div>
-            <h3 className="section-title" id="profile-activity-title">
-              포스트 작성 활동
-            </h3>
-            <p className="meta">초안을 쓰거나 블로그 글을 학습한 날이 진하게 표시돼요 (한국 시간)</p>
-          </div>
-          <span className="usage-period">최근 6개월</span>
-        </div>
-        {data && (
-          <p className="activity-summary">
-            <strong>{count(activeDays)}</strong>일 활동 · 초안·학습 <strong>{count(totalActions)}</strong>회
-          </p>
-        )}
-        <div className="activity-grid" role="img" aria-label="최근 6개월 포스트 작성 활동">
-          <div className="heatmap" style={{ ["--cols" as string]: columns }}>
-            {cells.map((cell, i) =>
-              cell === null ? (
-                <span key={`pad-${i}`} className="heat-cell heat-pad" />
-              ) : (
-                <span
-                  key={cell.date}
-                  title={`${cell.date}: ${cell.count}회`}
-                  className={`heat-cell level-${heatLevel(cell.count)}`}
-                />
-              ),
-            )}
-          </div>
-          <div className="heat-legend">
-            <span>적음</span>
-            {[0, 1, 2, 3, 4].map((n) => (
-              <i key={n} className={`heat-cell level-${n}`} />
-            ))}
-            <span>많음</span>
-          </div>
-        </div>
-      </section>
     </>
   );
 }

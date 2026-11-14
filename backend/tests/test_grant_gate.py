@@ -74,10 +74,15 @@ def test_grant_required_message_is_the_korean_literal():
 
 
 def test_bedrock_action_set_is_the_five_actions():
-    assert access_controller.BEDROCK_ACTIONS == frozenset(BEDROCK_ACTIONS)
+    research = {"run-research"}
+    assert access_controller.BEDROCK_ACTIONS == frozenset(BEDROCK_ACTIONS) | research
 
 
-@pytest.mark.parametrize("action", BEDROCK_ACTIONS)
+# generate-draft is the lite-tier exception (Req 15.1); see test_lite_tier.py for its rules.
+GRANT_ONLY_BEDROCK_ACTIONS = [a for a in BEDROCK_ACTIONS if a != "generate-draft"]
+
+
+@pytest.mark.parametrize("action", GRANT_ONLY_BEDROCK_ACTIONS)
 def test_requires_grant_for_member_on_every_bedrock_action(action):
     assert access_controller.requires_grant(action, {"kind": "learn"}, "member") is True
 
@@ -91,8 +96,9 @@ def test_requires_grant_false_for_get_result_draft_only():
     assert access_controller.requires_grant("get-result", {"kind": "draft"}, "member") is False
     assert access_controller.requires_grant("get-result", {"kind": "learn"}, "member") is True
     assert access_controller.requires_grant("get-result", {}, "member") is True
-    # kind=draft exempts only get-result
-    assert access_controller.requires_grant("generate-draft", {"kind": "draft"}, "member") is True
+    # kind=draft exempts only get-result; generate-draft needs a grant only when it names one
+    assert access_controller.requires_grant("generate-draft", {"kind": "draft"}, "member") is False
+    assert access_controller.requires_grant("generate-draft", {"grantId": "g_" + "0" * 16}, "member") is True
 
 
 @pytest.mark.parametrize("action", BEDROCK_ACTIONS)
@@ -254,7 +260,7 @@ def test_handler_member_with_valid_grant_runs_action_after_one_grants_read(gate,
     assert gate.s3_calls.count("GetObject", _grants_key(gate.member_id)) == 1
 
 
-@pytest.mark.parametrize("action", BEDROCK_ACTIONS)
+@pytest.mark.parametrize("action", GRANT_ONLY_BEDROCK_ACTIONS)
 def test_handler_member_without_grant_is_blocked_before_the_action_runs(gate, action):
     status, body = gate.send(gate.member_token, {"action": action, "kind": "learn"})
     assert status == 403

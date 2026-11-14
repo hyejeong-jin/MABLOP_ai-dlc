@@ -315,3 +315,43 @@ test("sends no grantId and renders no grant selector", async () => {
   for (const call of wire.calls) expect(call).not.toHaveProperty("grantId");
   expect(screen.queryByLabelText(/AI 서비스 토큰 사용 권한/)).not.toBeInTheDocument();
 });
+
+
+test("shows provenance labels and links only fact sources", async () => {
+  const wire = wireApi();
+  vi.spyOn(api, "postJson").mockImplementation(async (body) => {
+    wire.calls.push(body);
+    if (body.action === "list-drafts") return { drafts: [NEW] } as never;
+    if (body.action === "get-result")
+      return {
+        markdown: "# x",
+        provenance: {
+          sources: [
+            { sourceId: "s1", title: "출처1", url: "https://a.example/p" },
+            { sourceId: "s2", title: "나쁜", url: "javascript:alert(1)" },
+          ],
+          segments: [
+            { label: "fact", text: "사실문장", sourceIds: ["s1", "s2"] },
+            { label: "generated", text: "생성문장", sourceIds: ["s1"] },
+          ],
+        },
+      } as never;
+    return {} as never;
+  });
+  render(<ResultView />);
+  fireEvent.click(await screen.findByText(NEW.title));
+  const section = await screen.findByLabelText("사용한 글 재료");
+  expect(within(section).getByText("사실")).toBeInTheDocument();
+  expect(within(section).getByText("생성")).toBeInTheDocument();
+  const links = within(section).getAllByRole("link");
+  expect(links).toHaveLength(1);
+  expect(links[0]).toHaveAttribute("href", "https://a.example/p");
+});
+
+test("no provenance section when get-result has none", async () => {
+  wireApi();
+  render(<ResultView />);
+  fireEvent.click(await screen.findByText(NEW.title));
+  await screen.findByLabelText("생성된 마크다운");
+  expect(screen.queryByLabelText("사용한 글 재료")).not.toBeInTheDocument();
+});

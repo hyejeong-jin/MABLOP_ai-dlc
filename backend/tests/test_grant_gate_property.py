@@ -129,9 +129,12 @@ def _is_valid(grant: dict) -> bool:
     )
 
 
-def _needs_grant(role, action, kind, body_is_dict=True) -> bool:
+def _needs_grant(role, action, kind, body_is_dict=True, grant_claimed=False) -> bool:
     if role != "member" or action not in BEDROCK_ACTIONS:
         return False
+    if action == "generate-draft":
+        # Lite tier (Req 15.1): a member who names no grantId is not gated; naming one must verify.
+        return body_is_dict and grant_claimed
     return not (action == "get-result" and body_is_dict and kind == "draft")
 
 
@@ -180,7 +183,7 @@ def test_grant_gate_passes_exactly_when_the_model_says_so(
     if kind is not ABSENT:
         body["kind"] = kind
 
-    needs = _needs_grant(role, action, kind)
+    needs = _needs_grant(role, action, kind, grant_claimed=grant_id is not None)
     well_formed = isinstance(grant_id, str) and grant_service._GRANT_ID_RE.fullmatch(grant_id) is not None
     own_match = next((g for g in own if g["id"] == grant_id), None) if well_formed else None
     should_pass = (not needs) or (own_match is not None and _is_valid(own_match))

@@ -20,18 +20,20 @@ from errors import MablopError
 
 BUCKET = "mablop-test"
 TEXT_MODEL = "test-quality-korean"
+LITE_MODEL = "test-lite-korean"
 _PH = re.compile(r"!\[img-(\d+)\]")
 U = f"users/{ACTING_USER_ID}/"  # acting user's prefix
 IMG = U + "images/"
 NO_LEARNED_MSG = "학습된 글이 없습니다. 먼저 스타일 학습을 진행하세요."
 BAD_IMAGE_MSG = "허용되지 않는 이미지 경로입니다."
-GRANT_REQUIRED_MSG = "Bedrock 사용 권한이 필요합니다. 마이페이지에서 신청하세요."
 
 
 @pytest.fixture
 def env(monkeypatch, s3_bucket, signing_secret):
     """moto S3 + bucket + signing secret + env; reload storage/engine modules; yield drafting_engine."""
     monkeypatch.setenv("MABLOP_TEXT_MODEL", TEXT_MODEL)
+    monkeypatch.setenv("MABLOP_LITE_MODEL", LITE_MODEL)
+    monkeypatch.setenv("MABLOP_LITE_MONTHLY_LIMIT", "5")
     monkeypatch.setenv("MABLOP_EMBED_MODEL", "test-embed-model")
     monkeypatch.setenv("MABLOP_TOP_K", "2")
     import s3store
@@ -196,7 +198,9 @@ def test_generate_draft_tolerates_missing_profile_and_captions(env, monkeypatch)
 
     out = de.generate_draft({"title": "제목", "imageKeys": [IMG + "x.jpg"]})
     assert _counts(out["markdown"]) == {1: 1}
-    assert out["topK"] == 2
+    # No valid Style_Profile => general-style fallback, no style chunks (Req 8.1).
+    assert out["topK"] == 0
+    assert out["generalStyle"] is True
 
 
 def test_get_result_without_id_errors(env):
@@ -295,15 +299,18 @@ def member(h, create_user, make_session_token):
     return SimpleNamespace(user_id=user_id, grant_id=grant_id, token=make_session_token(user_id))
 
 
-def test_handler_member_without_grant_id_is_rejected_and_nothing_is_written(h, env, monkeypatch, member):
+def test_handler_member_without_grant_id_runs_as_lite_tier(h, env, monkeypatch, member):
+    """Req 15.1: a member who names no grant is not rejected; the draft uses the lite model and quota."""
     captured = _patch_bedrock(env, monkeypatch, "# 제목\n\n본문")
 
     resp = h.handler(_event({"action": "generate-draft", "title": "제목", "imageKeys": []}, member.token))
 
-    assert resp["statusCode"] == 403
-    assert json.loads(resp["body"])["error"] == {"code": "forbidden", "message": GRANT_REQUIRED_MSG}
-    assert captured["invoked"] == 0
-    assert _index_draft_ids(member.user_id) == []
+    assert resp["statusCode"] == 200
+    body = json.loads(resp["body"])
+    assert body["tier"] == "lite"
+    assert body["liteRemaining"] == 4  # monthly limit 5 in this test, one draft just used
+    assert captured["model_id"] == LITE_MODEL
+    assert _index_draft_ids(member.user_id) == [body["draftId"]]
 
 
 def test_handler_member_with_grant_id_records_draft_in_own_index(h, env, monkeypatch, member):
@@ -315,6 +322,8 @@ def test_handler_member_with_grant_id_records_draft_in_own_index(h, env, monkeyp
 
     assert resp["statusCode"] == 200
     body = json.loads(resp["body"])
+    assert body["tier"] == "quality"
+    assert "liteRemaining" not in body
     assert body["draftKey"] == f"users/{member.user_id}/generated-posts/{body['draftId']}.md"
     assert _index_draft_ids(member.user_id) == [body["draftId"]]
     assert _index_draft_ids(ACTING_USER_ID) == []

@@ -93,7 +93,7 @@ def test_activity_counts_drafts_and_learned_posts_per_kst_day(s3_bucket):
     )
     _seed_post("p1")
     out = usage_meter.get_usage({}, None, now=NOW)
-    assert out["activity"]["2026-10-14"] >= 2  # both drafts, plus the post stored "now"
+    assert out["activity"]["2026-10-14"]["drafts"] == 2  # both drafts; the post is dated by its real upload time
     assert "2026-10-13" not in out["activity"]
 
 

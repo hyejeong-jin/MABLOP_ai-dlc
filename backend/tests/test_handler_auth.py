@@ -36,7 +36,11 @@ GRANT_ACTIONS = {
     "admin-grant-revoke",
 }
 HISTORY_ACTIONS = {"list-drafts", "delete-draft", "get-usage", "get-learning-post", "rename-learning-post"}
-NEW_ACTIONS = ACCOUNT_ACTIONS | GRANT_ACTIONS | HISTORY_ACTIONS
+FEATURE_ACTIONS = {
+    "create-voc", "list-voc", "get-voc", "update-voc", "archive-voc", "admin-list-voc",
+    "admin-update-voc-status", "get-activity", "run-research", "get-research-run", "list-research-runs",
+}
+NEW_ACTIONS = ACCOUNT_ACTIONS | GRANT_ACTIONS | HISTORY_ACTIONS | FEATURE_ACTIONS
 LEGACY_ACTIONS = {
     "issue-presigned-urls",
     "learn-style",
@@ -60,8 +64,13 @@ ADMIN_ONLY = {
     "admin-grant-approve",
     "admin-grant-reject",
     "admin-grant-revoke",
+    "admin-list-voc",
+    "admin-update-voc-status",
 }
-BEDROCK = {"learn-style", "analyze-images", "generate-draft", "rebuild-from-stored", "get-result"}
+BEDROCK = {
+    "learn-style", "analyze-images", "generate-draft", "rebuild-from-stored", "get-result",
+    "run-research",
+}
 
 ADMIN_REQUIRED_MSG = "관리자 권한이 필요합니다."
 GRANT_REQUIRED_MSG = "Bedrock 사용 권한이 필요합니다. 마이페이지에서 신청하세요."
@@ -102,14 +111,14 @@ def _body(resp):
 
 
 def test_dispatch_contains_the_eight_legacy_and_twentyone_new_actions(h):
-    assert len(NEW_ACTIONS) == 24
+    assert len(NEW_ACTIONS) == 35
     assert set(h.DISPATCH) == LEGACY_ACTIONS | NEW_ACTIONS
     assert all(callable(fn) for fn in h.DISPATCH.values())
 
 
 def test_auth_scope_actions_are_exactly_the_twentyone_new_actions(h):
     assert h.AUTH_SCOPE_ACTIONS == frozenset(NEW_ACTIONS)
-    assert len(h.AUTH_SCOPE_ACTIONS) == 24
+    assert len(h.AUTH_SCOPE_ACTIONS) == 35
     assert h.AUTH_SCOPE_ACTIONS.isdisjoint(LEGACY_ACTIONS)
 
 
@@ -117,9 +126,9 @@ def test_admin_only_and_bedrock_action_sets(h):
     import access_controller
 
     assert access_controller.ADMIN_ONLY_ACTIONS == frozenset(ADMIN_ONLY)
-    assert len(access_controller.ADMIN_ONLY_ACTIONS) == 12
+    assert len(access_controller.ADMIN_ONLY_ACTIONS) == 14
     assert access_controller.BEDROCK_ACTIONS == frozenset(BEDROCK)
-    assert len(access_controller.BEDROCK_ACTIONS) == 5
+    assert len(access_controller.BEDROCK_ACTIONS) == 6
     assert access_controller.ADMIN_ONLY_ACTIONS <= set(h.DISPATCH)
     assert access_controller.BEDROCK_ACTIONS <= set(h.DISPATCH)
 

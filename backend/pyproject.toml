@@ -13,6 +13,7 @@ dependencies = [
 [tool.setuptools]
 py-modules = [
     "access_controller",
+    "activity_store",
     "auth_crypto",
     "auth_log",
     "auth_messages",
@@ -22,6 +23,7 @@ py-modules = [
     "bedrock",
     "checkpoint",
     "chunking",
+    "contracts",
     "crawler",
     "draft_history",
     "drafting_engine",
@@ -32,12 +34,15 @@ py-modules = [
     "index_store",
     "legacy_migrator",
     "prompt_builder",
+    "research",
+    "research_store",
     "retrieval",
     "s3store",
     "style_learner",
     "style_profile",
     "usage_meter",
     "user_scope",
+    "voc_store",
 ]
 
 [project.optional-dependencies]

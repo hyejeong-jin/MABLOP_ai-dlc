@@ -108,10 +108,12 @@ test("the user id sits in the bottom-left account chip and the three header butt
   expect(screen.getByRole("link", { name: "hyejeong.data@gmail.com" })).toBeInTheDocument();
 });
 
-test("the top tabs are a single row of five or four buttons without a scroll container", () => {
+test("the top tabs are a grid of seven or six buttons without a scroll container", () => {
   localStorage.setItem(HIDE_KEY, String(Date.now() + 3600_000));
   render(<App />);
   const nav = screen.getByRole("navigation", { name: "주요 기능" });
-  expect(nav.querySelectorAll("button")).toHaveLength(4);
+  expect(nav.querySelectorAll("button")).toHaveLength(6);
+  expect(screen.getByRole("button", { name: "글 재료 수집" })).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "사용자의 목소리함" })).toBeInTheDocument();
   expect(screen.getByRole("button", { name: "마이페이지" })).toBeInTheDocument();
 });

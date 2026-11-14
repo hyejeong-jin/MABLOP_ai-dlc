@@ -5,6 +5,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { CircleAlert, Copy, Download, Info, Trash2 } from "lucide-react";
 import { postJson } from "../api";
+import type { DraftProvenance } from "../api";
+import { SourceLabel } from "../components/SourceLabel";
+import { safeExternalUrl } from "../components/ResearchSummary";
 import { formatKst } from "../format";
 
 export interface ResultViewProps {
@@ -24,6 +27,7 @@ interface ListDraftsResponse {
 
 interface GetResultResponse {
   markdown?: string;
+  provenance?: DraftProvenance | null;
 }
 
 function errorMessage(err: unknown, fallback: string): string {
@@ -45,6 +49,7 @@ export function ResultView({ focusDraftId = null, onFocusHandled }: ResultViewPr
   const [listError, setListError] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [body, setBody] = useState<string | null>(null);
+  const [provenance, setProvenance] = useState<DraftProvenance | null>(null);
   const [bodyLoading, setBodyLoading] = useState(false);
   const [bodyError, setBodyError] = useState("");
   const [confirmingId, setConfirmingId] = useState<string | null>(null);
@@ -63,6 +68,7 @@ export function ResultView({ focusDraftId = null, onFocusHandled }: ResultViewPr
     selectedRef.current = id;
     setSelectedId(id);
     setBody(null);
+    setProvenance(null);
     setBodyError("");
     setCopied(false);
     setBodyLoading(true);
@@ -70,6 +76,7 @@ export function ResultView({ focusDraftId = null, onFocusHandled }: ResultViewPr
       const res = await postJson<GetResultResponse>({ action: "get-result", kind: "draft", id });
       if (selectedRef.current !== id) return;
       setBody(typeof res?.markdown === "string" ? res.markdown : "");
+      setProvenance(res?.provenance && typeof res.provenance === "object" ? res.provenance : null);
     } catch (err) {
       if (selectedRef.current !== id) return;
       setBodyError(errorMessage(err, "초안 본문을 불러오지 못했습니다."));
@@ -126,6 +133,7 @@ export function ResultView({ focusDraftId = null, onFocusHandled }: ResultViewPr
         selectedRef.current = null;
         setSelectedId(null);
         setBody(null);
+        setProvenance(null);
         setBodyError("");
         setBodyLoading(false);
         setCopied(false);
@@ -278,10 +286,45 @@ export function ResultView({ focusDraftId = null, onFocusHandled }: ResultViewPr
               <pre className="draft-output" aria-label="생성된 마크다운">
                 {body}
               </pre>
+              {provenance && <ProvenanceSection provenance={provenance} />}
             </div>
           )}
         </div>
       </div>
+    </section>
+  );
+}
+
+// "사용한 글 재료": segment labels as text badges; source links only on fact segments.
+function ProvenanceSection({ provenance }: { provenance: DraftProvenance }) {
+  const sources = Array.isArray(provenance.sources) ? provenance.sources : [];
+  const segments = Array.isArray(provenance.segments) ? provenance.segments : [];
+  const byId = new Map(sources.map((s) => [s.sourceId, s]));
+  if (!sources.length && !segments.length) return null;
+  return (
+    <section className="page-section" aria-label="사용한 글 재료">
+      <h3 className="section-title">사용한 글 재료</h3>
+      {segments.length > 0 && (
+        <ul className="stack">
+          {segments.map((seg, i) => (
+            <li key={i}>
+              <SourceLabel kind={seg.label} showDescription={false} /> <span>{seg.text}</span>
+              {seg.label === "fact" &&
+                (seg.sourceIds ?? []).map((id) => {
+                  const src = byId.get(id);
+                  const href = safeExternalUrl(src?.url);
+                  if (!src || !href) return null;
+                  return (
+                    <a key={id} href={href} target="_blank" rel="noopener noreferrer" className="source-meta">
+                      {" "}
+                      {src.title || src.domain || href}
+                    </a>
+                  );
+                })}
+            </li>
+          ))}
+        </ul>
+      )}
     </section>
   );
 }

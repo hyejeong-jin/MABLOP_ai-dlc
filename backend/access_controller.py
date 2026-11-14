@@ -7,10 +7,15 @@ metadata/ratelimit.json. YAGNI: no token bucket, no Redis.
 import hmac
 import json
 import os
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 import auth_messages
+import contracts
 from errors import MablopError
+
+# Draft tiers (Req 15.1). Decided only on the server by authorize(); a `tier` key in the body is ignored.
+TIER_QUALITY = "quality"
+TIER_LITE = "lite"
 
 RATELIMIT_KEY = "metadata/ratelimit.json"
 
@@ -165,6 +170,9 @@ def _body_len(headers: dict, body) -> int:
 
 
 
+# Actions declared by the feature contract. Implementations are added by later tasks.
+FEATURE_ACTIONS = contracts.NEW_ACTIONS
+
 # Actions served without a Session_Token (Req 4.1). Exactly these three.
 AUTH_EXEMPT_ACTIONS = frozenset({"login", "register", "bootstrap-admin"})
 
@@ -183,12 +191,17 @@ ADMIN_ONLY_ACTIONS = frozenset(
         "admin-grant-approve",
         "admin-grant-reject",
         "admin-grant-revoke",
+        "admin-list-voc",
+        "admin-update-voc-status",
     }
 )
 
 # Actions that call Bedrock (directly or through learn_style) (Req 20.1).
 BEDROCK_ACTIONS = frozenset(
-    {"learn-style", "analyze-images", "generate-draft", "rebuild-from-stored", "get-result"}
+    {
+        "learn-style", "analyze-images", "generate-draft", "rebuild-from-stored", "get-result",
+        "run-research",
+    }
 )
 
 
@@ -200,6 +213,8 @@ class RequestContext:
     user_id: str
     role: str
     user: dict
+    # Set by authorize(). Only generate-draft distinguishes tiers; every other action keeps quality.
+    tier: str = TIER_QUALITY
 
 
 def _peek_action(body):
@@ -277,12 +292,23 @@ def check_request(headers: dict, body, now: float = None) -> RequestContext:
         raise MablopError("internal_error", auth_messages.INTERNAL)
 
 
+def _grant_claimed(body) -> bool:
+    """True when the request names a grant (grantId is present and not null)."""
+    return isinstance(body, dict) and body.get("grantId") is not None
+
+
 def requires_grant(action, body, role) -> bool:
-    """Pure predicate: a member calling a Bedrock action (except get-result kind=draft) needs a Grant."""
+    """Pure predicate: a member calling a Bedrock action (except get-result kind=draft) needs a Grant.
+
+    generate-draft is the lite-tier exception (Req 15.1): a member who names no grant is allowed
+    and gets tier lite (see authorize). A member who names a grantId must present a verified one.
+    """
     if role != "member" or action not in BEDROCK_ACTIONS:
         return False
     if action == "get-result" and isinstance(body, dict) and body.get("kind") == "draft":
         return False
+    if action == "generate-draft":
+        return _grant_claimed(body)
     return True
 
 
@@ -302,3 +328,16 @@ def check_grant(ctx: RequestContext, body: dict, now: float = None) -> None:
 
         auth_log.log("grant", "blocked", ctx.user_id)
         raise MablopError("forbidden", auth_messages.GRANT_REQUIRED)
+
+
+def authorize(ctx: RequestContext, body, now: float = None) -> RequestContext:
+    """Grant gate plus the server-decided draft tier (Req 15.1, 15.2). Returns ctx with `tier` set.
+
+    check_grant runs first, so a named grantId is verified and a failure is the same 403 as before.
+    A member's generate-draft that names no grant is tier lite. Admins and verified members are quality.
+    The tier depends only on the verified request, never on the body's `tier` field.
+    """
+    check_grant(ctx, body, now)
+    if ctx.action == "generate-draft" and ctx.role == "member" and not _grant_claimed(body):
+        return replace(ctx, tier=TIER_LITE)
+    return replace(ctx, tier=TIER_QUALITY)

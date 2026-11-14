@@ -299,3 +299,34 @@ describe("error messages", () => {
     expect(err.message).toBe("입력이 올바르지 않습니다.");
   });
 });
+
+import { IGNORED_IDENTITY_FIELDS } from "./api";
+import type { ActivityResponse, FeatureAction, ResearchResponse, VocStatus } from "./api";
+
+describe("voice-box feature API contracts", () => {
+  it("defines authenticated feature actions and ignored identity fields", () => {
+    const actions: FeatureAction[] = [
+      "create-voc",
+      "list-voc",
+      "get-voc",
+      "update-voc",
+      "archive-voc",
+      "admin-list-voc",
+      "admin-update-voc-status",
+      "run-research",
+      "get-research-run",
+      "list-research-runs",
+      "get-activity",
+    ];
+    const status: VocStatus = "new";
+    const response: Pick<ResearchResponse, "status"> = { status: "partial" };
+    const activity: Pick<ActivityResponse, "events"> = { events: [] };
+
+    expect(actions).toHaveLength(11);
+    expect(status).toBe("new");
+    expect(response.status).toBe("partial");
+    expect(activity.events).toEqual([]);
+    expect(IGNORED_IDENTITY_FIELDS).toContain("userId");
+    expect(IGNORED_IDENTITY_FIELDS).toContain("loginId");
+  });
+});

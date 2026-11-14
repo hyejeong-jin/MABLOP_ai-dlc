@@ -169,3 +169,35 @@ def test_unexpected_generate_draft_failure_becomes_500(h, monkeypatch):
     assert resp["statusCode"] == 500
     assert _body(resp)["error"]["code"] == "internal_error"
     assert "Traceback" not in resp["body"]
+
+
+def test_get_activity_routes_authenticated_request_with_detail_ids(h, monkeypatch):
+    import activity_store
+
+    expected = {
+        "events": [
+            {
+                "eventId": "evt1",
+                "type": "voc-created",
+                "occurredAt": "2025-01-10T01:00:00Z",
+                "count": 1,
+                "relatedVocId": "voc_abc",
+                "relatedRunId": "run_def",
+            }
+        ],
+        "daily": [
+            {
+                "date": "2025-01-10",
+                "total": 1,
+                "byType": {"voc-created": 1},
+                "eventIds": ["evt1"],
+            }
+        ],
+        "range": {"from": "2025-01-10T00:00:00+09:00", "to": "2025-01-11T00:00:00+09:00"},
+    }
+    monkeypatch.setattr(activity_store, "get_activity", lambda body, ctx: expected)
+
+    resp = h.handler(_event({"action": "get-activity", "from": "2025-01-10", "to": "2025-01-10"}))
+
+    assert resp["statusCode"] == 200
+    assert _body(resp) == expected

@@ -8,6 +8,7 @@ import { CircleAlert, Info, KeyRound, LogOut, ShieldCheck, User } from "lucide-r
 import { ApiRequestError, postJson } from "../api";
 import { useAuth } from "../auth/AuthContext";
 import { formatKst, formatKstDate } from "../format";
+import { ActivitySection } from "../components/ActivitySection";
 import { UsageSection } from "../components/UsageSection";
 import { CapsLockHint, useCapsLock } from "../components/CapsLock";
 import { GRANT_REQUEST_HINT } from "../grants/GrantSelect";
@@ -395,7 +396,8 @@ export function ProfileView() {
       </section>
 
       <UsageSection />
-        {user?.role === "member" && <GrantSection />}
+      <ActivitySection />
+      {user?.role === "member" && <GrantSection />}
 
       <div>
         <button type="button" className="btn-with-icon" onClick={logout}>

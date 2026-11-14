@@ -1,0 +1,1018 @@
+{
+  "pbtResults": {
+    "2.4 VOC 저장·상태 전이 property 테스트를 작성한다.": {
+      "status": "passed",
+      "lastRunTimestamp": 1794405893546
+    },
+    "3.5 Activity API 집계·사용자 필터와 상세 입력 방식 property/컴포넌트 테스트를 작성한다.": {
+      "status": "passed",
+      "lastRunTimestamp": 1794406239613
+    },
+    "4.5 링크 cardinality·정규화·source 기록·부분 수집 property 테스트를 작성한다.": {
+      "status": "passed",
+      "lastRunTimestamp": 1794406359238
+    }
+  },
+  "executionHistory": {
+    "1.1 기존 `handler.py`, `access_controller.py`, `s3store.py`, `errors.py`, `usage_meter.py`, 프론트엔드 `api.ts`와 탭 구조를 조사하고 새 action/응답 타입을 기존 패턴에 맞춰 정의한다.": [
+      {
+        "executionId": "b591a345-1350-4dda-940d-4a4fbb079e6e",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794403216145
+      },
+      {
+        "executionId": "b591a345-1350-4dda-940d-4a4fbb079e6e",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794403240358
+      },
+      {
+        "executionId": "b591a345-1350-4dda-940d-4a4fbb079e6e",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794403466319
+      }
+    ],
+    "1.2 공통 식별자·시간·페이지네이션·검증 타입과 오류 매핑을 추가한다.": [
+      {
+        "executionId": "b591a345-1350-4dda-940d-4a4fbb079e6e",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794403217232
+      },
+      {
+        "executionId": "b591a345-1350-4dda-940d-4a4fbb079e6e",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794403476592
+      },
+      {
+        "executionId": "b591a345-1350-4dda-940d-4a4fbb079e6e",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794403621910
+      }
+    ],
+    "2.1 `backend/voc_store.py`에 VOC_Record 모델, 입력 검증, 사용자별 생성·조회·수정·보관 기능을 구현한다.": [
+      {
+        "executionId": "b591a345-1350-4dda-940d-4a4fbb079e6e",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794403217444
+      },
+      {
+        "executionId": "b591a345-1350-4dda-940d-4a4fbb079e6e",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794403476762
+      },
+      {
+        "executionId": "b591a345-1350-4dda-940d-4a4fbb079e6e",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794403622400
+      }
+    ],
+    "2.2 VOC 상태 전이와 관리자 필터 action을 구현한다.": [
+      {
+        "executionId": "b591a345-1350-4dda-940d-4a4fbb079e6e",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794403217555
+      },
+      {
+        "executionId": "b591a345-1350-4dda-940d-4a4fbb079e6e",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794403632900
+      },
+      {
+        "executionId": "b591a345-1350-4dda-940d-4a4fbb079e6e",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794403883686
+      }
+    ],
+    "2.3 VOC 생성·수정·보관·상태 변경을 `activity_store.py`의 Activity_Event 기록과 연결한다.": [
+      {
+        "executionId": "b591a345-1350-4dda-940d-4a4fbb079e6e",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794403217696
+      },
+      {
+        "executionId": "b591a345-1350-4dda-940d-4a4fbb079e6e",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794403632822
+      },
+      {
+        "executionId": "b591a345-1350-4dda-940d-4a4fbb079e6e",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794403883862
+      }
+    ],
+    "3.1 `backend/activity_store.py`에 기간·granularity별 activity 조회와 일별 집계 DTO를 구현한다.": [
+      {
+        "executionId": "b591a345-1350-4dda-940d-4a4fbb079e6e",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794403217864
+      },
+      {
+        "executionId": "b591a345-1350-4dda-940d-4a4fbb079e6e",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794403476968
+      },
+      {
+        "executionId": "b591a345-1350-4dda-940d-4a4fbb079e6e",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794403622288
+      }
+    ],
+    "3.2 `get-activity` action을 handler에 연결하고 활동 유형·관련 VOC/Research_Run 식별자를 포함한 상세 모델을 반환한다.": [
+      {
+        "executionId": "b591a345-1350-4dda-940d-4a4fbb079e6e",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794403217977
+      },
+      {
+        "executionId": "b591a345-1350-4dda-940d-4a4fbb079e6e",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794403633401
+      },
+      {
+        "executionId": "b591a345-1350-4dda-940d-4a4fbb079e6e",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794403884289
+      }
+    ],
+    "3.3 `ActivitySection.tsx`와 `ActivityDetail.tsx`를 구현한다.": [
+      {
+        "executionId": "b591a345-1350-4dda-940d-4a4fbb079e6e",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794403218066
+      },
+      {
+        "executionId": "b591a345-1350-4dda-940d-4a4fbb079e6e",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794404291570
+      },
+      {
+        "executionId": "b591a345-1350-4dda-940d-4a4fbb079e6e",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794405044489
+      }
+    ],
+    "3.4 hover, focus, Enter/Space, click/touch 입력이 같은 상세 패널 모델을 열고 닫도록 연결한다.": [
+      {
+        "executionId": "b591a345-1350-4dda-940d-4a4fbb079e6e",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794403218152
+      },
+      {
+        "executionId": "b591a345-1350-4dda-940d-4a4fbb079e6e",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794404291769
+      },
+      {
+        "executionId": "b591a345-1350-4dda-940d-4a4fbb079e6e",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794405045356
+      }
+    ],
+    "4.1 `backend/research.py`에 URL 정규화와 SSRF 방어 검사를 구현한다.": [
+      {
+        "executionId": "b591a345-1350-4dda-940d-4a4fbb079e6e",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794403218241
+      },
+      {
+        "executionId": "b591a345-1350-4dda-940d-4a4fbb079e6e",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794403477047
+      },
+      {
+        "executionId": "b591a345-1350-4dda-940d-4a4fbb079e6e",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794403622524
+      }
+    ],
+    "4.2 `backend/research_store.py`에 Info_Source, Research_Run, Research_Summary, cache 저장 모델을 구현한다.": [
+      {
+        "executionId": "b591a345-1350-4dda-940d-4a4fbb079e6e",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794403218389
+      },
+      {
+        "executionId": "b591a345-1350-4dda-940d-4a4fbb079e6e",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794403633199
+      },
+      {
+        "executionId": "b591a345-1350-4dda-940d-4a4fbb079e6e",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794403884442
+      }
+    ],
+    "4.3 3~5개 링크 cardinality 검증과 기본 링크 수집 단계를 구현한다.": [
+      {
+        "executionId": "b591a345-1350-4dda-940d-4a4fbb079e6e",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794403218483
+      },
+      {
+        "executionId": "b591a345-1350-4dda-940d-4a4fbb079e6e",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794403633289
+      },
+      {
+        "executionId": "b591a345-1350-4dda-940d-4a4fbb079e6e",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794403884108
+      }
+    ],
+    "4.4 `run-research`, `get-research-run`, `list-research-runs` action을 handler와 Bedrock Grant 검사에 연결한다.": [
+      {
+        "executionId": "b591a345-1350-4dda-940d-4a4fbb079e6e",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794403218563
+      },
+      {
+        "executionId": "b591a345-1350-4dda-940d-4a4fbb079e6e",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794404292167
+      },
+      {
+        "executionId": "b591a345-1350-4dda-940d-4a4fbb079e6e",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794405045223
+      }
+    ],
+    "5.1 명시적 검색 요청에만 Web_Search를 실행하는 provider 경계를 구현한다.": [
+      {
+        "executionId": "b591a345-1350-4dda-940d-4a4fbb079e6e",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794403218676
+      },
+      {
+        "executionId": "b591a345-1350-4dda-940d-4a4fbb079e6e",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794404292412
+      },
+      {
+        "executionId": "b591a345-1350-4dda-940d-4a4fbb079e6e",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794405044909
+      }
+    ],
+    "5.2 Research budget evaluator와 Lambda 시간 guard를 구현한다.": [
+      {
+        "executionId": "b591a345-1350-4dda-940d-4a4fbb079e6e",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794403218745
+      },
+      {
+        "executionId": "b591a345-1350-4dda-940d-4a4fbb079e6e",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794404292013
+      },
+      {
+        "executionId": "b591a345-1350-4dda-940d-4a4fbb079e6e",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794405045029
+      }
+    ],
+    "5.3 정규화 링크 집합·요약 설정·budget profile 기반 cache key와 TTL/fingerprint 검사를 구현한다.": [
+      {
+        "executionId": "b591a345-1350-4dda-940d-4a4fbb079e6e",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794403218822
+      },
+      {
+        "executionId": "b591a345-1350-4dda-940d-4a4fbb079e6e",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794406419951
+      },
+      {
+        "executionId": "fafd45cb-a443-4ffa-bf0a-5263393451d6",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794407576898
+      },
+      {
+        "executionId": "fafd45cb-a443-4ffa-bf0a-5263393451d6",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794407656857
+      },
+      {
+        "executionId": "28e92e26-0548-4d99-92b4-1339c6152f67",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794409032572
+      },
+      {
+        "executionId": "28e92e26-0548-4d99-92b4-1339c6152f67",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794409044592
+      },
+      {
+        "executionId": "28e92e26-0548-4d99-92b4-1339c6152f67",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794410518218
+      }
+    ],
+    "5.4 excerpt truncation과 요약 호출을 구현한다.": [
+      {
+        "executionId": "b591a345-1350-4dda-940d-4a4fbb079e6e",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794403218915
+      },
+      {
+        "executionId": "b591a345-1350-4dda-940d-4a4fbb079e6e",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794406419762
+      },
+      {
+        "executionId": "fafd45cb-a443-4ffa-bf0a-5263393451d6",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794407614560
+      },
+      {
+        "executionId": "fafd45cb-a443-4ffa-bf0a-5263393451d6",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794407657107
+      },
+      {
+        "executionId": "28e92e26-0548-4d99-92b4-1339c6152f67",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794409032675
+      },
+      {
+        "executionId": "28e92e26-0548-4d99-92b4-1339c6152f67",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794410527415
+      },
+      {
+        "executionId": "28e92e26-0548-4d99-92b4-1339c6152f67",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794411290151
+      }
+    ],
+    "6.1 `ResearchView.tsx`에 링크 3~5개 입력, 명시적 검색 보완 옵션, 예산 표시, 실행 상태, partial 결과 UI를 구현한다.": [
+      {
+        "executionId": "b591a345-1350-4dda-940d-4a4fbb079e6e",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794403218994
+      },
+      {
+        "executionId": "b591a345-1350-4dda-940d-4a4fbb079e6e",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794406420415
+      },
+      {
+        "executionId": "fafd45cb-a443-4ffa-bf0a-5263393451d6",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794407614995
+      },
+      {
+        "executionId": "fafd45cb-a443-4ffa-bf0a-5263393451d6",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794407657506
+      },
+      {
+        "executionId": "28e92e26-0548-4d99-92b4-1339c6152f67",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794409032890
+      },
+      {
+        "executionId": "28e92e26-0548-4d99-92b4-1339c6152f67",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794410528300
+      },
+      {
+        "executionId": "28e92e26-0548-4d99-92b4-1339c6152f67",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794411290904
+      }
+    ],
+    "6.2 `SourceLabel.tsx`와 `ResearchSummary.tsx`를 구현한다.": [
+      {
+        "executionId": "b591a345-1350-4dda-940d-4a4fbb079e6e",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794403219104
+      },
+      {
+        "executionId": "b591a345-1350-4dda-940d-4a4fbb079e6e",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794406420615
+      },
+      {
+        "executionId": "fafd45cb-a443-4ffa-bf0a-5263393451d6",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794407615122
+      },
+      {
+        "executionId": "fafd45cb-a443-4ffa-bf0a-5263393451d6",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794407657758
+      },
+      {
+        "executionId": "28e92e26-0548-4d99-92b4-1339c6152f67",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794409033524
+      },
+      {
+        "executionId": "28e92e26-0548-4d99-92b4-1339c6152f67",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794409046943
+      },
+      {
+        "executionId": "28e92e26-0548-4d99-92b4-1339c6152f67",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794410519072
+      }
+    ],
+    "7.1 `backend/drafting_engine.py`에 연구 자료 조회와 `RESEARCH_CONTEXT`/`STYLE_CONTEXT` 분리 입력을 구현한다.": [
+      {
+        "executionId": "b591a345-1350-4dda-940d-4a4fbb079e6e",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794403219164
+      },
+      {
+        "executionId": "b591a345-1350-4dda-940d-4a4fbb079e6e",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794406420224
+      },
+      {
+        "executionId": "fafd45cb-a443-4ffa-bf0a-5263393451d6",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794407615515
+      },
+      {
+        "executionId": "fafd45cb-a443-4ffa-bf0a-5263393451d6",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794407657977
+      },
+      {
+        "executionId": "28e92e26-0548-4d99-92b4-1339c6152f67",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794409036362
+      },
+      {
+        "executionId": "28e92e26-0548-4d99-92b4-1339c6152f67",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794409045744
+      },
+      {
+        "executionId": "28e92e26-0548-4d99-92b4-1339c6152f67",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794410518390
+      }
+    ],
+    "7.2 스타일 retrieval의 Top_K·context token cap과 일반 문체 fallback을 연결한다.": [
+      {
+        "executionId": "b591a345-1350-4dda-940d-4a4fbb079e6e",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794403219243
+      },
+      {
+        "executionId": "b591a345-1350-4dda-940d-4a4fbb079e6e",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794407004201
+      },
+      {
+        "executionId": "fafd45cb-a443-4ffa-bf0a-5263393451d6",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794407615308
+      },
+      {
+        "executionId": "28e92e26-0548-4d99-92b4-1339c6152f67",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794410529440
+      },
+      {
+        "executionId": "28e92e26-0548-4d99-92b4-1339c6152f67",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794411292015
+      }
+    ],
+    "7.3 `generate-draft`, `get-result`에 researchRunId/infoSourceIds/vocIds와 provenance 저장·조회 계약을 추가한다.": [
+      {
+        "executionId": "b591a345-1350-4dda-940d-4a4fbb079e6e",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794403219326
+      },
+      {
+        "executionId": "b591a345-1350-4dda-940d-4a4fbb079e6e",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794407004042
+      },
+      {
+        "executionId": "fafd45cb-a443-4ffa-bf0a-5263393451d6",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794407615683
+      },
+      {
+        "executionId": "28e92e26-0548-4d99-92b4-1339c6152f67",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794411297940
+      },
+      {
+        "executionId": "28e92e26-0548-4d99-92b4-1339c6152f67",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794412289112
+      }
+    ],
+    "8.1 `VocEditor.tsx`, `VocList.tsx`, `VoiceBoxView.tsx`를 구현하고 create/list/get/update/archive action을 연결한다.": [
+      {
+        "executionId": "b591a345-1350-4dda-940d-4a4fbb079e6e",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794403219865
+      },
+      {
+        "executionId": "b591a345-1350-4dda-940d-4a4fbb079e6e",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794407004466
+      },
+      {
+        "executionId": "fafd45cb-a443-4ffa-bf0a-5263393451d6",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794407635110
+      },
+      {
+        "executionId": "28e92e26-0548-4d99-92b4-1339c6152f67",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794409048260
+      },
+      {
+        "executionId": "28e92e26-0548-4d99-92b4-1339c6152f67",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794410520854
+      }
+    ],
+    "8.2 `App.tsx` 또는 기존 마이페이지 흐름에 Voice Box, Research, Activity 화면을 연결한다.": [
+      {
+        "executionId": "b591a345-1350-4dda-940d-4a4fbb079e6e",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794403219992
+      },
+      {
+        "executionId": "b591a345-1350-4dda-940d-4a4fbb079e6e",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794407044004
+      },
+      {
+        "executionId": "28e92e26-0548-4d99-92b4-1339c6152f67",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794409034717
+      },
+      {
+        "executionId": "28e92e26-0548-4d99-92b4-1339c6152f67",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794412295958
+      },
+      {
+        "executionId": "28e92e26-0548-4d99-92b4-1339c6152f67",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794413165038
+      }
+    ],
+    "8.3 `DraftingView.tsx`와 `ResultView.tsx`에 연구 선택, provenance, SourceLabel 렌더링을 연결한다.": [
+      {
+        "executionId": "b591a345-1350-4dda-940d-4a4fbb079e6e",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794403220162
+      },
+      {
+        "executionId": "b591a345-1350-4dda-940d-4a4fbb079e6e",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794407067033
+      },
+      {
+        "executionId": "28e92e26-0548-4d99-92b4-1339c6152f67",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794409037619
+      },
+      {
+        "executionId": "28e92e26-0548-4d99-92b4-1339c6152f67",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794412297095
+      },
+      {
+        "executionId": "28e92e26-0548-4d99-92b4-1339c6152f67",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794413165228
+      }
+    ],
+    "9.1 펭귄 색연필 참조를 복제하지 않고 브랜드 토큰과 손그림 질감 fallback을 프론트엔드 스타일 시스템에 추가한다.": [
+      {
+        "executionId": "b591a345-1350-4dda-940d-4a4fbb079e6e",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794403220316
+      },
+      {
+        "executionId": "b591a345-1350-4dda-940d-4a4fbb079e6e",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794403240563
+      },
+      {
+        "executionId": "b591a345-1350-4dda-940d-4a4fbb079e6e",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794403466529
+      }
+    ],
+    "9.2 빈 상태·section accent·브랜드 영역에만 캐릭터/연필 분위기를 적용하고 출처·본문·오류·상태 정보의 대비를 우선하는 컴포넌트 스타일을 구현한다.": [
+      {
+        "executionId": "b591a345-1350-4dda-940d-4a4fbb079e6e",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794403220432
+      },
+      {
+        "executionId": "b591a345-1350-4dda-940d-4a4fbb079e6e",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794403477185
+      },
+      {
+        "executionId": "b591a345-1350-4dda-940d-4a4fbb079e6e",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794403622635
+      }
+    ],
+    "10.1 320px 이상 화면에서 VOC 입력, 링크 목록, 출처 목록, 요약, 상태 조작을 세로 흐름 또는 카드 레이아웃으로 재배치한다.": [
+      {
+        "executionId": "b591a345-1350-4dda-940d-4a4fbb079e6e",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794403220665
+      },
+      {
+        "executionId": "b591a345-1350-4dda-940d-4a4fbb079e6e",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794403893739
+      },
+      {
+        "executionId": "b591a345-1350-4dda-940d-4a4fbb079e6e",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794404008090
+      }
+    ],
+    "10.2 모든 입력·오류·진행·시각화 요소에 label, `aria-describedby`, `role=alert`, `role=status`, 포커스 순서와 텍스트 대체 설명을 연결한다.": [
+      {
+        "executionId": "b591a345-1350-4dda-940d-4a4fbb079e6e",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794403220949
+      },
+      {
+        "executionId": "b591a345-1350-4dda-940d-4a4fbb079e6e",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794405071318
+      },
+      {
+        "executionId": "b591a345-1350-4dda-940d-4a4fbb079e6e",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794405245826
+      }
+    ],
+    "11.1 기존 backend auth, grant, style learner, draft history, usage meter 테스트와 기존 frontend App, StyleLearningView, DraftingView, ResultView, UsageSection 테스트를 유지하고 신규 계약 변경에 맞게 최소 수정한다.": [
+      {
+        "executionId": "b591a345-1350-4dda-940d-4a4fbb079e6e",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794403221210
+      },
+      {
+        "executionId": "28e92e26-0548-4d99-92b4-1339c6152f67",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794413184712
+      },
+      {
+        "executionId": "28e92e26-0548-4d99-92b4-1339c6152f67",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794437173266
+      }
+    ],
+    "11.2 handler 통합 테스트에 신규 action의 인증, 권한, validation, partial, budget exhausted, cache hit/miss 응답을 추가한다.": [
+      {
+        "executionId": "b591a345-1350-4dda-940d-4a4fbb079e6e",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794403221432
+      },
+      {
+        "executionId": "28e92e26-0548-4d99-92b4-1339c6152f67",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794437174805
+      },
+      {
+        "executionId": "28e92e26-0548-4d99-92b4-1339c6152f67",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794481661160
+      }
+    ],
+    "11.3 S3 key·private/SSE·최소 권한·브라우저 직접 Bedrock 호출 금지·제외 서비스에 대한 infra 정적 검사와 테스트 fixture를 추가한다.": [
+      {
+        "executionId": "b591a345-1350-4dda-940d-4a4fbb079e6e",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794403221780
+      },
+      {
+        "executionId": "28e92e26-0548-4d99-92b4-1339c6152f67",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794437176040
+      },
+      {
+        "executionId": "28e92e26-0548-4d99-92b4-1339c6152f67",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794481662671
+      }
+    ],
+    "12.1 모든 신규 화면과 action을 기존 인증·S3·Bedrock Grant·usage/activity 경계에 연결하고 orphan endpoint/component가 없는지 확인한다.": [
+      {
+        "executionId": "b591a345-1350-4dda-940d-4a4fbb079e6e",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794403222114
+      },
+      {
+        "executionId": "28e92e26-0548-4d99-92b4-1339c6152f67",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794481676478
+      },
+      {
+        "executionId": "28e92e26-0548-4d99-92b4-1339c6152f67",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794485898907
+      }
+    ],
+    "12.2 구현 범위가 사용자 승인 전 배포·push·IAM 적용을 하지 않는 상태인지 확인하고, 전체 테스트가 통과하는지 확인한다.": [
+      {
+        "executionId": "b591a345-1350-4dda-940d-4a4fbb079e6e",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794403222357
+      },
+      {
+        "executionId": "28e92e26-0548-4d99-92b4-1339c6152f67",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794485900273
+      },
+      {
+        "executionId": "28e92e26-0548-4d99-92b4-1339c6152f67",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794487522776
+      }
+    ],
+    "1. 기존 계약과 공통 기반 확장": [
+      {
+        "executionId": "b591a345-1350-4dda-940d-4a4fbb079e6e",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794403622075
+      }
+    ],
+    "9. 브랜드 자산, 디자인 토큰, 적용 규칙": [
+      {
+        "executionId": "b591a345-1350-4dda-940d-4a4fbb079e6e",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794403622714
+      }
+    ],
+    "1.3 공통 action 디스패치와 사용자 범위·권한 오류에 대한 백엔드 계약 테스트를 작성한다.": [
+      {
+        "executionId": "b591a345-1350-4dda-940d-4a4fbb079e6e",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794404117811
+      },
+      {
+        "executionId": "b591a345-1350-4dda-940d-4a4fbb079e6e",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794404281882
+      }
+    ],
+    "4. Research 링크 수집과 source 저장": [
+      {
+        "executionId": "b591a345-1350-4dda-940d-4a4fbb079e6e",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794405045444
+      }
+    ],
+    "3. Activity API와 시각화 상세 데이터": [
+      {
+        "executionId": "b591a345-1350-4dda-940d-4a4fbb079e6e",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794405045596
+      }
+    ],
+    "10. 모바일 반응형과 접근성 보강": [
+      {
+        "executionId": "b591a345-1350-4dda-940d-4a4fbb079e6e",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794405245989
+      }
+    ],
+    "2.5 VOC action의 실제 JSON 요청·S3 mock·인증 컨텍스트를 사용하는 통합 테스트를 작성한다.": [
+      {
+        "executionId": "b591a345-1350-4dda-940d-4a4fbb079e6e",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794405342118
+      },
+      {
+        "executionId": "b591a345-1350-4dda-940d-4a4fbb079e6e",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794406008234
+      }
+    ],
+    "2.4 VOC 저장·상태 전이 property 테스트를 작성한다.": [
+      {
+        "executionId": "b591a345-1350-4dda-940d-4a4fbb079e6e",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794405342345
+      },
+      {
+        "executionId": "b591a345-1350-4dda-940d-4a4fbb079e6e",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794406008600
+      }
+    ],
+    "4.5 링크 cardinality·정규화·source 기록·부분 수집 property 테스트를 작성한다.": [
+      {
+        "executionId": "b591a345-1350-4dda-940d-4a4fbb079e6e",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794405342553
+      },
+      {
+        "executionId": "b591a345-1350-4dda-940d-4a4fbb079e6e",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794407025513
+      }
+    ],
+    "3.5 Activity API 집계·사용자 필터와 상세 입력 방식 property/컴포넌트 테스트를 작성한다.": [
+      {
+        "executionId": "b591a345-1350-4dda-940d-4a4fbb079e6e",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794405342674
+      },
+      {
+        "executionId": "b591a345-1350-4dda-940d-4a4fbb079e6e",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794407025663
+      }
+    ],
+    "2. VOC 저장과 관리자 상태 관리": [
+      {
+        "executionId": "b591a345-1350-4dda-940d-4a4fbb079e6e",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794406008749
+      },
+      {
+        "executionId": "b591a345-1350-4dda-940d-4a4fbb079e6e",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794406008807
+      }
+    ],
+    "5. 검색 보완, budget, cache, partial 결과": [
+      {
+        "executionId": "28e92e26-0548-4d99-92b4-1339c6152f67",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794411290499
+      }
+    ],
+    "6. Research 화면과 요약 출처 표시": [
+      {
+        "executionId": "28e92e26-0548-4d99-92b4-1339c6152f67",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794411291154
+      }
+    ],
+    "7. Style/Research 분리와 draft provenance": [
+      {
+        "executionId": "28e92e26-0548-4d99-92b4-1339c6152f67",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794412289255
+      }
+    ],
+    "8. VOC·Research 프론트엔드 화면 연결": [
+      {
+        "executionId": "28e92e26-0548-4d99-92b4-1339c6152f67",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794413165448
+      }
+    ],
+    "11. 회귀·통합 테스트와 infra 정적 검사": [
+      {
+        "executionId": "28e92e26-0548-4d99-92b4-1339c6152f67",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794481662799
+      }
+    ],
+    "12. 최종 연결 및 검증 체크포인트": [
+      {
+        "executionId": "28e92e26-0548-4d99-92b4-1339c6152f67",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794487522960
+      }
+    ],
+    "13.1 dialogs.test.tsx의 매뉴얼 이미지 기대값을 9장(신규 단계 포함)으로 갱신하고, 업데이트 노트 날짜를 실제 배포일로 맞춘 뒤 vitest를 통과시킨다.": [
+      {
+        "executionId": "26f4a33b-b080-4337-8c4a-bb428647fdff",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794567116212
+      },
+      {
+        "executionId": "26f4a33b-b080-4337-8c4a-bb428647fdff",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794567152907
+      },
+      {
+        "executionId": "26f4a33b-b080-4337-8c4a-bb428647fdff",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794567837627
+      }
+    ],
+    "14.1 하단 아이디 버튼을 누르면 마이페이지·로그아웃 메뉴가 열리도록 원인을 찾아 고치고, 메뉴 열기·닫기·로그아웃 동작 테스트를 추가한다.": [
+      {
+        "executionId": "26f4a33b-b080-4337-8c4a-bb428647fdff",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794567117554
+      },
+      {
+        "executionId": "26f4a33b-b080-4337-8c4a-bb428647fdff",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794567153193
+      },
+      {
+        "executionId": "26f4a33b-b080-4337-8c4a-bb428647fdff",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794567838105
+      }
+    ],
+    "13. 매뉴얼·업데이트 노트 정정": [
+      {
+        "executionId": "26f4a33b-b080-4337-8c4a-bb428647fdff",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794567837954
+      }
+    ],
+    "14. 계정 메뉴(아이디 버튼) 복구": [
+      {
+        "executionId": "26f4a33b-b080-4337-8c4a-bb428647fdff",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794567838258
+      }
+    ],
+    "15.1 backend: AI 서비스 토큰(Grant)이 없는 회원도 generate-draft를 호출할 수 있게 하되, 응답에 tier(quality 또는 lite)를 넣는다. Grant 승인자는 quality(MABLOP_TEXT_MODEL), 미보유자는 lite 모델(MABLOP_LITE_MODEL)을 사용한다. 학습(learn-style)과 연구 실행(run-research)은 기존처럼 Grant를 요구한다.": [
+      {
+        "executionId": "26f4a33b-b080-4337-8c4a-bb428647fdff",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794568303752
+      },
+      {
+        "executionId": "26f4a33b-b080-4337-8c4a-bb428647fdff",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794571485814
+      }
+    ],
+    "15.2 backend: lite 등급은 회원별 월 호출 한도(MABLOP_LITE_MONTHLY_LIMIT, 기본 5회)를 usage_meter의 월 문서에 기록해 넘기면 quota_exceeded(429)로 막는다. 한도 초과 시 안내 메시지를 반환한다.": [
+      {
+        "executionId": "26f4a33b-b080-4337-8c4a-bb428647fdff",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794568304292
+      },
+      {
+        "executionId": "26f4a33b-b080-4337-8c4a-bb428647fdff",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794571485994
+      }
+    ],
+    "15.3 frontend: DraftingView에서 Grant가 없으면 \"저품질 초안(월 N회)\" 안내와 남은 횟수를 표시하고, 응답 tier에 따라 결과 화면에 등급을 표시한다. Grant 선택 UI와 API 계약(api.ts)을 맞춘다.": [
+      {
+        "executionId": "26f4a33b-b080-4337-8c4a-bb428647fdff",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794568311207
+      },
+      {
+        "executionId": "26f4a33b-b080-4337-8c4a-bb428647fdff",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794571486108
+      }
+    ],
+    "15.4 infra 확인만: lite 모델을 호출하려면 Lambda 역할 정책에 해당 모델 ARN 권한이 필요하다. 템플릿과 IAM 정책은 변경하지 말고, 필요한 ARN과 적용 명령을 보고서에만 적는다. 적용은 사용자 승인 후 별도로 한다.": [
+      {
+        "executionId": "26f4a33b-b080-4337-8c4a-bb428647fdff",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794571503640
+      },
+      {
+        "executionId": "26f4a33b-b080-4337-8c4a-bb428647fdff",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794577047032
+      },
+      {
+        "executionId": "26f4a33b-b080-4337-8c4a-bb428647fdff",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794577051685
+      },
+      {
+        "executionId": "26f4a33b-b080-4337-8c4a-bb428647fdff",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794577177517
+      },
+      {
+        "executionId": "26f4a33b-b080-4337-8c4a-bb428647fdff",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794577262131
+      },
+      {
+        "executionId": "26f4a33b-b080-4337-8c4a-bb428647fdff",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794577267550
+      }
+    ],
+    "15. 토큰 등급별 초안 모델 정책": [
+      {
+        "executionId": "26f4a33b-b080-4337-8c4a-bb428647fdff",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794577177646
+      }
+    ]
+  }
+}

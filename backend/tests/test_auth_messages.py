@@ -69,6 +69,7 @@ EXPECTED = {
     "DEFAULT_DRAFT_TITLE": "제목 없음",
     "BAD_DRAFT_ID": "올바르지 않은 초안 번호입니다.",
     "DRAFT_NOT_FOUND": "대상 초안을 찾을 수 없습니다.",
+    "LITE_QUOTA_EXCEEDED": "이번 달 저품질 초안 한도를 모두 사용했습니다. 다음 달에 다시 이용하거나 Bedrock 사용 권한을 신청하세요.",
 }
 
 HANGUL = re.compile(r"[\uac00-\ud7a3]")

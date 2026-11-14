@@ -53,12 +53,15 @@ afterEach(() => {
 
 // Wire postJson to walk the 3 backend actions in order; capture their payloads.
 // grant-list-mine (from useGrants) is answered but not captured: it is not a drafting step.
-function wireApi() {
+// get-usage (lite members only) reports 2 of 5 lite drafts used this month.
+function wireApi(grants: unknown[] = [GRANT]) {
   const calls: Record<string, unknown>[] = [];
   const postJson = vi.spyOn(api, "postJson").mockImplementation(async (body) => {
-    if (body.action === "grant-list-mine") return { grants: [GRANT] } as never;
+    if (body.action === "grant-list-mine") return { grants } as never;
     calls.push(body);
     switch (body.action) {
+      case "get-usage":
+        return { liteDrafts: { used: 2, limit: 5 } } as never;
       case "issue-presigned-urls": {
         const files = body.files as { filename: string }[];
         return {
@@ -209,16 +212,100 @@ test("renders a grant select and no token field; postJson gets no token argument
   for (const call of postJson.mock.calls) expect(call).toHaveLength(1);
 });
 
-// a member cannot generate before choosing a grant (Req 21.7)
-test("disables 초안 생성 until a grant is selected", async () => {
+// Changed for 작업 15.3: a member with a Grant gets the first owned Grant selected by default,
+// so the button is enabled without a manual choice. The button waits only for the Grant list.
+test("member with a Grant: 초안 생성 is enabled with the first Grant selected by default", async () => {
   const { calls } = wireApi();
   render(<DraftingView />);
   const button = screen.getByRole("button", { name: "초안 생성" });
+  expect(button).toBeDisabled(); // grant list still loading
   await screen.findByRole("option", { name: /^AI 서비스 토큰 사용 권한 · / });
-  expect(button).toBeDisabled();
-  await selectGrant();
-  expect(button).toBeEnabled();
+  await waitFor(() => expect(button).toBeEnabled());
+  expect(screen.getByLabelText("AI 서비스 토큰 사용 권한")).toHaveValue("g1");
   expect(calls).toHaveLength(0);
+});
+
+// 작업 15.3 (a): no Grant -> lite notice with this month's remaining count; the button stays enabled.
+test("member without a Grant sees the lite notice with this month's remaining count", async () => {
+  const { calls } = wireApi([]);
+  render(<DraftingView />);
+  const button = screen.getByRole("button", { name: "초안 생성" });
+  await waitFor(() =>
+    expect(screen.getByText(/저품질 초안으로 작성돼요/)).toHaveTextContent(
+      "AI 서비스 토큰이 없어 저품질 초안으로 작성돼요. 이번 달 남은 횟수: 3회",
+    ),
+  );
+  expect(button).toBeEnabled();
+  expect(calls.map((c) => c.action)).toEqual(["get-usage"]);
+});
+
+// 작업 15.3 (b): a Grant holder sends the first owned grantId without touching the select.
+test("member with Grants sends the first owned grantId by default", async () => {
+  const { calls } = wireApi([GRANT, { ...GRANT, id: "g2" }]);
+  render(<DraftingView />);
+  const select = await screen.findByLabelText("AI 서비스 토큰 사용 권한");
+  await waitFor(() => expect(select).toHaveValue("g1"));
+  fireEvent.click(screen.getByRole("button", { name: "초안 생성" }));
+  await screen.findByLabelText("초안 결과");
+  expect(calls.find((c) => c.action === "generate-draft")).toHaveProperty("grantId", "g1");
+});
+
+// 작업 15.3 (c): 429 quota_exceeded shows the server message as is, in role=alert.
+test("a 429 quota_exceeded shows the server message in an alert", async () => {
+  const message =
+    "이번 달 저품질 초안 한도를 모두 사용했습니다. 다음 달에 다시 이용하거나 Bedrock 사용 권한을 신청하세요.";
+  const { postJson } = wireApi([]);
+  const base = postJson.getMockImplementation()!;
+  postJson.mockImplementation((async (body: Record<string, unknown>) => {
+    if (body.action === "generate-draft") throw new api.ApiRequestError(429, "quota_exceeded", message);
+    return base(body as never);
+  }) as never);
+  render(<DraftingView />);
+  await waitFor(() => expect(screen.getByText(/저품질 초안으로 작성돼요/)).toHaveTextContent("3회"));
+  fireEvent.click(screen.getByRole("button", { name: "초안 생성" }));
+
+  const alert = await screen.findByRole("alert");
+  expect(alert.textContent).toBe(message);
+  expect(screen.getByText(/저품질 초안으로 작성돼요/)).toHaveTextContent("이번 달 남은 횟수: 0회");
+});
+
+// 작업 15.3: a lite result carries the 저품질 초안 text badge; the request has no grantId.
+test("a lite draft shows the 저품질 초안 badge and the updated remaining count", async () => {
+  const { calls, postJson } = wireApi([]);
+  const base = postJson.getMockImplementation()!;
+  postJson.mockImplementation((async (body: Record<string, unknown>) =>
+    body.action === "generate-draft"
+      ? { draftId: "d-lite", markdown: "# 제목\n\n본문", tier: "lite", liteRemaining: 2 }
+      : base(body as never)) as never);
+  render(<DraftingView />);
+  await waitFor(() => expect(screen.getByText(/저품질 초안으로 작성돼요/)).toHaveTextContent("3회"));
+  fireEvent.click(screen.getByRole("button", { name: "초안 생성" }));
+
+  expect(await screen.findByLabelText("초안 결과")).toBeInTheDocument();
+  expect(screen.getByText("저품질 초안")).toBeInTheDocument();
+  expect(screen.queryByText("고품질 초안")).not.toBeInTheDocument();
+  expect(screen.getByText(/저품질 초안으로 작성돼요/)).toHaveTextContent("이번 달 남은 횟수: 2회");
+  // this override answers generate-draft itself, so read the request from the spy's call log
+  const sent = postJson.mock.calls.map((c) => c[0]).find((b) => b.action === "generate-draft");
+  expect(sent).toHaveProperty("grantId", null);
+  expect(calls.map((c) => c.action)).toContain("get-usage");
+});
+
+// 작업 15.3: a quality result carries the 고품질 초안 text badge.
+test("a quality draft shows the 고품질 초안 badge", async () => {
+  const { postJson } = wireApi();
+  const base = postJson.getMockImplementation()!;
+  postJson.mockImplementation((async (body: Record<string, unknown>) =>
+    body.action === "generate-draft"
+      ? { draftId: "d-q", markdown: "# 제목\n\n본문", tier: "quality" }
+      : base(body as never)) as never);
+  render(<DraftingView />);
+  await selectGrant();
+  fireEvent.click(screen.getByRole("button", { name: "초안 생성" }));
+
+  expect(await screen.findByLabelText("초안 결과")).toBeInTheDocument();
+  expect(screen.getByText("고품질 초안")).toBeInTheDocument();
+  expect(screen.queryByText("저품질 초안")).not.toBeInTheDocument();
 });
 
 // an admin needs no grant: no select, enabled button, no grantId in the body (Req 21.9)
@@ -266,4 +353,36 @@ test("shows the general-style notice when nothing has been learned yet", async (
 
   expect(await screen.findByLabelText("초안 결과")).toBeInTheDocument();
   expect(screen.getByText(/일반 문체로 작성되었습니다/)).toBeInTheDocument();
+});
+
+test("sends researchRunId/vocIds only when selected", async () => {
+  const { calls, postJson } = wireApi();
+  const base = postJson.getMockImplementation()!;
+  postJson.mockImplementation((async (body: Record<string, unknown>) => {
+    if (body.action === "list-research-runs")
+      return { runs: [{ runId: "run-1", status: "completed", requestedAt: "2025-01-01T00:00:00.000Z" }] } as never;
+    if (body.action === "list-voc")
+      return { records: [{ vocId: "v1", preview: "의견하나", status: "new" }, { vocId: "v2", preview: "보관됨", status: "archived" }] } as never;
+    return base(body as never);
+  }) as never);
+  render(<DraftingView />);
+  await selectGrant();
+  fireEvent.click(screen.getByRole("button", { name: "글 재료 선택하기" }));
+  expect(await screen.findByText("의견하나")).toBeInTheDocument();
+  expect(screen.queryByText("보관됨")).not.toBeInTheDocument();
+  fireEvent.change(screen.getByLabelText("제목"), { target: { value: "t" } });
+  fireEvent.click(screen.getByRole("button", { name: "초안 생성" }));
+  await screen.findByLabelText("초안 결과");
+  const plain = calls.find((c) => c.action === "generate-draft")!;
+  expect(plain).not.toHaveProperty("researchRunId");
+  expect(plain).not.toHaveProperty("vocIds");
+});
+
+test("preselects initialResearchRunId and sends it", async () => {
+  const { calls } = wireApi();
+  render(<DraftingView initialResearchRunId="run-9" />);
+  await selectGrant();
+  fireEvent.click(screen.getByRole("button", { name: "초안 생성" }));
+  await screen.findByLabelText("초안 결과");
+  expect(calls.find((c) => c.action === "generate-draft")).toHaveProperty("researchRunId", "run-9");
 });

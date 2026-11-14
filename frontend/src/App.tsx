@@ -1,24 +1,28 @@
 import { useEffect, useRef, useState } from "react";
-import { Bell, BookOpen, CircleHelp, FileText, LogOut, Moon, PenLine, ShieldCheck, Sun, User } from "lucide-react";
+import { Bell, BookOpen, CircleHelp, FileText, LogOut, Mic, Moon, PenLine, Search, ShieldCheck, Sun, User } from "lucide-react";
 import { AuthProvider, useAuth } from "./auth/AuthContext";
 import { LoginView } from "./views/LoginView";
 import { StyleLearningView } from "./views/StyleLearningView";
 import { DraftingView } from "./views/DraftingView";
 import { ResultView } from "./views/ResultView";
 import { ProfileView } from "./views/ProfileView";
+import { ResearchView } from "./views/ResearchView";
+import { VoiceBoxView } from "./views/VoiceBoxView";
 import { AdminView } from "./views/AdminView";
 import { ManualDialog } from "./components/ManualDialog";
 import { LATEST_VERSION, UpdateNotesDialog } from "./components/UpdateNotesDialog";
 import { SiteFooter } from "./components/SiteFooter";
 import { asset } from "./config";
 
-type View = "style" | "draft" | "result" | "profile" | "admin";
+type View = "style" | "research" | "draft" | "result" | "voice" | "profile" | "admin";
 type Dialog = "manual" | "notes" | null;
 
 const TABS: { id: View; label: string; Icon: typeof BookOpen; adminOnly?: boolean }[] = [
   { id: "style", label: "스타일 학습", Icon: BookOpen },
+  { id: "research", label: "글 재료 수집", Icon: Search },
   { id: "draft", label: "초안 작성", Icon: PenLine },
   { id: "result", label: "결과", Icon: FileText },
+  { id: "voice", label: "사용자의 목소리함", Icon: Mic },
   { id: "profile", label: "마이페이지", Icon: User },
   { id: "admin", label: "관리", Icon: ShieldCheck, adminOnly: true },
 ];
@@ -66,6 +70,8 @@ function Shell() {
   const account = usePopover();
   // Draft just generated; ResultView selects it once, then clears it (Req 23.5).
   const [latestDraftId, setLatestDraftId] = useState<string | null>(null);
+  // Research run chosen in 글 재료 수집; DraftingView receives it as its starting material.
+  const [researchRunId, setResearchRunId] = useState<string | undefined>();
 
   useEffect(() => {
     document.documentElement.dataset.theme = dark ? "dark" : "light";
@@ -92,7 +98,7 @@ function Shell() {
   return (
     <div className="shell">
       <header className="top-bar">
-        <div className="brand">
+        <div className="brand brand-region">
           <img className="brand-mark" src={asset("logo-m.png")} alt="" />
           <div className="brand-text">
             <div className="brand-line">
@@ -146,10 +152,19 @@ function Shell() {
 
       <main className="view">
         {view === "style" && <StyleLearningView />}
-        {view === "draft" && <DraftingView onDraftCreated={setLatestDraftId} />}
+        {view === "research" && (
+          <ResearchView
+            onUseInDraft={(runId) => {
+              setResearchRunId(runId);
+              setView("draft");
+            }}
+          />
+        )}
+        {view === "draft" && <DraftingView onDraftCreated={setLatestDraftId} initialResearchRunId={researchRunId} />}
         {view === "result" && (
           <ResultView focusDraftId={latestDraftId} onFocusHandled={() => setLatestDraftId(null)} />
         )}
+        {view === "voice" && <VoiceBoxView />}
         {view === "profile" && <ProfileView />}
         {view === "admin" && isAdmin && <AdminView />}
       </main>
