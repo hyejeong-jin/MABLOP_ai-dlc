@@ -283,16 +283,18 @@ def test_iam_delete_never_matches_legacy_or_other_user_keys():
     _assert_delete_matching(patterns)
 
 
-def test_iam_ssm_statement_is_exactly_two_distinct_parameters():
+def test_iam_ssm_statement_is_exactly_four_distinct_parameters():
     """Req 7.1 / 18.8: ssm:GetParameter on exactly token + signing-secret paths."""
     policy = _load_policy()
     stmt = _stmt_by_sid(policy["Statement"], "ReadToken")
     assert _as_list(stmt["Action"]) == ["ssm:GetParameter"]
     resources = [_norm_policy_resource(r) for r in _as_list(stmt["Resource"])]
-    assert len(resources) == 2 and len(set(resources)) == 2
+    assert len(resources) == 4 and len(set(resources)) == 4
     assert set(resources) == {
         "arn:aws:ssm:us-east-1:${AccountId}:parameter${MablopTokenSsmPath}",
         "arn:aws:ssm:us-east-1:${AccountId}:parameter${MablopSigningSecretSsmPath}",
+        "arn:aws:ssm:us-east-1:${AccountId}:parameter${MablopBraveKeySsmPath}",
+        "arn:aws:ssm:us-east-1:${AccountId}:parameter${MablopSerpKeySsmPath}",
     }
 
 
@@ -606,15 +608,17 @@ def test_template_delete_limited_to_three_patterns():
     _assert_delete_matching(patterns)
 
 
-def test_template_ssm_statement_is_exactly_two_distinct_parameters():
+def test_template_ssm_statement_is_exactly_four_distinct_parameters():
     """Req 7.1 / 18.8: template ssm:GetParameter covers token + signing-secret paths only."""
     stmt = _stmt_by_sid(_template_statements(), "ReadToken")
     assert _as_list(stmt["Action"]) == ["ssm:GetParameter"]
     resources = [_norm_template_resource(r) for r in _as_list(stmt["Resource"])]
-    assert len(resources) == 2 and len(set(resources)) == 2
+    assert len(resources) == 4 and len(set(resources)) == 4
     assert set(resources) == {
         "arn:aws:ssm:us-east-1:${AccountId}:parameter${MablopTokenSsmPath}",
         "arn:aws:ssm:us-east-1:${AccountId}:parameter${MablopSigningSecretSsmPath}",
+        "arn:aws:ssm:us-east-1:${AccountId}:parameter${MablopBraveKeySsmPath}",
+        "arn:aws:ssm:us-east-1:${AccountId}:parameter${MablopSerpKeySsmPath}",
     }
 
 

@@ -113,6 +113,8 @@ export type VocAction =
   | "update-voc"
   | "archive-voc"
   | "admin-list-voc"
+  | "admin-reply"
+  | "admin-get-voc"
   | "admin-update-voc-status";
 export type ResearchAction = "run-research" | "get-research-run" | "list-research-runs";
 export type ActivityAction = "get-activity";
@@ -170,6 +172,11 @@ export interface ResearchSummaryItem {
 
 export interface ResearchSummaryData {
   facts?: ResearchSummaryItem[];
+  keyword?: string;
+  overview?: string;
+  sections?: Array<{ heading: string; points: ResearchSummaryItem[] }>;
+  titleIdeas?: string[];
+  keywords?: string[];
   generatedInterpretation?: ResearchSummaryItem[];
   unverified?: ResearchSummaryItem[];
   userInput?: ResearchSummaryItem[];
@@ -188,16 +195,15 @@ export interface ActivityResponse {
   range: { from: string; to: string };
 }
 
-// --- VOC (Voice Box) types and helpers ---------------------------------------
-export type VocSourceType = "customer" | "observation" | "quote" | "request" | "other";
+// --- VOC (사용자의 목소리함: 운영자 문의 게시판) types and helpers -----------------
+export type VocCategory = "inquiry" | "suggestion" | "bug" | "other";
 
-export const VOC_SOURCE_TYPES: ReadonlyArray<{ value: VocSourceType; label: string }> = [
-  { value: "customer", label: "고객" },
-  { value: "observation", label: "관찰" },
-  { value: "quote", label: "인용" },
-  { value: "request", label: "요청" },
-  { value: "other", label: "기타" },
-];
+export const VOC_CATEGORY_LABELS: Record<VocCategory, string> = {
+  inquiry: "문의",
+  suggestion: "제안",
+  bug: "오류",
+  other: "기타",
+};
 
 export const VOC_STATUS_LABELS: Record<VocStatus, string> = {
   new: "새 의견",
@@ -206,44 +212,69 @@ export const VOC_STATUS_LABELS: Record<VocStatus, string> = {
   archived: "보관됨",
 };
 
-export const VOC_LIMITS = { body: 20000, note: 5000, tags: 20, tagLength: 100 } as const;
+export const VOC_LIMITS = { title: 100, body: 20000, reply: 5000 } as const;
 
-// List entry returned by list-voc (index fields only).
+// List entry returned by list-voc (admin-list-voc adds ownerId/ownerLoginId).
 export interface VocSummary {
   vocId: string;
+  title: string;
+  category: VocCategory;
+  hasReply: boolean;
   preview: string;
   status: VocStatus;
   createdAt: string;
   updatedAt: string;
+  ownerId?: string;
+  ownerLoginId?: string;
 }
 
-// Full record returned by create/get/update/archive.
+export interface VocReply {
+  body: string;
+  createdAt: string;
+  updatedAt: string;
+  authorLoginId: string;
+}
+
+// Full record returned by create/get/update/archive/admin-reply.
 export interface VocRecord {
   vocId: string;
+  category: VocCategory;
+  title: string;
   body: string;
-  userMetadata: { sourceType: VocSourceType; tags: string[]; note: string };
   status: VocStatus;
   createdAt: string;
   updatedAt: string;
+  reply: VocReply | null;
 }
 
 export interface VocInput {
+  category: VocCategory;
+  title: string;
   body: string;
-  sourceType: VocSourceType;
-  tags: string[];
-  note: string;
+}
+
+export interface VocListResult {
+  records: VocSummary[];
+  nextCursor?: string | null;
 }
 
 export const createVoc = (input: VocInput) =>
   postJson<{ voc: VocRecord }>({ action: "create-voc", ...input });
 export const listVoc = (params: { status?: VocStatus; limit?: number; cursor?: string } = {}) =>
-  postJson<{ records: VocSummary[]; nextCursor?: string | null }>({ action: "list-voc", ...params });
+  postJson<VocListResult>({ action: "list-voc", ...params });
+export const adminListVoc = (params: { status?: VocStatus; limit?: number; cursor?: string } = {}) =>
+  postJson<VocListResult>({ action: "admin-list-voc", ...params });
 export const getVoc = (vocId: string) => postJson<{ voc: VocRecord }>({ action: "get-voc", vocId });
-export const updateVoc = (vocId: string, input: VocInput) =>
+export const updateVoc = (vocId: string, input: Partial<VocInput>) =>
   postJson<{ voc: VocRecord }>({ action: "update-voc", vocId, ...input });
 export const archiveVoc = (vocId: string) =>
   postJson<{ voc: VocRecord }>({ action: "archive-voc", vocId });
-
+export const adminReply = (ownerId: string, vocId: string, body: string) =>
+  postJson<{ voc: VocRecord }>({ action: "admin-reply", ownerId, vocId, body });
+export const adminGetVoc = (ownerId: string, vocId: string) =>
+  postJson<{ voc: VocRecord }>({ action: "admin-get-voc", ownerId, vocId });
+export const adminUpdateVocStatus = (ownerId: string, vocId: string, status: VocStatus) =>
+  postJson<{ voc: VocRecord }>({ action: "admin-update-voc-status", userId: ownerId, vocId, status });
 // --- Research (글 재료 수집) types and helpers ---------------------------------
 export type ResearchStatus = "completed" | "partial" | "budget-exhausted" | "failed";
 
@@ -269,8 +300,8 @@ export interface ResearchRunSource extends ResearchSource {
 }
 
 export interface ResearchRunRequest {
-  links: string[];
-  search?: { enabled: true; queries: string[] };
+  keyword: string;
+  links?: string[];
   budget?: ResearchBudget;
 }
 
@@ -283,12 +314,17 @@ export interface ResearchRunResult {
   budget: ResearchBudget;
   cacheHit: boolean;
   controls: string[];
+  keyword?: string;
+  cacheExpiresAt?: string | null;
 }
 
 export interface ResearchRunSummary {
   runId: string;
   status: ResearchStatus | string;
   requestedAt?: string;
+  completedAt?: string;
+  keyword?: string;
+  overview?: string;
   usage?: ResearchUsage;
 }
 

@@ -27,6 +27,8 @@ VOC_ACTIONS = frozenset(
         "archive-voc",
         "admin-list-voc",
         "admin-update-voc-status",
+        "admin-reply",
+        "admin-get-voc",
     }
 )
 RESEARCH_ACTIONS = frozenset({"run-research", "get-research-run", "list-research-runs"})

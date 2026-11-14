@@ -62,7 +62,7 @@ function usePopover() {
 function Shell() {
   const { user, logout } = useAuth();
   const loginId = user?.loginId ?? "";
-  const [view, setView] = useState<View>("style");
+  const [view, setView] = useState<View>("research");
   const [welcome] = useState(() => !manualHiddenToday(loginId));
   const [dialog, setDialog] = useState<Dialog>(welcome ? "manual" : null);
   const [notesSeen, setNotesSeen] = useState(() => localStorage.getItem(NOTES_SEEN_KEY) === LATEST_VERSION);
@@ -98,7 +98,7 @@ function Shell() {
   return (
     <div className="shell">
       <header className="top-bar">
-        <div className="brand brand-region">
+        <div className="brand">
           <img className="brand-mark" src={asset("logo-m.png")} alt="" />
           <div className="brand-text">
             <div className="brand-line">

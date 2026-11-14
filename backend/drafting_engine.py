@@ -40,7 +40,7 @@ TIER_QUALITY = "quality"
 TIER_LITE = "lite"
 TIERS = (TIER_QUALITY, TIER_LITE)
 _LITE_MODEL_ENV = "MABLOP_LITE_MODEL"  # low-cost model for members without a Grant
-# Claude Haiku 4.5, US inference profile. infra/template.yaml does not allow it yet (IAM change needed).
+# Claude Haiku 4.5, US inference profile (single source; handler._research_model reuses it).
 _DEFAULT_LITE_MODEL = "us.anthropic.claude-haiku-4-5-20251001-v1:0"
 
 _TOP_K_ENV = "MABLOP_TOP_K"  # Top_K retrieval cap (Req 2.4, 7.2)
@@ -443,6 +443,22 @@ def _provenance_key(draft_id) -> str:
     return s3store.user_key(_DRAFT_PREFIX + str(draft_id) + _PROVENANCE_SUFFIX)
 
 
+_MAX_MATERIAL_CHARS = 8000  # pasted material cap (23.2)
+
+
+def _material_entry(payload: dict):
+    """The author's pasted material as a user-input information item, or None when absent."""
+    raw = payload.get("materialText")
+    if raw is None or raw == "":
+        return None
+    if not isinstance(raw, str) or len(raw) > _MAX_MATERIAL_CHARS:
+        raise MablopError("bad_request", "materialText must be a string of at most 8000 characters")
+    text = raw.strip()
+    if not text:
+        return None
+    return {"vocId": "pasted-material", "body": text, "sourceLabel": "user-input"}
+
+
 def generate_draft(payload: dict, tier: str = TIER_QUALITY) -> dict:
     """Full generate-draft flow (2.1-2.9, 3.6-3.7, 4.1-4.2; Design Drafting Flow).
 
@@ -465,6 +481,12 @@ def generate_draft(payload: dict, tier: str = TIER_QUALITY) -> dict:
     research_context = load_research_context(
         payload.get("researchRunId"), payload.get("infoSourceIds"), payload.get("vocIds")
     )
+    # Text the author pasted from a search result (e.g. Google AI overview): information area only (23.2).
+    material = _material_entry(payload)
+    if material is not None:
+        if research_context is None:
+            research_context = {"summary": None, "sources": [], "voc": [], "runId": None, "runStatus": None}
+        research_context["voc"] = list(research_context["voc"]) + [material]
 
     # A lite draft takes its quota slot before any Bedrock call; a failed generation gives it back.
     remaining = usage_meter.reserve_lite_draft() if tier == TIER_LITE else None

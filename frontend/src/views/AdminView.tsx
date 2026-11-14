@@ -5,7 +5,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { CircleAlert, Copy } from "lucide-react";
 
-import { ApiRequestError, postJson, VOC_STATUS_LABELS, type VocStatus } from "../api";
+import { ApiRequestError, postJson } from "../api";
 import { formatKst, formatKstDate } from "../format";
 
 type UserStatus = "pending" | "active" | "disabled";
@@ -156,122 +156,8 @@ function SectionError({ message }: { message: string }) {
   );
 }
 
-interface AdminVocRecord {
-  vocId: string;
-  ownerId: string;
-  preview?: string;
-  status: VocStatus;
-  createdAt?: string;
-}
-
-const VOC_STATUSES = Object.keys(VOC_STATUS_LABELS) as VocStatus[];
-
-function VoiceBoxAdminSection() {
-  const [filter, setFilter] = useState<"" | VocStatus>("");
-  const [records, setRecords] = useState<AdminVocRecord[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [busyId, setBusyId] = useState<string | null>(null);
-  const [rowError, setRowError] = useState<Record<string, string>>({});
-  const request = useRef(0);
-
-  const load = useCallback(async (status: "" | VocStatus) => {
-    const id = ++request.current;
-    setLoading(true);
-    try {
-      const body: Record<string, unknown> = { action: "admin-list-voc" };
-      if (status) body.status = status;
-      const res = await postJson<{ records: AdminVocRecord[] }>(body);
-      if (id !== request.current) return;
-      setRecords(res.records ?? []);
-      setError(null);
-    } catch (err) {
-      if (id !== request.current) return;
-      setError(errorMessage(err));
-    } finally {
-      if (id === request.current) setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    void load(filter);
-  }, [load, filter]);
-
-  async function changeStatus(record: AdminVocRecord, status: VocStatus) {
-    if (busyId) return;
-    setBusyId(record.vocId);
-    setRowError((prev) => omitKey(prev, record.vocId));
-    try {
-      await postJson({
-        action: "admin-update-voc-status",
-        userId: record.ownerId,
-        vocId: record.vocId,
-        status,
-      });
-      await load(filter);
-    } catch (err) {
-      setRowError((prev) => ({ ...prev, [record.vocId]: errorMessage(err) }));
-    } finally {
-      setBusyId(null);
-    }
-  }
-
-  return (
-    <section className="card" aria-labelledby="admin-voc-title">
-      <h3 className="section-title" id="admin-voc-title">
-        목소리함 관리
-      </h3>
-      <label className="field">
-        상태 필터
-        <select
-          aria-label="목소리함 상태 필터"
-          value={filter}
-          onChange={(e) => setFilter(e.target.value as "" | VocStatus)}
-        >
-          <option value="">전체</option>
-          {VOC_STATUSES.map((s) => (
-            <option key={s} value={s}>
-              {VOC_STATUS_LABELS[s]}
-            </option>
-          ))}
-        </select>
-      </label>
-      {error && <SectionError message={error} />}
-      {loading && !error && (
-        <p className="meta" role="status">
-          불러오는 중...
-        </p>
-      )}
-      {!loading && !error && records.length === 0 && <p className="meta">표시할 의견이 없습니다.</p>}
-      {records.map((record) => (
-        <div className="user-row" key={`${record.ownerId}:${record.vocId}`}>
-          <div>
-            <strong>{record.preview || "(내용 없음)"}</strong>
-            <div className="sub">
-              작성자 {record.ownerId}
-              {record.createdAt ? ` · ${formatKst(record.createdAt)}` : ""}
-            </div>
-          </div>
-          <select
-            aria-label={`의견 상태 변경 ${record.vocId}`}
-            value={record.status}
-            disabled={busyId !== null}
-            onChange={(e) => void changeStatus(record, e.target.value as VocStatus)}
-          >
-            {VOC_STATUSES.map((s) => (
-              <option key={s} value={s}>
-                {VOC_STATUS_LABELS[s]}
-              </option>
-            ))}
-          </select>
-          {rowError[record.vocId] && <SectionError message={rowError[record.vocId]} />}
-        </div>
-      ))}
-    </section>
-  );
-}
-
-export function AdminView() {  // Users
+export function AdminView() {
+  // Users
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [usersLoading, setUsersLoading] = useState(true);
   const [usersError, setUsersError] = useState<string | null>(null);
@@ -780,7 +666,6 @@ export function AdminView() {  // Users
             </div>
           )}
         </section>
-        <VoiceBoxAdminSection />
       </div>
     </section>
   );

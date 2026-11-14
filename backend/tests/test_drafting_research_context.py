@@ -75,7 +75,7 @@ def _block(prompt, label):
 
 def test_research_and_style_are_in_separate_areas(de, monkeypatch):
     _seed_research()
-    voc = voc_store.create_voc(VOC_BODY, "customer")
+    voc = voc_store.create_voc("other", "t", VOC_BODY)
     cap = _patch(de, monkeypatch, [STYLE_CHUNK])
 
     result = de.generate_draft({

@@ -21,6 +21,18 @@ Parameters:
     Default: /mablop/signing-secret
     Description: SSM Parameter Store path holding the Session_Token Signing_Secret (SecureString).
 
+  # Brave Search API key: only the PATH lives here; the owner creates the SecureString out of band.
+  MablopBraveKeySsmPath:
+    Type: String
+    Default: /mablop/brave-api-key
+    Description: SSM Parameter Store path holding the Brave Search API key (SecureString).
+
+  # Google AI Overview via SerpApi: only the PATH lives here (SecureString created out of band).
+  MablopSerpKeySsmPath:
+    Type: String
+    Default: /mablop/serp-api-key
+    Description: SSM Parameter Store path holding the SerpApi key (SecureString).
+
   # Bedrock model ids - locked us-east-1 selections (decisions.md D14); override per-env.
   EmbeddingModelId:
     Type: String
@@ -189,6 +201,8 @@ Resources:
                 Resource:
                   - !Sub "arn:aws:ssm:us-east-1:${AWS::AccountId}:parameter${MablopTokenSsmPath}"
                   - !Sub "arn:aws:ssm:us-east-1:${AWS::AccountId}:parameter${MablopSigningSecretSsmPath}"
+                  - !Sub "arn:aws:ssm:us-east-1:${AWS::AccountId}:parameter${MablopBraveKeySsmPath}"
+                  - !Sub "arn:aws:ssm:us-east-1:${AWS::AccountId}:parameter${MablopSerpKeySsmPath}"
 
   # Single Python Lambda, routed by `action` (Req 8.1).
   MablopFunction:
@@ -217,6 +231,9 @@ Resources:
           MABLOP_TOKEN_SSM_PATH: !Ref MablopTokenSsmPath
           # Signing_Secret is read from SSM at runtime; only the path is configured here.
           MABLOP_SIGNING_SECRET_SSM_PATH: !Ref MablopSigningSecretSsmPath
+          # Brave Search API key is read from SSM at runtime; only the path is configured here.
+          MABLOP_BRAVE_KEY_SSM_PATH: !Ref MablopBraveKeySsmPath
+          MABLOP_SERP_KEY_SSM_PATH: !Ref MablopSerpKeySsmPath
           MABLOP_EMBED_MODEL: !Ref EmbeddingModelId
           MABLOP_TEXT_MODEL: !Ref TextModelId
           MABLOP_STYLE_MODEL: !Ref StyleModelId

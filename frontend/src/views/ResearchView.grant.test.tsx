@@ -58,11 +58,7 @@ beforeEach(() => {
   );
 });afterEach(() => vi.unstubAllGlobals());
 
-const fill = () => {
-  for (let i = 0; i < 3; i++) {
-    fireEvent.change(screen.getByLabelText(`정보 수집 링크 ${i + 1}`), { target: { value: `https://s${i}.example/p` } });
-  }
-};
+const fill = () => fireEvent.change(screen.getByLabelText("키워드"), { target: { value: "제주 여행" } });
 
 test("member: run-research needs a selected grant and sends grantId", async () => {
   auth.user = { loginId: "m1", name: "회원", role: "member" };

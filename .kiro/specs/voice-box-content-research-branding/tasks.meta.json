@@ -1005,6 +1005,21 @@
         "executionId": "26f4a33b-b080-4337-8c4a-bb428647fdff",
         "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
         "timestamp": 1794577267550
+      },
+      {
+        "executionId": "26f4a33b-b080-4337-8c4a-bb428647fdff",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794619257178
+      },
+      {
+        "executionId": "26f4a33b-b080-4337-8c4a-bb428647fdff",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794619268024
+      },
+      {
+        "executionId": "26f4a33b-b080-4337-8c4a-bb428647fdff",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794619784294
       }
     ],
     "15. 토큰 등급별 초안 모델 정책": [
@@ -1012,6 +1027,235 @@
         "executionId": "26f4a33b-b080-4337-8c4a-bb428647fdff",
         "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
         "timestamp": 1794577177646
+      }
+    ],
+    "16.1 백엔드: VOC 레코드에 답변(reply) 필드를 추가하고, mablop_admin(운영자·개발자)만 답변을 달 수 있는 admin-reply action을 만든다. 회원 조회 응답에는 답변을 포함한다. 관리자 계정의 create-voc는 거부한다. 일반 회원만 의견을 등록할 수 있다.": [
+      {
+        "executionId": "6a956e91-dc55-43c4-8d1a-8bd61553d6bc",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794631127471
+      },
+      {
+        "executionId": "6a956e91-dc55-43c4-8d1a-8bd61553d6bc",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794632471817
+      }
+    ],
+    "16.2 프론트 목록: https://agof.co.kr/board/product/list.html?board_no=6 과 faq-list.html 의 목록 디자인(번호·제목·작성자·날짜·상태 행, 모바일은 행 카드)을 참고해 구현한다. 답변이 달린 글에는 \"Re:\" 표시를 한다. 복제하지 말고 구조만 참고한다.": [
+      {
+        "executionId": "6a956e91-dc55-43c4-8d1a-8bd61553d6bc",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794632473678
+      },
+      {
+        "executionId": "6a956e91-dc55-43c4-8d1a-8bd61553d6bc",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794633999590
+      }
+    ],
+    "16.3 프론트 작성: https://agof.co.kr/board/product/write.html?board_no=6 의 글쓰기 구성(분류 select, 제목, 본문, 등록 버튼)을 참고한다. 입력 항목은 분류·제목·본문으로 줄이고 태그·메모 필드는 제거한다. 관리자 화면에서는 작성 폼을 숨기고 목록에서 답변 작성만 보인다.": [
+      {
+        "executionId": "6a956e91-dc55-43c4-8d1a-8bd61553d6bc",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794632475457
+      },
+      {
+        "executionId": "6a956e91-dc55-43c4-8d1a-8bd61553d6bc",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794640953964
+      }
+    ],
+    "16. 사용자의 목소리함을 운영자용 문의 게시판으로 재설계": [
+      {
+        "executionId": "6a956e91-dc55-43c4-8d1a-8bd61553d6bc",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794640954358
+      }
+    ],
+    "18.1 git 이력에서 f277c5c 시점의 App.tsx 헤더 마크업과 index.css 배경 규칙을 확인해, 태그라인 \"쌓일수록 나다워지는 글쓰기 AI\"와 배경 그라데이션을 복원한다. 그 뒤 추가된 다른 기능은 유지한다.": [
+      {
+        "executionId": "6a956e91-dc55-43c4-8d1a-8bd61553d6bc",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794640955943
+      },
+      {
+        "executionId": "6a956e91-dc55-43c4-8d1a-8bd61553d6bc",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794641922586
+      }
+    ],
+    "20.1 App.tsx의 초기 view를 \"research\"로 바꾸고 테스트를 갱신한다.": [
+      {
+        "executionId": "6a956e91-dc55-43c4-8d1a-8bd61553d6bc",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794640956943
+      },
+      {
+        "executionId": "6a956e91-dc55-43c4-8d1a-8bd61553d6bc",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794641923927
+      }
+    ],
+    "18. 헤더 태그라인과 배경 그라데이션을 직전 배포 버전(f277c5c) 디자인으로 되돌린다.": [
+      {
+        "executionId": "6a956e91-dc55-43c4-8d1a-8bd61553d6bc",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794641922715
+      }
+    ],
+    "20. 첫 화면 기본 탭을 글 재료 수집으로 바꾼다.": [
+      {
+        "executionId": "6a956e91-dc55-43c4-8d1a-8bd61553d6bc",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794641924100
+      }
+    ],
+    "19.1 보안 안내 문구를 넣는다. 내용은 실제 구현과 맞아야 한다: 학습 데이터는 본인 전용 저장소 공간에만 저장되고, 다른 사용자와 공유하지 않으며, 외부로 전송되지 않는다는 점. 과장된 표현(완벽 보안 등)은 쓰지 않는다.": [
+      {
+        "executionId": "6a956e91-dc55-43c4-8d1a-8bd61553d6bc",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794641925943
+      },
+      {
+        "executionId": "6a956e91-dc55-43c4-8d1a-8bd61553d6bc",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794642165868
+      }
+    ],
+    "19.2 설명문의 불필요한 줄바꿈을 제거한다. \"학습한 글이 쌓일수록 초안이 내 말투에 가까워져요.\"가 한 줄로 보이게 한다.": [
+      {
+        "executionId": "6a956e91-dc55-43c4-8d1a-8bd61553d6bc",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794641927254
+      },
+      {
+        "executionId": "6a956e91-dc55-43c4-8d1a-8bd61553d6bc",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794642166852
+      }
+    ],
+    "19. 스타일 학습 탭에 보안 안내를 추가하고 설명문 줄바꿈을 정리한다.": [
+      {
+        "executionId": "6a956e91-dc55-43c4-8d1a-8bd61553d6bc",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794642166987
+      }
+    ],
+    "21.5 요약이 비는 원인을 고친다. 현재 \"수집한 출처 3건 성공\"인데 요약이 \"no collected sources to summarize\"로 나온다. 성공한 출처의 excerpt가 요약 단계에 전달되지 않는 것으로 보인다. 확인 후 고친다.": [
+      {
+        "executionId": "6a956e91-dc55-43c4-8d1a-8bd61553d6bc",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794642168833
+      },
+      {
+        "executionId": "6a956e91-dc55-43c4-8d1a-8bd61553d6bc",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794645188699
+      }
+    ],
+    "21.1 네이버 블로그 링크는 수집이 막히므로 입력 안내에 명시하고, 검증 단계에서 naver.com 도메인을 안내 메시지와 함께 거부한다.": [
+      {
+        "executionId": "6a956e91-dc55-43c4-8d1a-8bd61553d6bc",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794642170464
+      },
+      {
+        "executionId": "6a956e91-dc55-43c4-8d1a-8bd61553d6bc",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794645186802
+      }
+    ],
+    "21.2 웹 검색 보완을 실제로 동작하게 한다. 검색 공급자와 요약 모델은 사용자 결정 후 연결한다. 검색 결과는 링크와 AI가 정리한 요약으로 저장하고 출처를 표시한다. ChatGPT 답변을 그대로 복사하지 않는다.": [
+      {
+        "executionId": "6a956e91-dc55-43c4-8d1a-8bd61553d6bc",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794642172351
+      },
+      {
+        "executionId": "6a956e91-dc55-43c4-8d1a-8bd61553d6bc",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794645185525
+      }
+    ],
+    "21.3 입력 칸, 사용량 카드, 출처 카드, 결과 카드의 크기와 간격을 하나의 가로 그리드로 통일한다. 세로로 긴 카드를 줄인다.": [
+      {
+        "executionId": "6a956e91-dc55-43c4-8d1a-8bd61553d6bc",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794645190742
+      },
+      {
+        "executionId": "6a956e91-dc55-43c4-8d1a-8bd61553d6bc",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794648628782
+      }
+    ],
+    "21.4 \"이 재료로 초안 쓰기\" 버튼을 결과 영역 맨 아래 고정 위치에 둔다. 수집 버튼을 눌러도 위치가 바뀌지 않게 한다.": [
+      {
+        "executionId": "6a956e91-dc55-43c4-8d1a-8bd61553d6bc",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794645192280
+      },
+      {
+        "executionId": "6a956e91-dc55-43c4-8d1a-8bd61553d6bc",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794648630397
+      }
+    ],
+    "21.6 \"최근 실행\"은 날짜만 보이지 않게, 수집 요약 텍스트와 출처 목록을 보여준다. \"이 재료로 초안 쓰기\"를 누르면 초안 작성 탭의 글 재료 란에 수집일(날짜형)과 요약 텍스트가 그대로 표시되고, 초안 생성 요청에 그 run이 연결된다.": [
+      {
+        "executionId": "6a956e91-dc55-43c4-8d1a-8bd61553d6bc",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794645194255
+      },
+      {
+        "executionId": "6a956e91-dc55-43c4-8d1a-8bd61553d6bc",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794648632358
+      }
+    ],
+    "21. 글 재료 수집 화면을 고도화한다.": [
+      {
+        "executionId": "6a956e91-dc55-43c4-8d1a-8bd61553d6bc",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794648632480
+      }
+    ],
+    "17.1 MANUAL_STEPS의 목소리함 단계 본문과 포인트를 \"운영자·개발자에게 서비스 의견이나 문의를 남기는 곳\"으로 고치고, 예시로 \"6개월 전 초안 결과가 보이지 않아요\"와 \"글 재료 수집을 6개 이상 링크에서 가져올 수 있었으면 좋겠어요\"를 넣는다. 목소리함 화면 캡처 09-voicebox.png를 새 UI로 다시 찍는다.": [
+      {
+        "executionId": "6a956e91-dc55-43c4-8d1a-8bd61553d6bc",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794648634481
+      },
+      {
+        "executionId": "6a956e91-dc55-43c4-8d1a-8bd61553d6bc",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794649346939
+      }
+    ],
+    "17. 사용자 매뉴얼의 목소리함 설명을 문의·건의 예시로 수정한다.": [
+      {
+        "executionId": "6a956e91-dc55-43c4-8d1a-8bd61553d6bc",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794649347203
+      }
+    ],
+    "22.1 결정된 API로 lite 등급 모델을 바꾸고, 가격 표(usage_meter PRICES)와 IAM 권한을 맞춘다. IAM 변경은 승인 후 배포 파이프라인으로만 적용한다.": [
+      {
+        "executionId": "6a956e91-dc55-43c4-8d1a-8bd61553d6bc",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794649348329
+      },
+      {
+        "executionId": "6a956e91-dc55-43c4-8d1a-8bd61553d6bc",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794651348357
+      }
+    ],
+    "22. 저비용 고품질 모델 적용 (사용자 결정 후 진행)": [
+      {
+        "executionId": "6a956e91-dc55-43c4-8d1a-8bd61553d6bc",
+        "chatSessionId": "sess_39e65fb3-517e-4cef-a981-80a19b895c1f",
+        "timestamp": 1794651348677
       }
     ]
   }

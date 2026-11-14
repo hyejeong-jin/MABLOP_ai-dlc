@@ -10,9 +10,9 @@ import type {
   DraftTier,
   GetUsageResponse,
   ResearchRunSummary,
-  VocSummary,
+  ResearchSummaryData,
 } from "../api";
-import { formatKst } from "../format";
+import { formatKstDateTime } from "../format";
 import { GrantSelect } from "../grants/GrantSelect";
 import { useGrants } from "../grants/useGrants";
 import { capImages, resizeImage, MAX_IMAGES } from "../images";
@@ -32,8 +32,6 @@ interface PresignUpload {
 interface PresignResponse {
   uploads: PresignUpload[];
 }
-
-const MAX_VOC_PICKS = 5;
 
 // Tier labels are text, so the tier is never shown by color alone.
 const TIER_LABEL: Record<DraftTier, string> = {
@@ -62,8 +60,12 @@ export function DraftingView({ onDraftCreated, initialResearchRunId = null }: Dr
   const [copied, setCopied] = useState(false);
   const [researchRuns, setResearchRuns] = useState<ResearchRunSummary[]>([]);
   const [researchRunId, setResearchRunId] = useState<string>(initialResearchRunId ?? "");
-  const [vocs, setVocs] = useState<VocSummary[]>([]);
-  const [vocIds, setVocIds] = useState<string[]>([]);
+  const [materialText, setMaterialText] = useState("");
+  const [materialDetail, setMaterialDetail] = useState<{
+    runId: string;
+    run?: ResearchRunSummary;
+    summary?: ResearchSummaryData;
+  } | null>(null);
   const [provenanceCount, setProvenanceCount] = useState(0);
   const [draftTier, setDraftTier] = useState<DraftTier | undefined>(undefined);
   // Lite drafts left this month; null until get-usage answers (or when it fails).
@@ -105,16 +107,10 @@ export function DraftingView({ onDraftCreated, initialResearchRunId = null }: Dr
   useEffect(() => {
     if (!loadMaterial) return;
     let alive = true;
-    // postJson called directly (same payloads as listResearchRuns/listVoc in api.ts)
+    // postJson called directly (same payload as listResearchRuns in api.ts)
     postJson<{ runs?: ResearchRunSummary[] }>({ action: "list-research-runs", limit: 20 })
       .then((res) => {
         if (alive && Array.isArray(res?.runs)) setResearchRuns(res.runs);
-      })
-      .catch(() => {});
-    postJson<{ records?: VocSummary[] }>({ action: "list-voc", limit: 20 })
-      .then((res) => {
-        if (alive && Array.isArray(res?.records))
-          setVocs(res.records.filter((v) => v.status !== "archived"));
       })
       .catch(() => {});
     return () => {
@@ -122,11 +118,27 @@ export function DraftingView({ onDraftCreated, initialResearchRunId = null }: Dr
     };
   }, [loadMaterial]);
 
-  function toggleVoc(id: string) {
-    setVocIds((cur) =>
-      cur.includes(id) ? cur.filter((v) => v !== id) : cur.length >= MAX_VOC_PICKS ? cur : [...cur, id],
-    );
-  }
+  // Read-only preview of the chosen 글 재료 (best-effort; the select stays usable on failure).
+  useEffect(() => {
+    if (!researchRunId) {
+      setMaterialDetail(null);
+      return;
+    }
+    let alive = true;
+    postJson<{ run?: ResearchRunSummary; summary?: ResearchSummaryData }>({
+      action: "get-research-run",
+      runId: researchRunId,
+    })
+      .then((res) => {
+        if (alive && res && typeof res === "object") {
+          setMaterialDetail({ runId: researchRunId, run: res.run, summary: res.summary });
+        }
+      })
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, [researchRunId]);
 
   useEffect(() => {
     if (!loading) {
@@ -252,7 +264,8 @@ export function DraftingView({ onDraftCreated, initialResearchRunId = null }: Dr
           imageKeys,
           // research inputs are added only when selected (request is unchanged otherwise)
           ...(researchRunId ? { researchRunId } : {}),
-          ...(vocIds.length ? { vocIds } : {}),
+          // pasted material (e.g. the copied Google AI overview) is sent only when filled in
+          ...(materialText.trim() ? { materialText: materialText.trim() } : {}),
         }),
       );
       setProvenanceCount(draft.provenance?.sources?.length ?? 0);
@@ -325,30 +338,35 @@ export function DraftingView({ onDraftCreated, initialResearchRunId = null }: Dr
               <option value="">선택 안 함</option>
               {researchRuns.map((r) => (
                 <option key={r.runId} value={r.runId}>
-                  {r.requestedAt ? formatKst(r.requestedAt) : r.runId} · {r.status}
+                  {materialLabel(r)}
                 </option>
               ))}
               {researchRunId && !researchRuns.some((r) => r.runId === researchRunId) && (
-                <option value={researchRunId}>선택한 글 재료 ({researchRunId})</option>
+                <option value={researchRunId}>
+                  {materialDetail?.runId === researchRunId && materialDetail.run
+                    ? materialLabel({
+                        ...materialDetail.run,
+                        keyword: materialDetail.run.keyword ?? materialDetail.summary?.keyword,
+                      })
+                    : `선택한 글 재료 (${researchRunId})`}
+                </option>
               )}
             </select>
           </label>
-          {vocs.length > 0 && (
-            <div role="group" aria-label="목소리함 의견 선택">
-              <p className="field-hint">목소리함 의견도 함께 쓸 수 있어요 (최대 {MAX_VOC_PICKS}개)</p>
-              {vocs.map((v) => (
-                <label key={v.vocId} className="field">
-                  <input
-                    type="checkbox"
-                    checked={vocIds.includes(v.vocId)}
-                    disabled={!vocIds.includes(v.vocId) && vocIds.length >= MAX_VOC_PICKS}
-                    onChange={() => toggleVoc(v.vocId)}
-                  />{" "}
-                  {v.preview}
-                </label>
-              ))}
-            </div>
+          {materialDetail && materialDetail.runId === researchRunId && materialDetail.summary && (
+            <MaterialPreview summary={materialDetail.summary} />
           )}
+          <label className="field">
+            붙여넣을 재료 (선택)
+            <textarea
+              aria-describedby="hint-material"
+              maxLength={8000}
+              value={materialText}
+              onChange={(e) => setMaterialText(e.target.value)}
+              placeholder="구글 AI 개요나 참고 글을 복사해서 붙여넣으세요."
+            />
+          </label>
+          <p id="hint-material" className="field-hint">붙여넣은 내용은 정보 재료로만 쓰이고, 말투 학습에는 쓰이지 않아요. 최대 8,000자.</p>
         </fieldset>
 
         <fieldset>
@@ -420,6 +438,45 @@ export function DraftingView({ onDraftCreated, initialResearchRunId = null }: Dr
         onDownload={downloadDraft}
       />
     </section>
+  );
+}
+
+function materialLabel(r: { requestedAt?: string; keyword?: string; runId: string }): string {
+  const when = formatKstDateTime(r.requestedAt) || r.runId;
+  return `${when} · ${r.keyword || "키워드 없음(이전 형식)"}`;
+}
+
+// Read-only preview of the collected material: overview plus section headings and points.
+function MaterialPreview({ summary }: { summary: ResearchSummaryData }) {
+  const sections = summary.sections ?? [];
+  const legacy = [...(summary.facts ?? []), ...(summary.generatedInterpretation ?? [])];
+  return (
+    <div className="material-preview" aria-label="글 재료 미리보기">
+      {summary.overview ? <p>{summary.overview}</p> : null}
+      {sections.length > 0 || legacy.length > 0 ? (
+        <details>
+          <summary>항목 펼치기/접기</summary>
+          {sections.map((s, i) => (
+            <div key={i}>
+              <strong>{s.heading}</strong>
+              <ul>
+                {(s.points ?? []).map((p, j) => (
+                  <li key={j}>{p.text}</li>
+                ))}
+              </ul>
+            </div>
+          ))}
+          {sections.length === 0 && (
+            <ul>
+              {legacy.map((p, j) => (
+                <li key={j}>{p.text}</li>
+              ))}
+            </ul>
+          )}
+        </details>
+      ) : null}
+      {!summary.overview && sections.length === 0 && legacy.length === 0 ? <p>표시할 요약이 없어요.</p> : null}
+    </div>
   );
 }
 

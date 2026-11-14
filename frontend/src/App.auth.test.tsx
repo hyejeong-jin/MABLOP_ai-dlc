@@ -31,6 +31,8 @@ function defaultReply(body: Body): Reply {
       return { data: { loginId: "user1", name: "사용자" } };
     case "grant-list-mine":
       return { data: { grants: [] } };
+    case "list-research-runs":
+      return { data: { runs: [] } };
     case "list-drafts":
       return { data: { drafts: [] } };
     default:
@@ -119,8 +121,8 @@ test("login gate: no session shows only the login screen, then login stores the 
   const login = callsOf("login")[0];
   expect(login.body).toMatchObject({ loginId: "user1", password: "correct-horse-1" });
   expect(login.headers["X-Mablop-Token"]).toBeUndefined();
-  await waitFor(() => expect(callsOf("get-learning-status").length).toBeGreaterThan(0));
-  expect(callsOf("get-learning-status")[0].headers["X-Mablop-Token"]).toBe("tok-1");
+  await waitFor(() => expect(callsOf("list-research-runs").length).toBeGreaterThan(0));
+  expect(callsOf("list-research-runs")[0].headers["X-Mablop-Token"]).toBe("tok-1");
 });
 
 test("an expired stored session is deleted at startup and the login screen is shown", () => {

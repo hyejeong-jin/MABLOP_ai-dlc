@@ -41,9 +41,8 @@ def _create_voc(handler, token, *, body="고객의 모바일 온보딩 의견", 
             "create-voc",
             token,
             body=body,
-            sourceType=fields.pop("sourceType", "customer"),
-            tags=fields.pop("tags", ["온보딩", "모바일"]),
-            note=fields.pop("note", "사용자 메모"),
+            category=fields.pop("category", "suggestion"),
+            title=fields.pop("title", "온보딩 의견"),
             **fields,
         )
     )
@@ -69,16 +68,13 @@ def test_voc_actions_round_trip_with_real_json_moto_s3_and_token_context(
 
     assert created["ownerId"] == acting_user_id
     assert created["body"].startswith("  고객이")
-    assert created["userMetadata"] == {
-        "sourceType": "customer",
-        "tags": ["온보딩", "모바일"],
-        "note": "사용자 메모",
-    }
+    assert (created["category"], created["title"], created["reply"]) == ("suggestion", "온보딩 의견", None)
     assert created["status"] == "new"
 
     listed = _json(handler_module.handler(_event("list-voc", token)))
     assert [item["vocId"] for item in listed["records"]] == [created["vocId"]]
     assert listed["records"][0]["status"] == "new"
+    assert listed["records"][0]["hasReply"] is False
 
     fetched = _json(
         handler_module.handler(_event("get-voc", token, vocId=created["vocId"]))
@@ -92,19 +88,14 @@ def test_voc_actions_round_trip_with_real_json_moto_s3_and_token_context(
                 token,
                 vocId=created["vocId"],
                 body="고객은 모바일 저장 버튼을 더 분명히 보여 달라고 요청했다.",
-                sourceType="request",
-                tags=["저장", "UX"],
-                note="수정된 메모",
+                category="bug",
+                title="수정된 제목",
             )
         )
     )["voc"]
     assert updated["ownerId"] == acting_user_id
     assert updated["body"].startswith("고객은 모바일")
-    assert updated["userMetadata"] == {
-        "sourceType": "request",
-        "tags": ["저장", "UX"],
-        "note": "수정된 메모",
-    }
+    assert (updated["category"], updated["title"]) == ("bug", "수정된 제목")
     assert updated["updatedAt"] >= created["updatedAt"]
 
     archived = _json(
@@ -218,3 +209,112 @@ def test_admin_can_filter_and_change_status_but_member_gets_403(
 def test_voc_action_requires_session_token(handler_module):
     response = handler_module.handler(_event("list-voc", None))
     _assert_error(response, 401, "unauthorized")
+
+
+def test_admin_account_cannot_create_voc(handler_module, create_user, make_session_token, other_user_id):
+    admin = create_user("admin1", user_id=other_user_id, role="admin")
+    response = handler_module.handler(
+        _event("create-voc", make_session_token(admin["userId"]), category="other", title="t", body="b")
+    )
+    _assert_error(response, 403, "forbidden")
+    assert "관리자" in _json(response)["error"]["message"]
+
+
+@pytest.mark.parametrize(
+    "fields",
+    [
+        {"category": "nope", "title": "t", "body": "b"},
+        {"category": "bug", "title": "", "body": "b"},
+        {"category": "bug", "title": "x" * 101, "body": "b"},
+        {"category": "bug", "title": "t", "body": " "},
+    ],
+)
+def test_create_voc_validates_input(handler_module, create_user, make_session_token, acting_user_id, fields):
+    member = create_user("member1", user_id=acting_user_id)
+    response = handler_module.handler(_event("create-voc", make_session_token(member["userId"]), **fields))
+    _assert_error(response, 400, "bad_request")
+
+
+def test_admin_reply_flow_visible_to_owner_only(
+    handler_module, create_user, make_session_token, acting_user_id, other_user_id
+):
+    member = create_user("member1", user_id=acting_user_id)
+    admin = create_user("admin1", user_id=other_user_id, role="admin")
+    other = create_user("member2", user_id="u_1111111111111111")
+    member_token = make_session_token(member["userId"])
+    admin_token = make_session_token(admin["userId"])
+    created = _create_voc(handler_module, member_token)
+
+    forbidden = handler_module.handler(
+        _event("admin-reply", member_token, ownerId=member["userId"], vocId=created["vocId"], body="자가 답변")
+    )
+    _assert_error(forbidden, 403, "forbidden")
+
+    for bad in ("", " ", "x" * 5001):
+        resp = handler_module.handler(
+            _event("admin-reply", admin_token, ownerId=member["userId"], vocId=created["vocId"], body=bad)
+        )
+        _assert_error(resp, 400, "bad_request")
+
+    replied = _json(handler_module.handler(
+        _event("admin-reply", admin_token, ownerId=member["userId"], vocId=created["vocId"], body="답변입니다")
+    ))["voc"]
+    assert replied["reply"]["body"] == "답변입니다"
+    assert replied["reply"]["authorLoginId"] == admin["loginId"]
+    first_created_at = replied["reply"]["createdAt"]
+
+    edited = _json(handler_module.handler(
+        _event("admin-reply", admin_token, ownerId=member["userId"], vocId=created["vocId"], body="수정 답변")
+    ))["voc"]
+    assert edited["reply"]["body"] == "수정 답변"
+    assert edited["reply"]["createdAt"] == first_created_at
+
+    fetched = _json(handler_module.handler(_event("get-voc", member_token, vocId=created["vocId"])))["voc"]
+    assert fetched["reply"]["body"] == "수정 답변"
+    listed = _json(handler_module.handler(_event("list-voc", member_token)))["records"]
+    assert listed[0]["hasReply"] is True
+
+    admin_records = _json(handler_module.handler(_event("admin-list-voc", admin_token)))["records"]
+    assert admin_records[0]["hasReply"] is True
+    assert admin_records[0]["title"] == "온보딩 의견"
+    assert admin_records[0]["category"] == "suggestion"
+    assert admin_records[0]["ownerLoginId"] == member["loginId"]
+
+    other_get = handler_module.handler(
+        _event("get-voc", make_session_token(other["userId"]), vocId=created["vocId"])
+    )
+    _assert_error(other_get, 404, "not_found")
+
+    missing = handler_module.handler(
+        _event("admin-reply", admin_token, ownerId=member["userId"], vocId="voc_" + "0" * 32, body="x")
+    )
+    _assert_error(missing, 404, "not_found")
+
+def test_admin_get_voc_returns_full_record(
+    handler_module, create_user, make_session_token, acting_user_id, other_user_id
+):
+    member = create_user("member1", user_id=acting_user_id)
+    admin = create_user("admin1", user_id=other_user_id, role="admin")
+    member_token = make_session_token(member["userId"])
+    admin_token = make_session_token(admin["userId"])
+    created = _create_voc(handler_module, member_token)
+    handler_module.handler(
+        _event("admin-reply", admin_token, ownerId=member["userId"], vocId=created["vocId"], body="전체 답변")
+    )
+
+    forbidden = handler_module.handler(
+        _event("admin-get-voc", member_token, ownerId=member["userId"], vocId=created["vocId"])
+    )
+    _assert_error(forbidden, 403, "forbidden")
+
+    voc = _json(handler_module.handler(
+        _event("admin-get-voc", admin_token, ownerId=member["userId"], vocId=created["vocId"])
+    ))["voc"]
+    assert voc["body"] == created["body"]
+    assert voc["reply"]["body"] == "전체 답변"
+    assert voc["ownerLoginId"] == member["loginId"]
+
+    missing = handler_module.handler(
+        _event("admin-get-voc", admin_token, ownerId=member["userId"], vocId="voc_" + "0" * 32)
+    )
+    _assert_error(missing, 404, "not_found")

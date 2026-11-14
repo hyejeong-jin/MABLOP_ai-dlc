@@ -51,4 +51,37 @@ describe("ResearchSummary", () => {
     expect(safeExternalUrl("data:text/html,x")).toBeNull();
     expect(safeExternalUrl("not a url")).toBeNull();
   });
+
+  test("renders overview, sections with numbered source links, title ideas and keyword chips", () => {
+    render(
+      <ResearchSummary
+        sources={sources}
+        summary={{
+          keyword: "k",
+          overview: "전체 개요",
+          sections: [
+            {
+              heading: "소제목 A",
+              points: [
+                { text: "항목 하나", sourceIds: ["s1"] },
+                { text: "위험 항목", sourceIds: ["s2"] },
+              ],
+            },
+          ],
+          titleIdeas: ["제목 후보"],
+          keywords: ["칩1", "칩2"],
+          facts: [{ text: "레거시 사실", sourceIds: ["s1"] }],
+        }}
+      />,
+    );
+    expect(screen.getByText("전체 개요")).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "소제목 A" })).toBeTruthy();
+    const link = screen.getByRole("link", { name: "출처 1" });
+    expect(link.getAttribute("href")).toBe("https://example.com/a");
+    expect(screen.getAllByRole("link")).toHaveLength(1); // javascript: source [2] is not linked
+    expect(screen.getByText("[2]")).toBeTruthy();
+    expect(screen.getByText("제목 후보")).toBeTruthy();
+    expect(screen.getByText("칩2")).toBeTruthy();
+    expect(screen.queryByText("레거시 사실")).toBeNull();
+  });
 });

@@ -18,6 +18,8 @@ KST = datetime.timezone(datetime.timedelta(hours=9))
 # USD per 1,000,000 tokens (Bedrock on-demand list prices; an estimate, not an invoice).
 PRICES = [
     {"match": "claude-sonnet-4-5", "label": "Claude Sonnet 4.5", "input": 3.0, "output": 15.0},
+    # Matches both the us.* inference profile id and the foundation model id (substring match).
+    {"match": "claude-haiku-4-5", "label": "Claude Haiku 4.5", "input": 1.0, "output": 5.0},
     {"match": "titan-embed-text-v2", "label": "Titan Text Embeddings V2", "input": 0.02, "output": 0.0},
 ]
 

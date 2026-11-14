@@ -20,7 +20,7 @@ def _prov_key(draft_id):
 
 def test_provenance_saved_returned_and_labelled(de, monkeypatch):  # noqa: F811
     _seed_research()
-    voc = voc_store.create_voc("VOC-TEXT", "customer")
+    voc = voc_store.create_voc("other", "t", "VOC-TEXT")
     _patch(de, monkeypatch, [])
     result = de.generate_draft({"title": "t", "researchRunId": RUN_ID, "vocIds": [voc["vocId"]]})
 

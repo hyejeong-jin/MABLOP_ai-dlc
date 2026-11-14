@@ -193,6 +193,8 @@ ADMIN_ONLY_ACTIONS = frozenset(
         "admin-grant-revoke",
         "admin-list-voc",
         "admin-update-voc-status",
+        "admin-reply",
+        "admin-get-voc",
     }
 )
 

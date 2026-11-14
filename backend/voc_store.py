@@ -20,11 +20,11 @@ INDEX_KEY = "metadata/voc-index.json"
 RECORD_KEY_PREFIX = "metadata/voc/"
 
 VOC_STATUSES = frozenset({"new", "reviewing", "confirmed", "archived"})
-SOURCE_TYPES = frozenset({"customer", "observation", "quote", "request", "other"})
+CATEGORIES = frozenset({"inquiry", "suggestion", "bug", "other"})
+DEFAULT_CATEGORY = "other"
 _MAX_BODY_LENGTH = 20_000
-_MAX_NOTE_LENGTH = 5_000
-_MAX_TAGS = 20
-_MAX_TAG_LENGTH = 100
+_MAX_TITLE_LENGTH = 100
+_MAX_REPLY_LENGTH = 5_000
 _PREVIEW_LENGTH = 160
 
 
@@ -46,31 +46,43 @@ def _required_text(value: Any, field: str, maximum: int) -> str:
     return value
 
 
-def _optional_text(value: Any, field: str, maximum: int) -> str:
-    if value is None:
-        return ""
-    if not isinstance(value, str):
-        raise _validation(f"{field} must be a string")
-    if len(value) > maximum:
-        raise _validation(f"{field} exceeds the maximum length")
+def _category(value: Any) -> str:
+    if value not in CATEGORIES:
+        raise _validation("category is invalid")
     return value
 
 
-def _metadata(source_type: Any, tags: Any, note: Any) -> dict[str, Any]:
-    if source_type not in SOURCE_TYPES:
-        raise _validation("sourceType is invalid")
-    if not isinstance(tags, list) or len(tags) > _MAX_TAGS:
-        raise _validation("tags must be a list with at most 20 items")
-    clean_tags: list[str] = []
-    for tag in tags:
-        if not isinstance(tag, str) or not tag.strip() or len(tag) > _MAX_TAG_LENGTH:
-            raise _validation("each tag must be a non-empty string of at most 100 characters")
-        clean_tags.append(tag)
-    return {
-        "sourceType": source_type,
-        "tags": clean_tags,
-        "note": _optional_text(note, "note", _MAX_NOTE_LENGTH),
-    }
+def _title(value: Any) -> str:
+    if not isinstance(value, str) or not value.strip():
+        raise _validation("title must be a non-empty string")
+    if len(value.strip()) > _MAX_TITLE_LENGTH:
+        raise _validation("title exceeds the maximum length")
+    return value.strip()
+
+
+def normalize_record(record: dict[str, Any]) -> dict[str, Any]:
+    """Fill defaults for records stored before category/title/reply existed."""
+    if not isinstance(record, dict):
+        return record
+    body = record.get("body") if isinstance(record.get("body"), str) else ""
+    if record.get("category") not in CATEGORIES:
+        record["category"] = DEFAULT_CATEGORY
+    if not isinstance(record.get("title"), str) or not record["title"].strip():
+        record["title"] = (body.strip().splitlines() or [""])[0][:_MAX_TITLE_LENGTH]
+    if not isinstance(record.get("reply"), dict):
+        record["reply"] = None
+    return record
+
+
+def _normalize_entry(item: dict[str, Any]) -> dict[str, Any]:
+    """Fill defaults for index entries written before the new list fields."""
+    item = dict(item)
+    if item.get("category") not in CATEGORIES:
+        item["category"] = DEFAULT_CATEGORY
+    if not isinstance(item.get("title"), str) or not item["title"].strip():
+        item["title"] = str(item.get("preview") or "")[:_MAX_TITLE_LENGTH]
+    item["hasReply"] = bool(item.get("hasReply"))
+    return item
 
 
 def _record_key(voc_id: str, user_id: str | None = None) -> str:
@@ -120,6 +132,9 @@ def _index_default() -> dict[str, Any]:
 def _index_entry(record: dict[str, Any]) -> dict[str, Any]:
     return {
         "vocId": record["vocId"],
+        "title": record["title"],
+        "category": record["category"],
+        "hasReply": record.get("reply") is not None,
         "preview": record["body"][:_PREVIEW_LENGTH],
         "status": record["status"],
         "createdAt": record["createdAt"],
@@ -149,19 +164,20 @@ def _record_activity(
     )
 
 
-def create_voc(body: Any, source_type: Any, tags: Any = None, note: Any = None) -> dict[str, Any]:
-    """Create and persist a VOC record for the bound acting user."""
+def create_voc(category: Any, title: Any, body: Any) -> dict[str, Any]:
+    """Create and persist an inquiry for the bound acting user."""
+    category = _category(category)
+    title = _title(title)
     body = _required_text(body, "body", _MAX_BODY_LENGTH)
-    if tags is None:
-        tags = []
-    metadata = _metadata(source_type, tags, note)
     now = _now()
     record = {
-        "v": 1,
+        "v": 2,
         "vocId": _new_id(),
         "ownerId": user_scope.current_user_id(),
+        "category": category,
+        "title": title,
         "body": body,
-        "userMetadata": metadata,
+        "reply": None,
         "status": "new",
         "createdAt": now,
         "updatedAt": now,
@@ -184,7 +200,7 @@ def create_voc(body: Any, source_type: Any, tags: Any = None, note: Any = None) 
         record,
         metadata={
             "status": record["status"],
-            "sourceType": record["userMetadata"]["sourceType"],
+            "category": record["category"],
         },
     )
     return record
@@ -200,7 +216,7 @@ def get_voc(voc_id: str) -> dict[str, Any]:
         raise
     if not isinstance(record, dict) or record.get("ownerId") != user_scope.current_user_id():
         raise MablopError("not_found", "VOC record not found")
-    return record
+    return normalize_record(record)
 
 
 def list_voc(*, status: str | None = None, limit: int = 100, cursor: str | None = None) -> dict[str, Any]:
@@ -213,7 +229,7 @@ def list_voc(*, status: str | None = None, limit: int = 100, cursor: str | None 
         raise _validation("cursor is invalid")
     index = s3store.read_json_optional(s3store.user_key(INDEX_KEY))
     records = [] if index is None else index[0].get("records", [])
-    records = [item for item in records if status is None or item.get("status") == status]
+    records = [_normalize_entry(item) for item in records if status is None or item.get("status") == status]
     records.sort(key=lambda item: (item.get("createdAt", ""), item.get("vocId", "")), reverse=True)
     start = 0
     if cursor:
@@ -224,27 +240,21 @@ def list_voc(*, status: str | None = None, limit: int = 100, cursor: str | None 
     return {"records": page, "nextCursor": page[-1]["vocId"] if len(page) == limit else None}
 
 
-def update_voc(voc_id: str, *, body: Any = None, source_type: Any = None, tags: Any = None, note: Any = None) -> dict[str, Any]:
+def update_voc(voc_id: str, *, category: Any = None, title: Any = None, body: Any = None) -> dict[str, Any]:
     """Update user-editable VOC fields and refresh the lightweight index."""
     record = get_voc(voc_id)
-    if body is None and source_type is None and tags is None and note is None:
+    if category is None and title is None and body is None:
         raise _validation("at least one field is required")
     changed_fields = []
+    if category is not None:
+        record["category"] = _category(category)
+        changed_fields.append("category")
+    if title is not None:
+        record["title"] = _title(title)
+        changed_fields.append("title")
     if body is not None:
         record["body"] = _required_text(body, "body", _MAX_BODY_LENGTH)
         changed_fields.append("body")
-    current = record["userMetadata"]
-    if source_type is not None:
-        changed_fields.append("sourceType")
-    if tags is not None:
-        changed_fields.append("tags")
-    if note is not None:
-        changed_fields.append("note")
-    record["userMetadata"] = _metadata(
-        current["sourceType"] if source_type is None else source_type,
-        current.get("tags", []) if tags is None else tags,
-        current.get("note", "") if note is None else note,
-    )
     record["updatedAt"] = _now()
     s3store.put_json(_record_key(voc_id), record)
     _replace_index(record)
@@ -299,12 +309,16 @@ def admin_list_voc(*, user_id: Any = None, status: str | None = None,
     if start is not None and end is not None and end <= start:
         raise _validation("from must be before to")
 
+    login_ids: dict[str, Any] = {}
     if user_id is None:
         import auth_store
-        target_ids = [record.get("userId") for record in auth_store.list_users()]
-        target_ids = [value for value in target_ids if isinstance(value, str)]
+        users = auth_store.list_users()
+        login_ids = {u.get("userId"): u.get("loginId") for u in users if isinstance(u.get("userId"), str)}
+        target_ids = list(login_ids)
     else:
         target_ids = [_validate_target_user(user_id)]
+        import auth_store
+        login_ids = {target_ids[0]: (auth_store.get_user(target_ids[0]) or {}).get("loginId")}
 
     records: list[dict[str, Any]] = []
     for target_id in target_ids:
@@ -324,7 +338,8 @@ def admin_list_voc(*, user_id: Any = None, status: str | None = None,
                 continue
             if end is not None and created >= end:
                 continue
-            records.append({**item, "ownerId": target_id})
+            records.append({**_normalize_entry(item), "ownerId": target_id,
+                            "ownerLoginId": login_ids.get(target_id)})
 
     records.sort(key=lambda item: (item.get("createdAt", ""), item.get("ownerId", ""), item.get("vocId", "")), reverse=True)
     if cursor:
@@ -335,10 +350,7 @@ def admin_list_voc(*, user_id: Any = None, status: str | None = None,
     return {"records": page, "nextCursor": page[-1]["vocId"] if len(page) == limit else None}
 
 
-def admin_update_voc_status(user_id: Any, voc_id: Any, status: Any, *, actor_id: str | None = None) -> dict[str, Any]:
-    """Change a target user's VOC status; caller authorization is enforced by the handler."""
-    target_id = _validate_target_user(user_id)
-    new_status = _validate_status(status)
+def _load_for_user(voc_id: Any, target_id: str) -> dict[str, Any]:
     try:
         record = s3store.get_json(_record_key(voc_id, target_id))
     except Exception as exc:
@@ -347,6 +359,45 @@ def admin_update_voc_status(user_id: Any, voc_id: Any, status: Any, *, actor_id:
         raise
     if not isinstance(record, dict) or record.get("ownerId") != target_id:
         raise MablopError("not_found", "VOC record not found")
+    return normalize_record(record)
+
+
+def admin_reply_voc(user_id: Any, voc_id: Any, body: Any, *, actor_login_id: str | None = None) -> dict[str, Any]:
+    """Write or edit the administrator reply on a target user's VOC (authorization is the handler's job)."""
+    target_id = _validate_target_user(user_id)
+    text = _required_text(body, "body", _MAX_REPLY_LENGTH)
+    record = _load_for_user(voc_id, target_id)
+    now = _now()
+    previous = record.get("reply")
+    record["reply"] = {
+        "body": text,
+        "createdAt": previous.get("createdAt", now) if previous else now,
+        "updatedAt": now,
+        "authorLoginId": actor_login_id,
+    }
+    record["updatedAt"] = now
+    s3store.put_json(_record_key(record["vocId"], target_id), record)
+    _replace_index_for_user(record, target_id)
+    return record
+
+
+def admin_get_voc(user_id: Any, voc_id: Any) -> dict[str, Any]:
+    """Return one target user's full VOC record (body and reply included); authorization is the handler's job."""
+    target_id = _validate_target_user(user_id)
+    record = _load_for_user(voc_id, target_id)
+    try:
+        import auth_store
+        login_id = (auth_store.get_user(target_id) or {}).get("loginId")
+    except Exception:
+        login_id = None
+    return {**record, "ownerLoginId": login_id}
+
+
+def admin_update_voc_status(user_id: Any, voc_id: Any, status: Any, *, actor_id: str | None = None) -> dict[str, Any]:
+    """Change a target user's VOC status; caller authorization is enforced by the handler."""
+    target_id = _validate_target_user(user_id)
+    new_status = _validate_status(status)
+    record = _load_for_user(voc_id, target_id)
     previous_status = record.get("status")
     if previous_status != new_status:
         now = _now()

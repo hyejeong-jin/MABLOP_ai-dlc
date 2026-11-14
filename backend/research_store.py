@@ -36,7 +36,7 @@ def _key(prefix: str, identifier: str) -> str:
 def _index_entry(record: dict[str, Any]) -> dict[str, Any]:
     return {
         key: record[key]
-        for key in ("runId", "status", "summaryId", "requestedAt", "completedAt", "cacheKey")
+        for key in ("runId", "status", "summaryId", "requestedAt", "completedAt", "cacheKey", "keyword", "overview")
         if key in record
     }
 

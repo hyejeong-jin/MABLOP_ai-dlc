@@ -1,4 +1,4 @@
-"""Handler-level research integration: auth, Grant, validation, partial, budget, cache, isolation.
+﻿"""Handler-level research integration: auth, Grant, validation, partial, budget, cache, isolation.
 
 Uses moto S3 and real Session_Tokens. The collector (handler._research_fetch) and the
 Bedrock provider (bedrock.text_generate) are replaced, so no network call is made.
@@ -19,6 +19,7 @@ SUMMARY_JSON = json.dumps(
     },
     ensure_ascii=False,
 )
+KEYWORD = "제주 웨딩 스냅 부케"
 LINKS = [
     {"url": "https://one.example/a"},
     {"url": "https://two.example/b"},
@@ -58,6 +59,7 @@ def calls(h, monkeypatch):
         return SUMMARY_JSON
 
     monkeypatch.setattr(h, "_research_fetch", fake_fetch)
+    monkeypatch.setattr(h.research, "default_search_provider", lambda: None)
     monkeypatch.setattr(bedrock, "text_generate", fake_generate)
     return record
 
@@ -90,6 +92,7 @@ def _member_with_grant(h, create_user, make_session_token, login_id, user_id=Non
 
 def _run(h, token, gid, **fields):
     fields.setdefault("links", LINKS)
+    fields.setdefault("keyword", KEYWORD)
     return h.handler(_event("run-research", token, grantId=gid, **fields))
 
 
@@ -97,13 +100,13 @@ def _run(h, token, gid, **fields):
 
 
 def test_run_research_without_token_returns_401(h, calls):
-    _assert_error(h.handler(_event("run-research", None, links=LINKS)), 401, "unauthorized")
+    _assert_error(h.handler(_event("run-research", None, links=LINKS, keyword=KEYWORD)), 401, "unauthorized")
     assert calls["fetch"] == [] and calls["bedrock"] == []
 
 
 def test_member_without_grant_gets_403_and_no_work_is_done(h, calls, create_user, make_session_token):
     token = make_session_token(create_user("member1")["userId"])
-    _assert_error(h.handler(_event("run-research", token, links=LINKS)), 403, "forbidden")
+    _assert_error(h.handler(_event("run-research", token, links=LINKS, keyword=KEYWORD)), 403, "forbidden")
     assert calls["fetch"] == [] and calls["bedrock"] == []
 
 
@@ -116,8 +119,8 @@ def test_member_cannot_call_admin_voc_actions(h, calls, create_user, make_sessio
 # --- validation (Req 1.4, 2.3) -------------------------------------------------------
 
 
-@pytest.mark.parametrize("count", [2, 6])
-def test_link_count_outside_three_to_five_is_validation_error_without_collection(
+@pytest.mark.parametrize("count", [6])
+def test_more_than_five_links_is_validation_error_without_collection(
     h, calls, create_user, make_session_token, count
 ):
     token, gid = _member_with_grant(h, create_user, make_session_token, "member1")
@@ -257,3 +260,131 @@ def test_successful_run_records_research_run_activity_and_survives_activity_fail
     monkeypatch.setattr(h.activity_store, "record_event", boom)
     other = _run(h, token, gid, links=[{"url": f"https://x{i}.example/p"} for i in range(3)])
     assert other["statusCode"] == 200
+
+
+
+# --- keyword-driven research (task 21.1 / 21.2 / 21.5) ---------------------------------
+
+import re
+
+
+def _brave_results():
+    return {"results": [
+        {"title": "네이버글", "url": "https://blog.naver.com/a/1", "description": "막힘"},
+        {"title": "스냅 후기", "url": "https://snap.example/1", "description": "제주 웨딩 스냅 후기"},
+        {"title": "부케 팁", "url": "https://bouquet.example/2", "description": "부케 고르는 법"},
+    ]}
+
+
+def _material_generate(calls):
+    def generate(prompt, model, max_tokens=0, **_kw):
+        calls["bedrock"].append((prompt, model, max_tokens))
+        ids = re.findall(r"source (src_[0-9a-f]+)", prompt)
+        return json.dumps({
+            "overview": "제주 웨딩 스냅 정리입니다. 두 번째 문장입니다.",
+            "sections": [{"heading": "부케", "points": [
+                {"text": "근거 있는 내용", "sourceIds": [ids[0]]},
+                {"text": "근거 없는 내용", "sourceIds": ["src_fake"]},
+            ]}],
+            "titleIdeas": ["제목 아이디어"],
+            "keywords": ["제주", "부케"],
+        }, ensure_ascii=False)
+    return generate
+
+
+@pytest.mark.parametrize("keyword", [None, "", "   ", "가" * 81, 5])
+def test_keyword_is_required_and_bounded(h, calls, create_user, make_session_token, keyword):
+    token, gid = _member_with_grant(h, create_user, make_session_token, "member1")
+    fields = {} if keyword is None else {"keyword": keyword}
+    response = h.handler(_event("run-research", token, grantId=gid, links=LINKS, **fields))
+    _assert_error(response, 400, "validation_error")
+    assert calls["fetch"] == [] and calls["bedrock"] == []
+
+
+def test_zero_links_are_allowed_with_keyword_only(h, calls, create_user, make_session_token):
+    token, gid = _member_with_grant(h, create_user, make_session_token, "member1")
+    response = h.handler(_event("run-research", token, grantId=gid, keyword=KEYWORD))
+    assert response["statusCode"] == 200
+    body = _body(response)
+    assert body["keyword"] == KEYWORD
+    assert "search_provider_unavailable" in body["controls"]  # no Brave key: search skipped
+    assert body["sources"] == [] and calls["bedrock"] == []
+
+
+def test_naver_link_is_rejected_with_guidance(h, calls, create_user, make_session_token):
+    token, gid = _member_with_grant(h, create_user, make_session_token, "member1")
+    response = _run(h, token, gid, links=[{"url": "https://blog.naver.com/x/1"}])
+    _assert_error(response, 400, "validation_error")
+    assert "네이버 블로그는 외부 수집이 막혀 있어" in _body(response)["error"]["message"]
+    assert calls["fetch"] == []
+
+
+def test_empty_body_source_is_failed_not_succeeded_and_no_summary_call(h, calls, create_user, make_session_token, monkeypatch):
+    token, gid = _member_with_grant(h, create_user, make_session_token, "member1")
+    monkeypatch.setattr(h, "_research_fetch", lambda url: "")
+    body = _body(_run(h, token, gid))
+    assert [s["status"] for s in body["sources"]] == ["failed"] * 3
+    assert all(s["errorMessage"] == "본문을 가져오지 못했어요" for s in body["sources"])
+    assert body["status"] == "failed"
+    assert calls["bedrock"] == []
+
+
+def test_brave_results_become_sources_and_sectioned_summary(h, calls, create_user, make_session_token, monkeypatch, caplog):
+    import bedrock
+    import research
+
+    secret = "BRAVE-SECRET-VALUE"
+    queries = []
+
+    def provider(query):
+        queries.append(query)
+        return _brave_results()
+
+    monkeypatch.setattr(h.research, "default_search_provider", lambda: provider)
+    monkeypatch.setattr(bedrock, "text_generate", _material_generate(calls))
+    token, gid = _member_with_grant(h, create_user, make_session_token, "member1")
+
+    response = _run(h, token, gid, links=[])
+    body = _body(response)
+
+    assert queries == [KEYWORD]
+    assert body["status"] == "completed" and body["keyword"] == KEYWORD
+    web = [s for s in body["sources"] if s["sourceType"] == "web-search"]
+    assert [s["url"] for s in web] == ["https://snap.example/1", "https://bouquet.example/2"]
+    assert all(s["query"] == KEYWORD and s["collectedAt"] for s in web)
+    assert len(calls["fetch"]) == 2  # top non-naver results enriched via crawler
+    summary = body["summary"]
+    assert summary["overview"].startswith("제주 웨딩 스냅")
+    (section,) = summary["sections"]
+    assert [p["text"] for p in section["points"]] == ["근거 있는 내용"]
+    assert section["points"][0]["sourceIds"][0] in {s["sourceId"] for s in web}
+    assert [u["text"] for u in summary["unverified"]] == ["근거 없는 내용"]
+    assert summary["titleIdeas"] == ["제목 아이디어"] and summary["keywords"] == ["제주", "부케"]
+    assert [f["text"] for f in summary["facts"]] == ["근거 있는 내용"]  # legacy field
+    assert {"제목 아이디어"} <= {g["text"] for g in summary["generatedInterpretation"]}
+    prompt, model, max_tokens = calls["bedrock"][0]
+    assert KEYWORD in prompt and "haiku" in model and max_tokens == 1500
+    assert secret not in response["body"] and secret not in caplog.text
+
+
+def test_list_research_runs_includes_keyword_and_overview_preview(h, calls, create_user, make_session_token, monkeypatch):
+    import bedrock
+
+    monkeypatch.setattr(h.research, "default_search_provider", lambda: (lambda q: _brave_results()))
+    long_overview = "가" * 300
+    monkeypatch.setattr(bedrock, "text_generate", lambda p, m, max_tokens=0, **k: json.dumps(
+        {"overview": long_overview, "sections": [], "titleIdeas": [], "keywords": []}))
+    token, gid = _member_with_grant(h, create_user, make_session_token, "member1")
+    _run(h, token, gid, links=[])
+    (item,) = _body(h.handler(_event("list-research-runs", token)))["runs"]
+    assert item["keyword"] == KEYWORD
+    assert item["overview"] == "가" * 120
+
+
+def test_cache_key_depends_on_keyword(h, calls, create_user, make_session_token):
+    token, gid = _member_with_grant(h, create_user, make_session_token, "member1")
+    first = _body(_run(h, token, gid))
+    same = _body(_run(h, token, gid))
+    other = _body(_run(h, token, gid, keyword="부산 웨딩 스냅"))
+    assert same["cacheHit"] is True and same["runId"] == first["runId"]
+    assert other["cacheHit"] is False and other["runId"] != first["runId"]

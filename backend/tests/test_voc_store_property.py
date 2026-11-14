@@ -27,7 +27,8 @@ _NOTE = st.text(
 )
 _TAG = _TEXT.map(lambda value: value[:20]).filter(lambda value: bool(value.strip()))
 _TAGS = st.lists(_TAG, max_size=5, unique=True)
-_SOURCE_TYPE = st.sampled_from(sorted(voc_store.SOURCE_TYPES))
+_CATEGORY = st.sampled_from(sorted(voc_store.CATEGORIES))
+_TITLE = _TEXT.map(lambda value: value.strip()[:50]).filter(bool)
 
 
 @pytest.mark.property
@@ -36,12 +37,12 @@ _SOURCE_TYPE = st.sampled_from(sorted(voc_store.SOURCE_TYPES))
     deadline=None,
     suppress_health_check=[HealthCheck.function_scoped_fixture],
 )
-@given(body=_TEXT, source_type=_SOURCE_TYPE, tags=_TAGS, note=_NOTE)
+@given(body=_TEXT, category=_CATEGORY, title=_TITLE)
 def test_voc_storage_isolation_uses_acting_user_prefix(
-    s3_bucket, acting_user_id, other_user_id, body, source_type, tags, note
+    s3_bucket, acting_user_id, other_user_id, body, category, title
 ):
     """**Validates: Requirements 1.1, 1.2, 10.1, 13.3**"""
-    record = voc_store.create_voc(body, source_type, tags, note)
+    record = voc_store.create_voc(category, title, body)
 
     with user_scope.bind(other_user_id):
         assert voc_store.list_voc()["records"] == []
@@ -61,21 +62,18 @@ def test_voc_storage_isolation_uses_acting_user_prefix(
     deadline=None,
     suppress_health_check=[HealthCheck.function_scoped_fixture],
 )
-@given(body=_TEXT, source_type=_SOURCE_TYPE, tags=_TAGS, note=_NOTE)
+@given(body=_TEXT, category=_CATEGORY, title=_TITLE)
 def test_voc_round_trip_preserves_body_and_user_metadata(
-    s3_bucket, body, source_type, tags, note
+    s3_bucket, body, category, title
 ):
     """**Validates: Requirements 1.3**"""
-    record = voc_store.create_voc(body, source_type, tags, note)
+    record = voc_store.create_voc(category, title, body)
     loaded = voc_store.get_voc(record["vocId"])
 
     assert loaded["body"] == body
-    assert loaded["userMetadata"] == {
-        "sourceType": source_type,
-        "tags": tags,
-        "note": note,
-    }
-    assert loaded["body"] != loaded["userMetadata"]
+    assert loaded["category"] == category
+    assert loaded["title"] == title
+    assert loaded["reply"] is None
 
 
 @pytest.mark.property
@@ -86,20 +84,19 @@ def test_voc_round_trip_preserves_body_and_user_metadata(
 )
 @given(
     body=_TEXT,
-    source_type=_SOURCE_TYPE,
-    tags=_TAGS,
-    note=_NOTE,
+    category=_CATEGORY,
+    title=_TITLE,
     new_status=st.sampled_from(sorted(voc_store.VOC_STATUSES - {"new"})),
 )
 def test_admin_status_transition_stores_valid_status_and_activity_event(
-    s3_bucket, create_user, body, source_type, tags, note, new_status
+    s3_bucket, create_user, body, category, title, new_status
 ):
     """**Validates: Requirements 1.5, 2.1, 2.4**"""
     target = create_user("property-target")
     actor_id = "u_admin0000000000"
 
     with user_scope.bind(target["userId"]):
-        record = voc_store.create_voc(body, source_type, tags, note)
+        record = voc_store.create_voc(category, title, body)
         updated = voc_store.admin_update_voc_status(
             target["userId"], record["vocId"], new_status, actor_id=actor_id
         )

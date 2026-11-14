@@ -1,4 +1,4 @@
-﻿import importlib
+import importlib
 import pytest
 import prompt_builder
 import research_store
@@ -44,7 +44,7 @@ def test_valid_style_is_not_general(de, monkeypatch):
 
 
 def test_fallback_keeps_voc_as_information_only(de, monkeypatch):
-    voc = voc_store.create_voc("VOC-ONLY-BODY", "customer")
+    voc = voc_store.create_voc("other", "t", "VOC-ONLY-BODY")
     res, p = _run(de, monkeypatch, [], {}, {"title": "t", "vocIds": [voc["vocId"]]})
     assert res["generalStyle"] is True
     assert "VOC-ONLY-BODY" in p[p.index("<<DATA: RESEARCH_CONTEXT"):]

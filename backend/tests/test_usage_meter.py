@@ -73,7 +73,20 @@ def test_metering_failure_never_breaks_the_model_call(monkeypatch):
 def test_empty_month_returns_zero(s3_bucket):
     out = usage_meter.get_usage({}, None, now=NOW)
     assert out["totalUsd"] == 0 and out["models"] == []
-    assert {p["label"] for p in out["pricing"]} == {"Claude Sonnet 4.5", "Titan Text Embeddings V2"}
+    assert {p["label"] for p in out["pricing"]} == {"Claude Sonnet 4.5", "Claude Haiku 4.5", "Titan Text Embeddings V2"}
+
+
+def test_lite_haiku_model_is_priced(s3_bucket, monkeypatch):
+    import drafting_engine
+
+    monkeypatch.setattr(usage_meter.time, "time", lambda: NOW)
+    lite = drafting_engine._DEFAULT_LITE_MODEL
+    _call(monkeypatch, lite, {"usage": {"input_tokens": 2000, "output_tokens": 1000}})
+    _call(monkeypatch, "anthropic.claude-haiku-4-5-20251001-v1:0", {"usage": {"input_tokens": 1, "output_tokens": 1}})
+    rows = {m["modelId"]: m for m in usage_meter.get_usage({}, None, now=NOW)["models"]}
+    assert rows[lite]["priced"] is True and rows[lite]["label"] == "Claude Haiku 4.5"
+    assert rows[lite]["usd"] == pytest.approx((2000 * 1 + 1000 * 5) / 1e6)
+    assert rows["anthropic.claude-haiku-4-5-20251001-v1:0"]["priced"] is True
 
 
 def test_get_usage_through_handler_needs_login_but_no_grant(s3_bucket, signing_secret, create_user, make_session_token):

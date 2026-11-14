@@ -43,7 +43,7 @@ These are edits to `template.yaml` and the mirror `lambda-role-policy.json`. The
 | `S3Prefixes` | `s3:GetObject` / `s3:PutObject` now also on `users/*` (nine prefixes: the eight legacy ones plus `users`). |
 | `ListRawPosts` | `s3:ListBucket` with `s3:prefix` condition `raw-posts/*`, `users/*`, `generated-posts/*` (was `raw-posts/*` only). The Sid is unchanged, so the name is narrower than the statement now. |
 | `DeleteUserObjects` (new) | `s3:DeleteObject` on `users/_auth/login/*` and `users/u_*` (every per-user prefix, not `users/_auth/` otherwise; used by `admin-delete-user` and `delete-draft`). No delete permission on any legacy prefix. |
-| `ReadToken` | `ssm:GetParameter` on exactly two parameters: the Bootstrap_Token path and the Signing_Secret path. |
+| `ReadToken` | `ssm:GetParameter` on exactly four parameters: the Bootstrap_Token path, the Signing_Secret path, the Brave Search API key path (`MablopBraveKeySsmPath`, default `/mablop/brave-api-key`) and the SerpApi key path (`MablopSerpKeySsmPath`, default `/mablop/serp-api-key`). |
 | Unchanged | Bedrock invoke, logs, Function URL CORS (`Content-Type`, `X-Mablop-Token`), bucket CORS, billing alarm, resource types. |
 
 Review note: `DeleteUserObjects` lets the Lambda delete any user's objects (needed for `admin-delete-user`, which removes an account and all of its data). Isolation between users is enforced by application code (every key is built from the user id in the Session_Token). If the owner declines the `account.json` and lookup patterns, `admin-reject-user` needs a tombstone fallback. `delete-draft` has no fallback.

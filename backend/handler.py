@@ -68,10 +68,10 @@ DISPATCH = {
     "get-learning-post": lambda body, ctx: style_learner.get_learning_post(body),
     "rename-learning-post": lambda body, ctx: style_learner.rename_learning_post(body),
     # VOC / administrator operations
-    "create-voc": lambda body, ctx: {"voc": voc_store.create_voc(body.get("body"), body.get("sourceType"), body.get("tags"), body.get("note"))},
+    "create-voc": lambda body, ctx: _create_voc(body, ctx),
     "list-voc": lambda body, ctx: voc_store.list_voc(status=body.get("status"), limit=body.get("limit", 100), cursor=body.get("cursor")),
     "get-voc": lambda body, ctx: {"voc": voc_store.get_voc(body.get("vocId"))},
-    "update-voc": lambda body, ctx: {"voc": voc_store.update_voc(body.get("vocId"), body=body.get("body"), source_type=body.get("sourceType"), tags=body.get("tags"), note=body.get("note"))},
+    "update-voc": lambda body, ctx: {"voc": voc_store.update_voc(body.get("vocId"), category=body.get("category"), title=body.get("title"), body=body.get("body"))},
     "archive-voc": lambda body, ctx: {"voc": voc_store.archive_voc(body.get("vocId"))},
     "admin-list-voc": lambda body, ctx: {
         **voc_store.admin_list_voc(user_id=body.get("userId"), status=body.get("status"),
@@ -82,6 +82,11 @@ DISPATCH = {
     "admin-update-voc-status": lambda body, ctx: {"voc": voc_store.admin_update_voc_status(
         body.get("userId"), body.get("vocId"), body.get("status"), actor_id=ctx.user_id
     )},
+    "admin-reply": lambda body, ctx: {"voc": voc_store.admin_reply_voc(
+        body.get("ownerId"), body.get("vocId"), body.get("body"),
+        actor_login_id=(ctx.user or {}).get("loginId"),
+    )},
+    "admin-get-voc": lambda body, ctx: {"voc": voc_store.admin_get_voc(body.get("ownerId"), body.get("vocId"))},
     "get-activity": lambda body, ctx: activity_store.get_activity(body, ctx),
     # Research actions execute only inside the verified user scope. The browser
     # reaches these through postJson; S3 and the collector remain server-side.
@@ -128,6 +133,8 @@ AUTH_SCOPE_ACTIONS = frozenset(
         "archive-voc",
         "admin-list-voc",
         "admin-update-voc-status",
+        "admin-reply",
+        "admin-get-voc",
         "get-activity",
     }
 )
@@ -139,26 +146,73 @@ def _research_fetch(url: str) -> str:
 
 
 def _research_model() -> str:
-    import os
+    # Low-cost Claude Haiku 4.5 (env MABLOP_LITE_MODEL), same id the lite tier uses.
+    return drafting_engine._lite_model()
 
-    return os.environ.get("MABLOP_TEXT_MODEL", "us.anthropic.claude-sonnet-4-5-20250929-v1:0")
 
+def _create_voc(body: dict, ctx) -> dict:
+    # The administrator is the inquiry recipient, so that account cannot post.
+    if ctx.role == "admin":
+        raise MablopError("forbidden", "관리자 계정은 의견을 등록할 수 없습니다.")
+    return {"voc": voc_store.create_voc(body.get("category"), body.get("title"), body.get("body"))}
+
+
+def _collect_ai_overview(keyword: str):
+    """Google AI Overview for the keyword as one 'google-ai-overview' source (SerpApi, 23.1).
+
+    Returns (source or None, controls). A missing key, a query without an overview, or a failed
+    request each add one control; none of them fails the run.
+    """
+    import urllib.parse
+
+    import serp_ai_overview
+    from contracts import iso_ms
+
+    try:
+        overview, control = serp_ai_overview.fetch_ai_overview(keyword)
+    except Exception:  # noqa: BLE001 - the reason stays private; the run continues without it
+        return None, ["serp_request_failed"]
+    if overview is None:
+        return None, [control]
+    url = "https://www.google.com/search?q=" + urllib.parse.quote(keyword)
+    source = {
+        "sourceId": "ai_overview",
+        "source": "ai_overview",
+        "sourceType": "google-ai-overview",
+        "query": keyword,
+        "url": url,
+        "normalizedUrl": url,
+        "title": f"구글 AI 개요: {keyword}",
+        "collectedAt": iso_ms(),
+        "status": "succeeded",
+        "excerpt": overview["text"],
+        "errorCode": None,
+        "errorMessage": None,
+    }
+    return source, []
 
 def _run_research(body: dict) -> dict:
     """Collect the required primary links and persist the basic run contract."""
     from contracts import iso_ms, new_id
 
+    keyword = body.get("keyword")
+    if not isinstance(keyword, str) or not 1 <= len(keyword.strip()) <= research.MAX_KEYWORD_CHARS:
+        raise MablopError("validation_error", "keyword must be a string of 1 to 80 characters")
+    keyword = keyword.strip()
     links = body.get("links")
+    if links is None:
+        links = []
     if not isinstance(links, list):
         raise MablopError("validation_error", "links must be an array")
+    # The keyword drives one Brave web search; any legacy `search` field is ignored.
+    search_setting = {"enabled": True, "queries": [keyword]}
     try:
         budget = body.get("budget") if isinstance(body.get("budget"), dict) else {}
-        max_search_calls = budget.get("maxSearchCalls", 0)
+        max_search_calls = budget.get("maxSearchCalls", 1)
         research.validate_primary_links(links)  # cardinality/URL errors before any cache or fetch work
         summary_settings = body.get("summary") if isinstance(body.get("summary"), dict) else {}
-        search_setting = body.get("search") if isinstance(body.get("search"), dict) else {}
         cache_key = research.build_cache_key(
-            links, {**summary_settings, "search": search_setting}, budget
+            links, {**summary_settings, "search": search_setting}, budget, keyword=keyword
         )
         cached = research.lookup_cache(cache_key, research_store.get_cache)
         if cached is not None:
@@ -180,16 +234,22 @@ def _run_research(body: dict) -> dict:
                     "cacheHit": True,
                     "cacheExpiresAt": cached["expiresAt"],
                     "controls": run.get("controls", []),
+                    "keyword": run.get("keyword", keyword),
                 }
         collected = research.run_research(
             links,
             _research_fetch,
-            search=body.get("search"),
+            search=search_setting,
+            search_provider=research.default_search_provider(),
             max_search_calls=max_search_calls,
             budget=budget,
+            enrich_top=3,
         )
-    except research.ResearchValidationError as exc:
+    except (research.ResearchValidationError, research.URLValidationError) as exc:
         raise MablopError("validation_error", str(exc)) from exc
+
+    overview_source, overview_controls = _collect_ai_overview(keyword)
+    collected = {**collected, "sources": list(collected["sources"]) + ([overview_source] if overview_source else []), "controls": list(collected["controls"]) + overview_controls}
 
     run_id = new_id("run")
     summary_id = new_id("summary")
@@ -209,7 +269,7 @@ def _run_research(body: dict) -> dict:
         saved = research_store.save_info_source(source)
         sources.append(saved)
         remapped.append(source)
-        if source.get("sourceType") == "web-search":
+        if source.get("sourceType") in ("web-search", "google-ai-overview"):
             search_ids.append(source_id)
         else:
             primary_ids.append(source_id)
@@ -225,6 +285,7 @@ def _run_research(body: dict) -> dict:
         remapped,
         lambda prompt, tokens: bedrock.text_generate(prompt, _research_model(), max_tokens=tokens),
         evaluator=evaluator,
+        keyword=keyword,
     )
     controls = list(collected["controls"])
     controls.extend(c for c in info["controls"] if c not in controls)
@@ -235,6 +296,11 @@ def _run_research(body: dict) -> dict:
     summary = {
         "summaryId": summary_id,
         "runId": run_id,
+        "keyword": keyword,
+        "overview": summarized.get("overview", ""),
+        "sections": summarized.get("sections", []),
+        "titleIdeas": summarized.get("titleIdeas", []),
+        "keywords": summarized.get("keywords", []),
         "facts": summarized["facts"],
         "generatedInterpretation": summarized["generatedInterpretation"],
         "unverified": summarized["unverified"],
@@ -246,6 +312,8 @@ def _run_research(body: dict) -> dict:
     run = {
         "runId": run_id,
         "status": collected["status"],
+        "keyword": keyword,
+        "overview": (summarized.get("overview") or "")[:120],
         "primarySourceIds": primary_ids,
         "searchSourceIds": search_ids,
         "summaryId": summary_id,
@@ -253,7 +321,7 @@ def _run_research(body: dict) -> dict:
         "completedAt": iso_ms(),
         "usage": research.merge_research_usage(
             {
-                "requests": len(sources) + (1 if info["called"] else 0),
+                "requests": collected["usage"].get("requests", 0) + (1 if info["called"] else 0),
                 "inputChars": collected["usage"].get("inputChars", 0) + info["inputChars"],
                 "outputTokens": info["outputTokens"],
                 "searchCalls": collected["searchCalls"],
@@ -298,6 +366,7 @@ def _run_research(body: dict) -> dict:
         "cacheHit": False,
         "cacheExpiresAt": cache_expires_at,
         "controls": saved_run["controls"],
+        "keyword": keyword,
     }
 
 

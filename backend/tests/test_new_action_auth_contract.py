@@ -27,7 +27,7 @@ PERSONAL_ACTIONS = frozenset(
         "get-activity",
     }
 )
-ADMIN_ACTIONS = frozenset({"admin-list-voc", "admin-update-voc-status"})
+ADMIN_ACTIONS = frozenset({"admin-list-voc", "admin-update-voc-status", "admin-reply", "admin-get-voc"})
 GRANT_ACTIONS = frozenset({"run-research"})
 
 

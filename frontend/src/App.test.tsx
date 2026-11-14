@@ -19,6 +19,7 @@ function seedSession(role: "admin" | "member") {
 function mockApi() {
   return vi.spyOn(api, "postJson").mockImplementation((async (body: Record<string, unknown>) => {
     if (body.action === "get-learning-status") return { processedPosts: 0, chunks: 0, posts: [] };
+    if (body.action === "list-research-runs") return { runs: [] };
     return { grants: [], drafts: [] };
   }) as never);
 }
@@ -38,12 +39,12 @@ test("shows the login view and no tabs when there is no session", () => {
 });
 
 // Smoke test: with a valid session the app renders the style-learning view by default.
-test("renders app and the style-learning view by default with a session", () => {
+test("renders app and the research view by default with a session", () => {
   seedSession("member");
   mockApi();
   render(<App />);
   expect(screen.getByRole("heading", { name: "MABLOP" })).toBeInTheDocument();
-  expect(screen.getByRole("heading", { name: "스타일 학습" })).toBeInTheDocument();
+  expect(screen.getByRole("heading", { name: "글 재료 수집" })).toBeInTheDocument();
 });
 
 test("hides the 관리 tab from members and shows it to admins", () => {

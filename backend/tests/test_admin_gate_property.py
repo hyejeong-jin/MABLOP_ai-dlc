@@ -40,6 +40,8 @@ EXPECTED_ADMIN_ONLY = frozenset(
         "admin-grant-revoke",
         "admin-list-voc",
         "admin-update-voc-status",
+        "admin-reply",
+        "admin-get-voc",
     }
 )
 
@@ -72,7 +74,7 @@ def _gate_environment(monkeypatch):
 def test_admin_only_action_set_is_the_eleven_documented_actions():
     """Req 4.8, 19.16: the gate covers exactly the twelve administrator actions."""
     assert access_controller.ADMIN_ONLY_ACTIONS == EXPECTED_ADMIN_ONLY
-    assert len(access_controller.ADMIN_ONLY_ACTIONS) == 14
+    assert len(access_controller.ADMIN_ONLY_ACTIONS) == 16
 
 
 @PBT_SETTINGS
@@ -120,3 +122,4 @@ def test_property_admin_actions_require_admin_role(
     written = {call["key"] for call in s3_calls.writes()}
     assert written <= {access_controller.RATELIMIT_KEY}
     assert s3store.get_json(account_key) == before
+

@@ -38,7 +38,7 @@ GRANT_ACTIONS = {
 HISTORY_ACTIONS = {"list-drafts", "delete-draft", "get-usage", "get-learning-post", "rename-learning-post"}
 FEATURE_ACTIONS = {
     "create-voc", "list-voc", "get-voc", "update-voc", "archive-voc", "admin-list-voc",
-    "admin-update-voc-status", "get-activity", "run-research", "get-research-run", "list-research-runs",
+    "admin-update-voc-status", "admin-reply", "admin-get-voc", "get-activity", "run-research", "get-research-run", "list-research-runs",
 }
 NEW_ACTIONS = ACCOUNT_ACTIONS | GRANT_ACTIONS | HISTORY_ACTIONS | FEATURE_ACTIONS
 LEGACY_ACTIONS = {
@@ -66,6 +66,8 @@ ADMIN_ONLY = {
     "admin-grant-revoke",
     "admin-list-voc",
     "admin-update-voc-status",
+    "admin-reply",
+    "admin-get-voc",
 }
 BEDROCK = {
     "learn-style", "analyze-images", "generate-draft", "rebuild-from-stored", "get-result",
@@ -111,14 +113,14 @@ def _body(resp):
 
 
 def test_dispatch_contains_the_eight_legacy_and_twentyone_new_actions(h):
-    assert len(NEW_ACTIONS) == 35
+    assert len(NEW_ACTIONS) == 37
     assert set(h.DISPATCH) == LEGACY_ACTIONS | NEW_ACTIONS
     assert all(callable(fn) for fn in h.DISPATCH.values())
 
 
 def test_auth_scope_actions_are_exactly_the_twentyone_new_actions(h):
     assert h.AUTH_SCOPE_ACTIONS == frozenset(NEW_ACTIONS)
-    assert len(h.AUTH_SCOPE_ACTIONS) == 35
+    assert len(h.AUTH_SCOPE_ACTIONS) == 37
     assert h.AUTH_SCOPE_ACTIONS.isdisjoint(LEGACY_ACTIONS)
 
 
@@ -126,7 +128,7 @@ def test_admin_only_and_bedrock_action_sets(h):
     import access_controller
 
     assert access_controller.ADMIN_ONLY_ACTIONS == frozenset(ADMIN_ONLY)
-    assert len(access_controller.ADMIN_ONLY_ACTIONS) == 14
+    assert len(access_controller.ADMIN_ONLY_ACTIONS) == 16
     assert access_controller.BEDROCK_ACTIONS == frozenset(BEDROCK)
     assert len(access_controller.BEDROCK_ACTIONS) == 6
     assert access_controller.ADMIN_ONLY_ACTIONS <= set(h.DISPATCH)
@@ -214,3 +216,5 @@ def test_unknown_target_user_gives_404_with_literal_message(h, create_user, make
     )
     assert resp["statusCode"] == 404
     assert _body(resp)["error"] == {"code": "not_found", "message": NOT_FOUND_TARGET_MSG}
+
+

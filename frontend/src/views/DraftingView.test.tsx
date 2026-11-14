@@ -355,21 +355,21 @@ test("shows the general-style notice when nothing has been learned yet", async (
   expect(screen.getByText(/일반 문체로 작성되었습니다/)).toBeInTheDocument();
 });
 
-test("sends researchRunId/vocIds only when selected", async () => {
+test("sends researchRunId only when selected, never vocIds", async () => {
   const { calls, postJson } = wireApi();
   const base = postJson.getMockImplementation()!;
   postJson.mockImplementation((async (body: Record<string, unknown>) => {
     if (body.action === "list-research-runs")
-      return { runs: [{ runId: "run-1", status: "completed", requestedAt: "2025-01-01T00:00:00.000Z" }] } as never;
-    if (body.action === "list-voc")
-      return { records: [{ vocId: "v1", preview: "의견하나", status: "new" }, { vocId: "v2", preview: "보관됨", status: "archived" }] } as never;
+      return { runs: [{ runId: "run-1", status: "completed", requestedAt: "2025-01-01T00:00:00.000Z", keyword: "제주 여행" }, { runId: "run-0", status: "completed", requestedAt: "2024-12-01T00:00:00.000Z" }] } as never;
     return base(body as never);
   }) as never);
   render(<DraftingView />);
   await selectGrant();
   fireEvent.click(screen.getByRole("button", { name: "글 재료 선택하기" }));
-  expect(await screen.findByText("의견하나")).toBeInTheDocument();
-  expect(screen.queryByText("보관됨")).not.toBeInTheDocument();
+  expect(await screen.findByRole("option", { name: "2025-01-01 09:00 · 제주 여행" })).toBeInTheDocument();
+  expect(screen.getByRole("option", { name: "2024-12-01 09:00 · 키워드 없음(이전 형식)" })).toBeInTheDocument();
+  expect(calls.some((c) => c.action === "list-voc")).toBe(false);
+  expect(screen.queryByRole("group", { name: "목소리함 의견 선택" })).not.toBeInTheDocument();
   fireEvent.change(screen.getByLabelText("제목"), { target: { value: "t" } });
   fireEvent.click(screen.getByRole("button", { name: "초안 생성" }));
   await screen.findByLabelText("초안 결과");
@@ -385,4 +385,47 @@ test("preselects initialResearchRunId and sends it", async () => {
   fireEvent.click(screen.getByRole("button", { name: "초안 생성" }));
   await screen.findByLabelText("초안 결과");
   expect(calls.find((c) => c.action === "generate-draft")).toHaveProperty("researchRunId", "run-9");
+});
+
+test("initialResearchRunId loads a read-only preview and switching runs swaps it", async () => {
+  const { postJson } = wireApi();
+  const base = postJson.getMockImplementation()!;
+  const details: Record<string, unknown> = {
+    "run-9": {
+      run: { runId: "run-9", status: "completed", requestedAt: "2025-02-03T01:30:00.000Z", keyword: "서울 맛집" },
+      summary: { overview: "서울 맛집 개요", sections: [{ heading: "추천 거리", points: [{ text: "성수동 카페거리", sourceIds: [] }] }] },
+    },
+    "run-1": {
+      run: { runId: "run-1", status: "completed", requestedAt: "2025-01-01T00:00:00.000Z", keyword: "제주 여행" },
+      summary: { overview: "제주 개요", sections: [] },
+    },
+  };
+  postJson.mockImplementation((async (body: Record<string, unknown>) => {
+    if (body.action === "list-research-runs")
+      return { runs: [{ runId: "run-1", status: "completed", requestedAt: "2025-01-01T00:00:00.000Z", keyword: "제주 여행" }] } as never;
+    if (body.action === "get-research-run") return details[body.runId as string] as never;
+    return base(body as never);
+  }) as never);
+  render(<DraftingView initialResearchRunId="run-9" />);
+  expect(await screen.findByText("서울 맛집 개요")).toBeInTheDocument();
+  expect(screen.getByText("성수동 카페거리")).toBeInTheDocument();
+  expect(await screen.findByRole("option", { name: "2025-02-03 10:30 · 서울 맛집" })).toBeInTheDocument();
+  fireEvent.change(screen.getByLabelText("수집한 정보"), { target: { value: "run-1" } });
+  expect(await screen.findByText("제주 개요")).toBeInTheDocument();
+  expect(screen.queryByText("서울 맛집 개요")).not.toBeInTheDocument();
+});
+
+test("sends pasted material only when it is filled in", async () => {
+  const { calls } = wireApi();
+  render(<DraftingView />);
+  await selectGrant();
+  fireEvent.click(screen.getByRole("button", { name: "초안 생성" }));
+  await screen.findByLabelText("초안 결과");
+  expect(calls.find((c) => c.action === "generate-draft")).not.toHaveProperty("materialText");
+
+  calls.length = 0;
+  fireEvent.change(screen.getByLabelText(/붙여넣을 재료/), { target: { value: "  구글 AI 개요 내용  " } });
+  fireEvent.click(screen.getByRole("button", { name: "초안 생성" }));
+  await screen.findByLabelText("초안 결과");
+  expect(calls.find((c) => c.action === "generate-draft")).toHaveProperty("materialText", "구글 AI 개요 내용");
 });

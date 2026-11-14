@@ -59,6 +59,18 @@ afterEach(() => {
   localStorage.clear();
 });
 
+// security note card (task 19.1): shown, factual, no overclaims
+test("shows the security note without absolute claims", async () => {
+  mockApi();
+  render(<StyleLearningView />);
+  const card = screen.getByRole("region", { name: "내 글은 나만 볼 수 있어요" });
+  expect(card).toBeInTheDocument();
+  expect(card.querySelectorAll("li")).toHaveLength(4);
+  expect(card.textContent).toContain("AWS Bedrock");
+  expect(card.textContent).not.toMatch(/완벽|절대|100%/);
+  await screen.findByLabelText("AI 서비스 토큰 사용 권한");
+});
+
 // renders the core fields; the token field is gone and the Grant dropdown is shown
 test("renders url, maxPosts and grant select without a token field", async () => {
   mockApi();

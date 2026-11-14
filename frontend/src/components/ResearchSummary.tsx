@@ -75,27 +75,88 @@ interface ResearchSummaryProps {
   sources?: ResearchSource[];
 }
 
+function CitationLinks({ ids, order, sources }: { ids?: string[]; order: Map<string, number>; sources: Map<string, ResearchSource> }) {
+  const nums = (ids ?? []).filter((id) => order.has(id));
+  if (nums.length === 0) return null;
+  return (
+    <span className="citation-list">
+      {nums.map((id) => {
+        const n = order.get(id)!;
+        const s = sources.get(id);
+        const href = s ? safeExternalUrl(s.url ?? s.normalizedUrl) : null;
+        return href ? (
+          <a key={id} href={href} target="_blank" rel="noopener noreferrer" aria-label={`출처 ${n}`}>
+            [{n}]
+          </a>
+        ) : (
+          <span key={id}>[{n}]</span>
+        );
+      })}
+    </span>
+  );
+}
+
 export function ResearchSummary({ summary, sources = [] }: ResearchSummaryProps) {
   if (!summary) return null;
   const byId = new Map(sources.map((s) => [s.sourceId, s]));
+  const order = new Map(sources.map((s, i) => [s.sourceId, i + 1]));
+  const sections = summary.sections ?? [];
+  const titleIdeas = summary.titleIdeas ?? [];
+  const keywords = summary.keywords ?? [];
+  const hasNew = sections.length > 0 || !!summary.overview;
   const groups: Array<[SourceLabelKind, ResearchSummaryItem[] | undefined]> = [
     ["fact", summary.facts],
     ["generated", summary.generatedInterpretation],
     ["user-input", summary.userInput],
     ["unverified", summary.unverified],
   ];
-  const blocks = groups.flatMap(([kind, items]) =>
-    (items ?? []).map((item, index) => ({ kind, item, key: `${kind}-${index}` })),
-  );
+  const blocks = hasNew
+    ? []
+    : groups.flatMap(([kind, items]) =>
+        (items ?? []).map((item, index) => ({ kind, item, key: `${kind}-${index}` })),
+      );
 
   return (
-    <section className="feature-card" aria-label="연구 요약">
+    <section className="research-summary" aria-label="연구 요약">
       {summary.partial && (
         <p role="status" className="source-meta">
           부분 결과입니다{summary.omitted ? `: ${summary.omitted}` : "."}
         </p>
       )}
-      {blocks.length === 0 ? (
+      {hasNew ? (
+        <>
+          {summary.overview ? <p className="research-overview">{summary.overview}</p> : null}
+          {sections.map((section, si) => (
+            <div key={`section-${si}`} className="research-section">
+              <h4 className="research-section-title">{section.heading}</h4>
+              <ul className="research-points">
+                {(section.points ?? []).map((point, pi) => (
+                  <li key={pi}>
+                    {point.text} <CitationLinks ids={point.sourceIds} order={order} sources={byId} />
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+          {titleIdeas.length > 0 && (
+            <div className="research-section">
+              <h4 className="research-section-title">제목 아이디어</h4>
+              <ul className="research-points">
+                {titleIdeas.map((t, i) => (
+                  <li key={i}>{t}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+          {keywords.length > 0 && (
+            <ul className="chip-list" aria-label="키워드">
+              {keywords.map((k, i) => (
+                <li key={i} className="chip">{k}</li>
+              ))}
+            </ul>
+          )}
+        </>
+      ) : blocks.length === 0 ? (
         <p className="source-meta">표시할 요약이 없습니다.</p>
       ) : (
         <ul className="summary-block-list">

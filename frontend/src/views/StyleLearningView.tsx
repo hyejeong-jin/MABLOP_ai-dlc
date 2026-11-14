@@ -1,7 +1,7 @@
 // Style-learning view (task 11.1). Naver URL + maxPosts, paste fallback, run status + resume.
 // Browser -> Lambda only (Req 6.1); no form lib, no state mgr (YAGNI).
 import { useEffect, useState } from "react";
-import { CircleAlert, Info } from "lucide-react";
+import { CircleAlert, Cloud, Info, Lock, ShieldCheck, Trash2 } from "lucide-react";
 import { postJson, ApiRequestError } from "../api";
 import { formatKst } from "../format";
 import { GrantSelect } from "../grants/GrantSelect";
@@ -53,6 +53,15 @@ interface PreviewResponse {
   posts: PreviewPost[];
 }
 
+// Facts verified against infra/template.yaml (private SSE-S3 bucket, users/{userId}/ prefix),
+// backend/auth_service.admin_delete_user (deletes everything under users/{userId}/), and the
+// AWS Bedrock data-protection doc (model providers cannot access prompts and completions).
+const SECURITY_NOTES = [
+  { icon: Lock, title: "회원별 비공개 저장", body: "학습한 글과 문체 데이터는 회원별로 나뉜 비공개 저장 공간에 서버 측 암호화로 저장돼요." },
+  { icon: ShieldCheck, title: "다른 회원은 볼 수 없어요", body: "서버가 로그인 정보로 내 데이터만 불러와요. 다른 회원의 글에는 접근하지 못해요." },
+  { icon: Cloud, title: "AWS 클라우드에서 AI 처리", body: "브라우저가 AI를 직접 부르지 않고 MABLOP 서버를 거쳐 AWS Bedrock에서 처리돼요. 모델 제공사는 내 입력과 결과에 접근할 수 없어요." },
+  { icon: Trash2, title: "삭제하면 함께 지워져요", body: "계정을 삭제하면 저장된 글과 문체 데이터도 함께 삭제돼요." },
+];
 
 export function StyleLearningView() {
   const grants = useGrants();
@@ -144,6 +153,24 @@ export function StyleLearningView() {
     <section>
       <h2 className="page-title">스타일 학습</h2>
       <p className="page-lead">내 공개 블로그 글을 읽어 문체를 익힙니다. 학습한 글이 쌓일수록 초안이 내 말투에 가까워져요.</p>
+
+      <section className="card security-note" aria-labelledby="security-note-title">
+        <div className="security-note-head">
+          <ShieldCheck size={20} aria-hidden="true" />
+          <h3 id="security-note-title" className="section-title">내 글은 나만 볼 수 있어요</h3>
+        </div>
+        <ul className="security-note-grid">
+          {SECURITY_NOTES.map((n) => (
+            <li key={n.title}>
+              <n.icon size={16} aria-hidden="true" />
+              <div>
+                <strong>{n.title}</strong>
+                <p>{n.body}</p>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </section>
 
       {learningStatus && learningStatus.posts.length > 0 && (
         <section className="card" aria-label="학습 완료된 포스트">

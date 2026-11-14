@@ -74,9 +74,132 @@ def test_is_safe_url_is_a_non_throwing_predicate():
     assert research.is_safe_url("http://10.0.0.1") is False
 
 
-def test_primary_link_cardinality_rejects_before_fetching():
+def test_primary_link_cardinality_rejects_more_than_five_before_fetching():
+    fetched = []
     with pytest.raises(research.ResearchCardinalityError):
-        research.run_research(["https://example.com/one"] * 2, lambda url: "never")
+        research.run_research(["https://example.com/one"] * 6, lambda url: fetched.append(url))
+    assert fetched == []
+
+
+@pytest.mark.parametrize("count", [0, 1, 2])
+def test_fewer_than_three_links_are_allowed(count):
+    assert len(research.validate_primary_links(["https://example.com/a"] * count)) == count
+    result = research.run_research(["https://example.com/a"] * count, lambda url: "text")
+    assert len(result["primarySources"]) == count
+
+
+@pytest.mark.parametrize("url", [
+    "https://blog.naver.com/someone/1", "https://naver.com/", "https://m.blog.naver.com/x/2",
+])
+def test_naver_hosts_are_rejected_with_guidance(url):
+    with pytest.raises(research.URLValidationError) as exc:
+        research.validate_primary_links([url])
+    assert str(exc.value) == research.NAVER_BLOCKED_MESSAGE
+    assert research.is_safe_url(url) is False
+    assert research.is_safe_url("https://notnaver.com/x") is True
+
+
+def test_empty_body_marks_source_failed_and_is_not_summarized():
+    result = research.run_research(
+        ["https://example.com/a", "https://example.com/b"], lambda url: {"excerpt": "   "}
+    )
+    assert [s["status"] for s in result["sources"]] == ["failed", "failed"]
+    assert result["sources"][0]["errorMessage"] == "본문을 가져오지 못했어요"
+    assert result["status"] == "failed"
+    summary, info = research.summarize_sources(result["sources"], lambda p, t: "{}")
+    assert info["called"] is False
+
+
+def test_cache_key_includes_keyword():
+    links = ["https://example.com/a"]
+    a = research.build_cache_key(links, keyword="제주 웨딩")
+    assert a == research.build_cache_key(links, keyword="  제주  웨딩 ")
+    assert a != research.build_cache_key(links, keyword="부산 웨딩")
+    assert a != research.build_cache_key(links)
+
+
+def test_brave_provider_builds_request_and_maps_results_without_leaking_key():
+    seen = {}
+
+    class Resp:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            return False
+
+        def read(self):
+            return ('{"web":{"results":[{"title":"T","url":"https://a.example/x",'
+                    '"description":"D","extra":1}]}}').encode()
+
+    def opener(request, timeout):
+        seen["url"] = request.full_url
+        seen["token"] = request.get_header("X-subscription-token")
+        return Resp()
+
+    out = research.BraveSearchProvider("SECRET-KEY", opener=opener)("제주 웨딩")
+    assert seen["url"].startswith("https://api.search.brave.com/res/v1/web/search?")
+    for part in ("count=8", "country=KR", "search_lang=ko"):
+        assert part in seen["url"]
+    assert seen["token"] == "SECRET-KEY" and "SECRET-KEY" not in seen["url"]
+    assert out == {"results": [{"title": "T", "url": "https://a.example/x", "description": "D"}]}
+
+    def failing(request, timeout):
+        raise OSError(f"boom {request.get_header('X-subscription-token')}")
+
+    with pytest.raises(RuntimeError) as exc:
+        research.BraveSearchProvider("SECRET-KEY", opener=failing)("q")
+    assert "SECRET-KEY" not in str(exc.value)
+
+
+def test_search_results_skip_naver_and_enrich_top_with_body():
+    fetched = []
+
+    def provider(query):
+        return [
+            {"title": "N", "url": "https://blog.naver.com/a/1", "description": "n"},
+            {"title": "A", "url": "https://a.example/1", "description": "desc a"},
+            {"title": "B", "url": "https://b.example/2", "description": "desc b"},
+        ]
+
+    def fetch(url):
+        fetched.append(url)
+        if "b.example" in url:
+            raise OSError("x")
+        return "full body"
+
+    result = research.run_research(
+        [], fetch, search={"enabled": True, "queries": ["kw"]}, search_provider=provider,
+        max_search_calls=1, enrich_top=3,
+    )
+    found = result["searchSources"]
+    assert [s["url"] for s in found] == ["https://a.example/1", "https://b.example/2"]
+    assert found[0]["excerpt"] == "full body" and found[0]["description"] == "desc a"
+    assert found[1]["excerpt"] == "desc b"  # fetch failed: snippet kept
+    assert fetched == ["https://a.example/1", "https://b.example/2"]
+    assert result["status"] == "completed"
+
+
+def test_missing_provider_skips_search_with_control():
+    result = research.run_research(
+        [], lambda u: "x", search={"enabled": True, "queries": ["kw"]},
+        search_provider=None, max_search_calls=1,
+    )
+    assert result["controls"] == ["search_provider_unavailable"]
+    assert result["searchSources"] == []
+
+
+def test_default_search_provider_is_none_without_key(monkeypatch):
+    monkeypatch.setattr(research, "_brave_key_cache", None)
+    monkeypatch.setenv("MABLOP_BRAVE_KEY_SSM_PATH", "/mablop/none")
+
+    class Boom:
+        def get_parameter(self, **kw):
+            raise RuntimeError("no such parameter")
+
+    import boto3
+    monkeypatch.setattr(boto3, "client", lambda *a, **k: Boom())
+    assert research.default_search_provider() is None
 
 
 def test_collect_primary_links_keeps_success_when_one_link_fails():
@@ -267,7 +390,7 @@ def test_property_primary_links_only_accept_three_to_five_and_record_each_source
         fetched.append(url)
         return {"excerpt": "content"}
 
-    if not 3 <= len(links) <= 5:
+    if len(links) > 5:
         with pytest.raises(research.ResearchCardinalityError):
             research.run_research(links, fetch, clock=lambda: collected_at)
         assert fetched == []

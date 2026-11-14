@@ -68,3 +68,29 @@ def test_output_tokens_capped_by_remaining_budget():
     ev = research.CostBudgetEvaluator({"maxOutputTokens": 300})
     research.summarize_sources([_src(1)], lambda p, t: seen.setdefault("t", t) and "{}", evaluator=ev)
     assert seen["t"] == 300
+
+
+def test_keyword_material_summary_uses_keyword_prompt_and_demotes_unknown_sources():
+    import json as _json
+    import research
+
+    captured = {}
+
+    def generate(prompt, tokens):
+        captured["prompt"], captured["tokens"] = prompt, tokens
+        return _json.dumps({
+            "overview": "개요",
+            "sections": [{"heading": "H", "points": [
+                {"text": "ok", "sourceIds": ["src_a"]}, {"text": "bad", "sourceIds": ["nope"]}]}],
+            "titleIdeas": ["T"], "keywords": ["k"],
+        }, ensure_ascii=False)
+
+    sources = [{"sourceId": "src_a", "status": "succeeded", "title": "제목", "normalizedUrl": "https://a.example/",
+                "description": "설명", "excerpt": "본문"}]
+    summary, info = research.summarize_sources(sources, generate, keyword="제주 부케")
+    assert "제주 부케라는 키워드로 블로그를 쓰려고 합니다" in captured["prompt"]
+    assert captured["tokens"] == 1500 and info["called"] is True
+    assert "title: 제목" in captured["prompt"] and "description: 설명" in captured["prompt"]
+    assert summary["sections"] == [{"heading": "H", "points": [{"text": "ok", "sourceIds": ["src_a"]}]}]
+    assert summary["unverified"] == [{"text": "bad"}]
+    assert summary["partial"] is False and summary["sourceIds"] == ["src_a"]
