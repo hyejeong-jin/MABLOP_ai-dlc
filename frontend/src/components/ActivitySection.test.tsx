@@ -2,103 +2,98 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, test, vi } from "vitest";
 
 import * as api from "../api";
-import { ActivitySection } from "./ActivitySection";
+import { ActivitySection, dayLabel, levelOf, yearDates } from "./ActivitySection";
+
+// Use days inside the displayed window (the last 365 days ending today, KST).
+const DAYS = yearDates();
+const A = DAYS[360];
+const B = DAYS[361];
 
 const response = {
-  events: [
-    {
-      eventId: "evt-voc",
-      actorUserId: "acting-user",
-      type: "voc-created",
-      occurredAt: "2025-01-10T01:00:00Z",
-      count: 2,
-      relatedVocId: "voc-123",
-      relatedRunId: null,
-      metadata: {},
-    },
-    {
-      eventId: "evt-research",
-      actorUserId: "acting-user",
-      type: "research-completed",
-      occurredAt: "2025-01-11T02:00:00Z",
-      count: 1,
-      relatedVocId: null,
-      relatedRunId: "run-456",
-      metadata: {},
-    },
-  ],
+  events: [],
   daily: [
-    { date: "2025-01-10", total: 2, byType: { "voc-created": 2 }, eventIds: ["evt-voc"] },
-    { date: "2025-01-11", total: 1, byType: { "research-completed": 1 }, eventIds: ["evt-research"] },
+    { date: A, total: 3, byType: { draft: 2, learned: 1 }, eventIds: ["d1", "d2", "l1"] },
+    { date: B, total: 1, byType: { draft: 1 }, eventIds: ["d3"] },
   ],
-  range: { from: "2025-01-01T00:00:00+09:00", to: "2025-01-31T00:00:00+09:00" },
+  range: { from: DAYS[0], to: DAYS[364] },
 };
-
 afterEach(() => vi.restoreAllMocks());
 
-describe("ActivitySection", () => {
-  test("renders only the API response events with text legend and accessible names", async () => {
-    const request = vi.spyOn(api, "postJson").mockResolvedValue(response);
-
+describe("ActivitySection calendar", () => {
+  test("requests one year of day buckets and renders a cell per day", async () => {
+    const request = vi.spyOn(api, "postJson").mockResolvedValue(response as never);
     render(<ActivitySection />);
 
-    const point = (await screen.findAllByRole("button", { name: /VOC 작성/ }))[0];
-    expect(point).toHaveAttribute(
-      "aria-label",
-      expect.stringContaining("2회"),
+    const cells = await screen.findAllByRole("button", { name: /^\d{4}-\d{2}-\d{2} · 초안/ });
+    expect(cells).toHaveLength(365);
+    expect(request).toHaveBeenCalledWith(
+      expect.objectContaining({ action: "get-activity", granularity: "day" }),
     );
-    expect(screen.getByRole("group", { name: "활동 시각화" })).toBeInTheDocument();
-    expect(screen.getByRole("group", { name: "활동 스캐터 플롯" })).toBeInTheDocument();
-    expect(screen.getByRole("group", { name: "일별 활동 히트맵" })).toBeInTheDocument();
-    expect(screen.getByRole("group", { name: "일별 활동 히트맵" })).toHaveTextContent("2");
-    const legend = screen.getByText("적음").parentElement;
-    expect(legend).toHaveAttribute("aria-label", "활동량 범례");
+    const body = request.mock.calls[0][0] as { from: string; to: string };
+    expect(body.from < body.to).toBe(true);
+    expect(screen.getByRole("group", { name: "최근 1년 활동 달력" })).toBeInTheDocument();
+  });
+
+  test("cell label shows the date with draft and learned counts", async () => {
+    vi.spyOn(api, "postJson").mockResolvedValue(response as never);
+    render(<ActivitySection />);
+
+    const cell = await screen.findByRole("button", { name: `${A} · 초안 2회 · 학습 1회` });
+    expect(cell).toHaveAttribute("title", `${A} · 초안 2회 · 학습 1회`);
+    expect(cell).toHaveStyle({ background: "var(--heat-3)" });
+  });
+
+  test("hover, focus and click show the same day summary", async () => {
+    vi.spyOn(api, "postJson").mockResolvedValue(response as never);
+    render(<ActivitySection />);
+    const cell = await screen.findByRole("button", { name: `${B} · 초안 1회 · 학습 0회` });
+
+    fireEvent.pointerEnter(cell);
+    expect(screen.getByRole("status")).toHaveTextContent(`${B} · 초안 1회 · 학습 0회`);
+
+    fireEvent.pointerLeave(cell);
+    expect(screen.getByRole("status")).toHaveTextContent("날짜 칸에 마우스를 올리거나 누르면");
+
+    fireEvent.focus(cell);
+    expect(screen.getByRole("status")).toHaveTextContent(B);
+    fireEvent.blur(cell);
+
+    fireEvent.click(cell);
+    expect(cell).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByRole("status")).toHaveTextContent(`${B} · 초안 1회`);
+  });
+
+  test("legend is text-labelled and summary counts the year's activity", async () => {
+    vi.spyOn(api, "postJson").mockResolvedValue(response as never);
+    render(<ActivitySection />);
+
+    const legend = await screen.findByLabelText("활동량 범례");
+    expect(legend).toHaveTextContent("적음");
     expect(legend).toHaveTextContent("많음");
-    expect(request).toHaveBeenCalledWith(expect.objectContaining({ action: "get-activity" }));
+    expect(screen.getByText("4").closest("p")).toHaveTextContent("최근 1년 중 2일 활동 · 총 4회");
   });
 
-  test.each([
-    ["pointer hover", (button: HTMLElement) => fireEvent.pointerEnter(button)],
-    ["keyboard focus", (button: HTMLElement) => fireEvent.focus(button)],
-    ["Enter", (button: HTMLElement) => fireEvent.keyDown(button, { key: "Enter" })],
-    ["Space", (button: HTMLElement) => fireEvent.keyDown(button, { key: " " })],
-    ["touch click", (button: HTMLElement) => fireEvent.click(button)],
-  ])("opens the same detail model via %s", async (_input, activate) => {
-    vi.spyOn(api, "postJson").mockResolvedValue(response);
+  test("shows the error alert when the request fails", async () => {
+    vi.spyOn(api, "postJson").mockRejectedValue(new Error("boom"));
     render(<ActivitySection />);
-    const point = (await screen.findAllByRole("button", { name: /VOC 작성/ }))[0];
-
-    activate(point);
-
-    expect((await screen.findAllByText("VOC 작성", { selector: "strong" }))[0]).toBeInTheDocument();
-    expect(screen.getByText("voc-123")).toBeInTheDocument();
-    expect(screen.getAllByText("2회").length).toBeGreaterThanOrEqual(1);
-  });
-
-  test("closes a selected detail and shows the empty-state guidance", async () => {
-    vi.spyOn(api, "postJson").mockResolvedValue({ ...response, events: [], daily: [] });
-    render(<ActivitySection />);
-
-    expect(await screen.findByText("선택한 기간에 활동이 없습니다.")).toBeInTheDocument();
-    expect(screen.getByText("기간을 늘려 다른 활동이 있는지 확인해 보세요.")).toBeInTheDocument();
+    expect(await screen.findByRole("alert")).toHaveTextContent("활동을 불러오지 못했습니다.");
   });
 });
 
-describe("ActivitySection draft/learned hover", () => {
-  test("heatmap cell shows date with draft and learned counts on hover", async () => {
-    vi.spyOn(api, "postJson").mockResolvedValue({
-      events: [
-        { eventId: "draft-1", type: "draft", occurredAt: "2025-01-10T01:00:00Z", count: 1, metadata: {} },
-        { eventId: "draft-2", type: "draft", occurredAt: "2025-01-10T02:00:00Z", count: 1, metadata: {} },
-        { eventId: "learned-1", type: "learned", occurredAt: "2025-01-10T03:00:00Z", count: 1, metadata: {} },
-      ],
-      daily: [{ date: "2025-01-10", total: 3, byType: { draft: 2, learned: 1 }, eventIds: ["draft-1", "draft-2", "learned-1"] }],
-      range: { from: "2025-01-01T00:00:00+09:00", to: "2025-01-31T00:00:00+09:00" },
-    } as never);
-    render(<ActivitySection />);
-    const cell = await screen.findByRole("button", { name: "2025-01-10 · 초안 2회 · 학습 1회" });
-    expect(cell).toHaveAttribute("title", "2025-01-10 · 초안 2회 · 학습 1회");
-    fireEvent.pointerEnter(cell);
-    expect((await screen.findAllByText("2025-01-10 · 초안 2회 · 학습 1회")).length).toBeGreaterThan(0);
+describe("activity helpers", () => {
+  test("yearDates returns 365 consecutive KST days ending today", () => {
+    const dates = yearDates(new Date("2026-11-14T03:00:00Z"));
+    expect(dates).toHaveLength(365);
+    expect(dates[364]).toBe("2026-11-14");
+    expect(dates[0]).toBe("2025-11-15");
+  });
+
+  test("levelOf uses 0, 1, 2, 3-4 and 5+ thresholds", () => {
+    expect([0, 1, 2, 3, 4, 5, 9].map(levelOf)).toEqual([0, 1, 2, 3, 3, 4, 4]);
+  });
+
+  test("dayLabel names draft and learned counts first", () => {
+    expect(dayLabel("2025-01-02", { learned: 1, draft: 2 })).toBe("2025-01-02 · 초안 2회 · 학습 1회");
+    expect(dayLabel("2025-01-03")).toBe("2025-01-03 · 초안 0회 · 학습 0회");
   });
 });
