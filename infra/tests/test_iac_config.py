@@ -717,3 +717,28 @@ def test_log_group_present():
     template = _load_template()
     lgs = [r for r in template["Resources"].values() if r.get("Type") == "AWS::Logs::LogGroup"]
     assert lgs, "no AWS::Logs::LogGroup resource"
+
+
+def _plain_strings(node):
+    """Yield every plain (non-``!Sub``) string in the loaded template tree."""
+    if isinstance(node, dict):
+        for key, value in node.items():
+            if key == "Sub":
+                continue  # !Sub bodies are substituted by CloudFormation.
+            yield from _plain_strings(value)
+    elif isinstance(node, list):
+        for item in node:
+            yield from _plain_strings(item)
+    elif isinstance(node, str):
+        yield node
+
+
+def test_account_id_placeholder_only_inside_sub():
+    """CFN parse guard: ${AWS::AccountId} is only substituted inside !Sub.
+
+    A plain string keeps the literal text, which IAM then rejects as a
+    malformed policy ARN (the cause of the failed mablop stack update).
+    """
+    template = _load_template()
+    offenders = [s for s in _plain_strings(template) if "${AWS::AccountId}" in s]
+    assert not offenders, f"${{AWS::AccountId}} used outside !Sub: {offenders}"
